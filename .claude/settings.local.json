@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bash \"C:/Users/nguye/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.6/skills/brainstorming/scripts/start-server.sh\" --project-dir \"C:/Users/nguye/OneDrive/Desktop/GoldPlan\")",
+      "Bash(npm create:*)",
+      "Bash(npm --version)",
+      "Bash(npm install:*)",
+      "Bash(npx tailwindcss:*)",
+      "Bash(./node_modules/.bin/tailwindcss init:*)",
+      "Bash(node -e \"const p = require\\(''./node_modules/tailwindcss/package.json''\\); console.log\\(p.version\\);\")",
+      "Bash(node -e \"const p = require\\(''''./node_modules/tailwindcss/package.json''''\\); console.log\\(p.version\\);\")",
+      "Bash(node_modules/.bin/tailwindcss init:*)",
+      "Bash(npm run:*)",
+      "Bash(git -C \"C:/Users/nguye/OneDrive/Desktop/GoldPlan/gpls-demo/\" log --oneline)",
+      "Bash(npx vitest:*)"
+    ]
+  }
+}
