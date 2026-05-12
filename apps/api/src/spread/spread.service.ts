@@ -1,27 +1,33 @@
 import { Injectable } from '@nestjs/common';
-import { GoldType } from '@prisma/client';
+import { GoldBrand, GoldType } from '@prisma/client';
 import { PrismaService } from '../database/prisma.service';
 import { SpreadRankingDto } from '@gpls/shared';
 
-const BRANDS = ['SJC', 'DOJI', 'PNJ', 'BAO_TIN'] as const;
+const BRANDS: GoldBrand[] = [
+  GoldBrand.SJC,
+  GoldBrand.DOJI,
+  GoldBrand.PNJ,
+  GoldBrand.BAO_TIN,
+];
 
 @Injectable()
 export class SpreadService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getSpreadRanking(goldType: GoldType): Promise<SpreadRankingDto[]> {
-    // Fetch recent non-anomalous records across all brands for this goldType
-    const records = await this.prisma.priceRecord.findMany({
-      where: { goldType, isAnomalous: false },
-      orderBy: { recordedAt: 'desc' },
-      take: 50,
-    });
+    // Fetch the latest non-anomalous record per brand for this goldType
+    const brandRecords = await Promise.all(
+      BRANDS.map((brand) =>
+        this.prisma.priceRecord.findFirst({
+          where: { brand, goldType, isAnomalous: false },
+          orderBy: { recordedAt: 'desc' },
+        }),
+      ),
+    );
 
     const results: SpreadRankingDto[] = [];
 
-    for (const brand of BRANDS) {
-      const latestRecord = records.find((r) => r.brand === brand);
-
+    for (const latestRecord of brandRecords) {
       if (!latestRecord) continue;
 
       const buyPrice = Number(latestRecord.buyPrice);
@@ -34,7 +40,7 @@ export class SpreadService {
       const spreadPct = Math.round((spreadVnd / buyPrice) * 100 * 100) / 100;
 
       results.push({
-        brand,
+        brand: latestRecord.brand,
         goldType,
         buyPrice,
         sellPrice,

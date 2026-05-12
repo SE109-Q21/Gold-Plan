@@ -23,13 +23,23 @@ function makeRecord(
   };
 }
 
+/** Build a findFirst mock that returns the matching record for each brand call */
+function makeFindFirst(
+  recordMap: Record<string, ReturnType<typeof makeRecord> | null>,
+): jest.Mock {
+  return jest.fn().mockImplementation(({ where }: { where: { brand: string } }) => {
+    const record = recordMap[where.brand] ?? null;
+    return Promise.resolve(record);
+  });
+}
+
 describe('SpreadService', () => {
   let service: SpreadService;
-  let prismaService: { priceRecord: { findMany: jest.Mock } };
+  let prismaService: { priceRecord: { findFirst: jest.Mock } };
 
   beforeEach(async () => {
     prismaService = {
-      priceRecord: { findMany: jest.fn() },
+      priceRecord: { findFirst: jest.fn() },
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -53,10 +63,12 @@ describe('SpreadService', () => {
     const dojiBuy = 79_000_000n;
     const dojiSell = 81_200_000n;
 
-    prismaService.priceRecord.findMany.mockResolvedValueOnce([
-      makeRecord('SJC', sjcBuy, sjcSell),
-      makeRecord('DOJI', dojiBuy, dojiSell),
-    ]);
+    prismaService.priceRecord.findFirst = makeFindFirst({
+      SJC: makeRecord('SJC', sjcBuy, sjcSell),
+      DOJI: makeRecord('DOJI', dojiBuy, dojiSell),
+      PNJ: null,
+      BAO_TIN: null,
+    });
 
     const result = await service.getSpreadRanking('MIEN_SJC' as any);
 
@@ -70,10 +82,12 @@ describe('SpreadService', () => {
   });
 
   it('skips brands with zero buyPrice', async () => {
-    prismaService.priceRecord.findMany.mockResolvedValueOnce([
-      makeRecord('SJC', 0n, 82_500_000n),       // zero buyPrice → skip
-      makeRecord('DOJI', 79_000_000n, 81_200_000n),
-    ]);
+    prismaService.priceRecord.findFirst = makeFindFirst({
+      SJC: makeRecord('SJC', 0n, 82_500_000n),       // zero buyPrice → skip
+      DOJI: makeRecord('DOJI', 79_000_000n, 81_200_000n),
+      PNJ: null,
+      BAO_TIN: null,
+    });
 
     const result = await service.getSpreadRanking('MIEN_SJC' as any);
 
@@ -82,9 +96,12 @@ describe('SpreadService', () => {
   });
 
   it('marks the only result as isMostEfficient when single brand present', async () => {
-    prismaService.priceRecord.findMany.mockResolvedValueOnce([
-      makeRecord('SJC', 80_000_000n, 82_500_000n),
-    ]);
+    prismaService.priceRecord.findFirst = makeFindFirst({
+      SJC: makeRecord('SJC', 80_000_000n, 82_500_000n),
+      DOJI: null,
+      PNJ: null,
+      BAO_TIN: null,
+    });
 
     const result = await service.getSpreadRanking('MIEN_SJC' as any);
 
@@ -96,9 +113,12 @@ describe('SpreadService', () => {
     // buyPrice = 80_000_000, sellPrice = 82_500_000
     // spreadVnd = 2_500_000
     // spreadPct = 2_500_000 / 80_000_000 * 100 = 3.125 → rounded to 3.13
-    prismaService.priceRecord.findMany.mockResolvedValueOnce([
-      makeRecord('SJC', 80_000_000n, 82_500_000n),
-    ]);
+    prismaService.priceRecord.findFirst = makeFindFirst({
+      SJC: makeRecord('SJC', 80_000_000n, 82_500_000n),
+      DOJI: null,
+      PNJ: null,
+      BAO_TIN: null,
+    });
 
     const result = await service.getSpreadRanking('MIEN_SJC' as any);
 
