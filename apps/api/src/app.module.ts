@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { HealthController } from './health/health.controller';
 import { envValidationSchema } from './config/env.validation';
+import { ExchangeRateModule } from './exchange-rate/exchange-rate.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { envValidationSchema } from './config/env.validation';
     MailModule,
     AuthModule,
     UsersModule,
+    ExchangeRateModule,
   ],
   controllers: [HealthController],
 })

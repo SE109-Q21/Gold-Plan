@@ -59,3 +59,29 @@ export interface ComparisonRowDto {
   goldType: GoldType;
   brands: ComparisonBrandDto[];
 }
+
+export interface ExchangeRateDto {
+  usdVnd: number;
+  eurVnd: number;
+  updatedAt: string; // ISO string
+  source: string;    // 'live' | 'stale' | 'fallback'
+}
+
+export interface SpreadRankingDto {
+  rank: number;
+  brand: GoldBrand;
+  goldType: GoldType;
+  spreadVnd: number;
+  spreadPercent: number;
+  crawlSessionId: string;
+}
+
+export interface ConverterResultDto {
+  inputAmount: number;
+  inputUnit: string;   // 'USD' | 'VND' | 'gram' | 'tael' | 'troy_oz'
+  outputAmount: number;
+  outputUnit: string;
+  exchangeRate: number;
+  goldPriceUsd: number;
+  calculatedAt: string; // ISO string
+}
