@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/auth-context';
 
 // Icons (Lucide-style inline SVG)
 function IconHome({ s = 20 }: { s?: number }) {
@@ -41,6 +43,17 @@ const WATCHLIST = [
 ];
 
 function Sidebar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
+  const { user } = useAuth();
+  const router = useRouter();
+  const initials = user
+    ? (user.displayName ?? user.email)
+        .split(/[\s@]/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((p: string) => p[0].toUpperCase())
+        .join('')
+    : '';
+
   return (
     <aside style={{
       width: 232, flexShrink: 0, height: '100%',
@@ -109,6 +122,32 @@ function Sidebar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
         <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', marginTop: 8, lineHeight: 1.5 }}>
           next refresh in 04:48<br/>sjc · doji · pnj
         </div>
+      </div>
+
+      {/* User / Auth section */}
+      <div style={{ padding: '12px 16px', borderTop: '1px solid var(--hairline)' }}>
+        {user ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 30, height: 30, borderRadius: 8, background: 'linear-gradient(135deg,#D4AF37,#8E7321)', display: 'flex', alignItems: 'center', justifyContent: 'center', font: '800 11px/1 var(--font-display)', color: '#0B0B0F', flexShrink: 0 }}>
+              {initials}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="mono" style={{ fontSize: 10, color: 'var(--bone)', letterSpacing: '0.04em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {user.displayName ?? user.email}
+              </div>
+              <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: 2 }}>
+                {user.role}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={() => router.push('/auth/login')}
+            style={{ width: '100%', height: 34, background: 'var(--gold)', border: 0, borderRadius: 8, cursor: 'pointer', font: '700 11px/1 var(--font-display)', color: '#0B0B0F', letterSpacing: '0.04em' }}
+          >
+            Log in
+          </button>
+        )}
       </div>
     </aside>
   );

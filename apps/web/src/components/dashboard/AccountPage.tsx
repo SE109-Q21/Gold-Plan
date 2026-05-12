@@ -1,6 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/auth-context';
+import { apiChangePassword, apiDeleteAccount } from '@/lib/auth.api';
 
 function Toggle({ on, onChange }: { on: boolean; onChange: () => void }) {
   return (
@@ -32,23 +35,116 @@ function Row({ label, detail, right }: { label: string; detail?: string; right: 
   );
 }
 
+function ChangePasswordModal({ onClose }: { onClose: () => void }) {
+  const { getAccessToken } = useAuth();
+  const [oldPw, setOldPw] = useState('');
+  const [newPw, setNewPw] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (newPw.length < 8) { setError('New password must be at least 8 characters'); return; }
+    if (!/[A-Z]/.test(newPw)) { setError('New password needs at least 1 uppercase letter'); return; }
+    if (!/[0-9]/.test(newPw)) { setError('New password needs at least 1 digit'); return; }
+    if (newPw !== confirm) { setError('Passwords do not match'); return; }
+    if (!getAccessToken()) { setError('Not authenticated'); return; }
+    setLoading(true);
+    try {
+      await apiChangePassword(getAccessToken() ?? '', oldPw, newPw);
+      setSuccess(true);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Change failed');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const inputS: React.CSSProperties = { width: '100%', height: 36, background: 'var(--ink-3)', border: '1px solid var(--line)', borderRadius: 6, padding: '0 10px', color: 'var(--chalk)', font: '500 13px/1 var(--font-display)', outline: 'none', boxSizing: 'border-box' };
+  const labelS: React.CSSProperties = { display: 'block', font: '600 10px/1 var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 5 };
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
+      <div style={{ width: 360, background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, padding: 28 }}>
+        <h3 style={{ font: '700 16px/1 var(--font-display)', margin: '0 0 20px' }}>Change password</h3>
+        {success ? (
+          <div>
+            <p style={{ color: 'var(--up)', fontSize: 14 }}>Password updated successfully.</p>
+            <button onClick={onClose} style={{ marginTop: 16, height: 36, padding: '0 16px', background: 'var(--gold)', border: 0, borderRadius: 6, cursor: 'pointer', font: '700 11px/1 var(--font-mono)', color: '#0B0B0F' }}>Close</button>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div><label style={labelS}>Current password</label><input type="password" value={oldPw} onChange={e => setOldPw(e.target.value)} required style={inputS} autoComplete="current-password"/></div>
+            <div><label style={labelS}>New password</label><input type="password" value={newPw} onChange={e => setNewPw(e.target.value)} required style={inputS} autoComplete="new-password"/></div>
+            <div><label style={labelS}>Confirm new password</label><input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} required style={inputS} autoComplete="new-password"/></div>
+            {error && <div style={{ color: 'var(--down)', fontSize: 12, padding: '8px 10px', background: 'rgba(229,72,77,0.1)', borderRadius: 6 }}>{error}</div>}
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 4 }}>
+              <button type="button" onClick={onClose} style={{ height: 34, padding: '0 14px', background: 'var(--ink-3)', border: '1px solid var(--line)', borderRadius: 6, cursor: 'pointer', font: '700 10px/1 var(--font-mono)', color: 'var(--bone)' }}>Cancel</button>
+              <button type="submit" disabled={loading} style={{ height: 34, padding: '0 14px', background: 'var(--gold)', border: 0, borderRadius: 6, cursor: loading ? 'not-allowed' : 'pointer', font: '700 10px/1 var(--font-mono)', color: '#0B0B0F', opacity: loading ? 0.7 : 1 }}>
+                {loading ? 'Saving…' : 'Update'}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function AccountPage() {
+  const { user, getAccessToken, logout } = useAuth();
+  const router = useRouter();
   const [theme, setTheme] = useState('DARK');
   const [unit, setUnit] = useState('TAEL');
   const [notifEmail, setNotifEmail] = useState(true);
   const [notifPush, setNotifPush] = useState(true);
   const [notifDigest, setNotifDigest] = useState(false);
+  const [showChangePw, setShowChangePw] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
+
+  async function handleDeleteAccount() {
+    if (!confirm('Delete your account? This is irreversible and all data will be purged.')) return;
+    if (!getAccessToken()) return;
+    setDeletingAccount(true);
+    try {
+      await apiDeleteAccount(getAccessToken() ?? '');
+      await logout();
+      router.push('/auth/login');
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Delete failed');
+      setDeletingAccount(false);
+    }
+  }
+
+  async function handleSignOut() {
+    await logout();
+    router.push('/auth/login');
+  }
+
+  const initials = user
+    ? (user.displayName ?? user.email)
+        .split(/[\s@]/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((p: string) => p[0].toUpperCase())
+        .join('')
+    : 'GT';
 
   return (
+    <>
+    {showChangePw && <ChangePasswordModal onClose={() => setShowChangePw(false)}/>}
     <div style={{ padding: '24px 28px 40px', display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 20 }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
         {/* Profile card */}
         <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, padding: 28, clipPath: 'polygon(0 0, calc(100% - 22px) 0, 100% 22px, 100% 100%, 0 100%)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-            <div style={{ width: 72, height: 72, borderRadius: 14, background: 'linear-gradient(135deg, #D4AF37, #8E7321)', display: 'flex', alignItems: 'center', justifyContent: 'center', font: '800 26px/1 var(--font-display)', color: '#0B0B0F' }}>GT</div>
+            <div style={{ width: 72, height: 72, borderRadius: 14, background: 'linear-gradient(135deg, #D4AF37, #8E7321)', display: 'flex', alignItems: 'center', justifyContent: 'center', font: '800 26px/1 var(--font-display)', color: '#0B0B0F' }}>{initials}</div>
             <div style={{ flex: 1 }}>
-              <div style={{ font: '700 24px/1.1 var(--font-display)', letterSpacing: '-0.015em', marginBottom: 6 }}>GoldTracker User</div>
-              <div className="mono" style={{ fontSize: 12, color: 'var(--mute)' }}>member since 2024</div>
+              <div style={{ font: '700 24px/1.1 var(--font-display)', letterSpacing: '-0.015em', marginBottom: 6 }}>{user?.displayName ?? user?.email ?? 'GoldTracker User'}</div>
+              <div className="mono" style={{ fontSize: 12, color: 'var(--mute)' }}>{user ? user.role : 'guest'}</div>
             </div>
             <span className="stamp" style={{ fontSize: 10 }}>GOLD MEMBER</span>
           </div>
@@ -82,7 +178,7 @@ export function AccountPage() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
         <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14 }}>
           <div style={{ padding: '16px 22px' }}><h3 style={{ font: '700 16px/1 var(--font-display)', margin: 0 }}>security</h3></div>
-          <Row label="Password" detail="last changed 2026.03.14" right={<button style={{ height: 32, padding: '0 12px', background: 'var(--ink-3)', border: '1px solid var(--line)', borderRadius: 6, cursor: 'pointer', font: '700 11px/1 var(--font-mono)', color: 'var(--bone)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>change</button>}/>
+          <Row label="Password" detail="click to update your password" right={<button onClick={() => setShowChangePw(true)} style={{ height: 32, padding: '0 12px', background: 'var(--ink-3)', border: '1px solid var(--line)', borderRadius: 6, cursor: 'pointer', font: '700 11px/1 var(--font-mono)', color: 'var(--bone)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>change</button>}/>
           <Row label="Two-factor auth" detail="TOTP authenticator" right={<span className="mono" style={{ fontSize: 11, color: 'var(--up)' }}>· enabled</span>}/>
         </div>
 
@@ -94,8 +190,8 @@ export function AccountPage() {
 
         <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, borderColor: 'rgba(229,72,77,0.3)' }}>
           <div style={{ padding: '16px 22px' }}><h3 style={{ font: '700 16px/1 var(--font-display)', margin: 0, color: 'var(--down)' }}>danger zone</h3></div>
-          <Row label="Sign out" detail="end the session" right={<button style={{ height: 32, padding: '0 12px', background: 'var(--ink-3)', border: '1px solid var(--line)', borderRadius: 6, cursor: 'pointer', font: '700 11px/1 var(--font-mono)', color: 'var(--bone)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>sign out</button>}/>
-          <Row label="Delete account" detail="irreversible · all data purged" right={<button style={{ height: 32, padding: '0 12px', background: 'transparent', border: '1px solid rgba(229,72,77,0.4)', borderRadius: 6, cursor: 'pointer', font: '700 11px/1 var(--font-mono)', color: 'var(--down)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>delete</button>}/>
+          <Row label="Sign out" detail="end the session" right={<button onClick={handleSignOut} style={{ height: 32, padding: '0 12px', background: 'var(--ink-3)', border: '1px solid var(--line)', borderRadius: 6, cursor: 'pointer', font: '700 11px/1 var(--font-mono)', color: 'var(--bone)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>sign out</button>}/>
+          <Row label="Delete account" detail="irreversible · all data purged" right={<button onClick={handleDeleteAccount} disabled={deletingAccount} style={{ height: 32, padding: '0 12px', background: 'transparent', border: '1px solid rgba(229,72,77,0.4)', borderRadius: 6, cursor: deletingAccount ? 'not-allowed' : 'pointer', font: '700 11px/1 var(--font-mono)', color: 'var(--down)', letterSpacing: '0.04em', textTransform: 'uppercase', opacity: deletingAccount ? 0.6 : 1 }}>{deletingAccount ? '…' : 'delete'}</button>}/>
         </div>
 
         <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, padding: 22 }}>
@@ -108,5 +204,6 @@ export function AccountPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

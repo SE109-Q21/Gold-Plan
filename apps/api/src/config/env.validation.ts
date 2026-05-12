@@ -14,4 +14,5 @@ export const envValidationSchema = Joi.object({
   OPENAI_API_KEY: Joi.string().optional().allow(''),
   GOLD_API_KEY: Joi.string().default(''),
   EXCHANGE_RATE_API_KEY: Joi.string().default(''),
+  JWT_REFRESH_SECRET: Joi.string().min(32).required(),
 });

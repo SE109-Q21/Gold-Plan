@@ -4,6 +4,9 @@ import { DatabaseModule } from './database/database.module';
 import { CrawlerModule } from './crawler/crawler.module';
 import { PriceModule } from './price/price.module';
 import { InternationalModule } from './international/international.module';
+import { MailModule } from './mail/mail.module';
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
 import { HealthController } from './health/health.controller';
 import { envValidationSchema } from './config/env.validation';
 
@@ -18,6 +21,9 @@ import { envValidationSchema } from './config/env.validation';
     CrawlerModule,
     PriceModule,
     InternationalModule,
+    MailModule,
+    AuthModule,
+    UsersModule,
   ],
   controllers: [HealthController],
 })
