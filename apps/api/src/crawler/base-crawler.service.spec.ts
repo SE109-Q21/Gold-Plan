@@ -1,0 +1,93 @@
+import { BaseCrawlerService, RawPriceData } from './base-crawler.service';
+import { PrismaService } from '../database/prisma.service';
+import { AnomalyDetectorService } from './anomaly-detector.service';
+
+// Define test GoldBrand/GoldType string values directly (avoid importing Prisma at module level)
+const SJC = 'SJC';
+const MIEN_SJC = 'MIEN_SJC';
+
+class TestCrawler extends BaseCrawlerService {
+  readonly brand = SJC as any;
+  fetchPrices = jest.fn<Promise<RawPriceData[]>, []>();
+}
+
+const mockPrisma = {
+  crawlSession: {
+    create: jest.fn(),
+    update: jest.fn(),
+  },
+  priceRecord: {
+    findFirst: jest.fn(),
+    create: jest.fn(),
+  },
+};
+
+describe('BaseCrawlerService', () => {
+  let crawler: TestCrawler;
+  let anomalyDetector: AnomalyDetectorService;
+
+  beforeEach(() => {
+    anomalyDetector = new AnomalyDetectorService();
+    crawler = new TestCrawler(
+      mockPrisma as unknown as PrismaService,
+      anomalyDetector,
+    );
+    jest.clearAllMocks();
+  });
+
+  it('creates a crawl session, persists records, and marks session complete', async () => {
+    const session = { id: 'session-1' };
+    mockPrisma.crawlSession.create.mockResolvedValue(session);
+    mockPrisma.crawlSession.update.mockResolvedValue({});
+    mockPrisma.priceRecord.findFirst.mockResolvedValue(null);
+    mockPrisma.priceRecord.create.mockResolvedValue({});
+
+    crawler.fetchPrices.mockResolvedValue([
+      { goldType: MIEN_SJC as any, buyPrice: 8_500_000n, sellPrice: 8_600_000n },
+    ]);
+
+    await crawler.crawl('source-1');
+
+    expect(mockPrisma.crawlSession.create).toHaveBeenCalledWith({
+      data: { dataSourceId: 'source-1', status: 'running' },
+    });
+    expect(mockPrisma.priceRecord.create).toHaveBeenCalledTimes(1);
+    expect(mockPrisma.crawlSession.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ status: 'completed' }) }),
+    );
+  });
+
+  it('marks session failed when fetchPrices throws', async () => {
+    const session = { id: 'session-2' };
+    mockPrisma.crawlSession.create.mockResolvedValue(session);
+    mockPrisma.crawlSession.update.mockResolvedValue({});
+    crawler.fetchPrices.mockRejectedValue(new Error('network error'));
+
+    await crawler.crawl('source-1');
+
+    expect(mockPrisma.crawlSession.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ status: 'failed' }) }),
+    );
+  });
+
+  it('flags anomalous records but still persists them', async () => {
+    mockPrisma.crawlSession.create.mockResolvedValue({ id: 's3' });
+    mockPrisma.crawlSession.update.mockResolvedValue({});
+    mockPrisma.priceRecord.findFirst.mockResolvedValue({
+      buyPrice: 8_500_000n,
+    });
+    mockPrisma.priceRecord.create.mockResolvedValue({});
+
+    crawler.fetchPrices.mockResolvedValue([
+      { goldType: MIEN_SJC as any, buyPrice: 10_500_000n, sellPrice: 10_600_000n }, // +23%
+    ]);
+
+    await crawler.crawl('source-1');
+
+    expect(mockPrisma.priceRecord.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ isAnomalous: true }),
+      }),
+    );
+  });
+});
