@@ -1,0 +1,371 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum GoldBrand {
+  SJC
+  DOJI
+  PNJ
+  BAO_TIN
+}
+
+enum GoldType {
+  MIEN_SJC
+  NHAN_9999
+  VANG_24K
+  VANG_18K
+}
+
+enum CrawlStatus {
+  pending
+  running
+  completed
+  failed
+}
+
+enum UserStatus {
+  pending
+  active
+  locked
+  deleted
+}
+
+enum UserRole {
+  user
+  admin
+}
+
+enum AlertCondition {
+  lte
+  gte
+}
+
+enum AlertStatus {
+  active
+  triggered
+  inactive
+}
+
+enum ForecastDirection {
+  up
+  down
+  flat
+}
+
+// ─── Crawl Sources & Sessions ────────────────────────────────────────────────
+
+model DataSource {
+  id            String      @id @default(cuid())
+  name          String
+  brand         GoldBrand
+  url           String
+  crawlType     String
+  frequencyMin  Int         @default(5)
+  isActive      Boolean     @default(true)
+  lastCrawledAt DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  crawlSessions CrawlSession[]
+}
+
+model CrawlSession {
+  id           String      @id @default(cuid())
+  dataSourceId String
+  startedAt    DateTime    @default(now())
+  completedAt  DateTime?
+  status       CrawlStatus @default(pending)
+
+  dataSource   DataSource    @relation(fields: [dataSourceId], references: [id])
+  priceRecords PriceRecord[]
+
+  @@index([dataSourceId, startedAt])
+}
+
+// ─── Prices ───────────────────────────────────────────────────────────────────
+
+model PriceRecord {
+  id             String       @id @default(cuid())
+  crawlSessionId String
+  brand          GoldBrand
+  goldType       GoldType
+  buyPrice       BigInt
+  sellPrice      BigInt
+  recordedAt     DateTime     @default(now())
+  isAnomalous    Boolean      @default(false)
+  anomalyReason  String?
+  approvedAt     DateTime?
+  rejectedAt     DateTime?
+
+  crawlSession   CrawlSession @relation(fields: [crawlSessionId], references: [id])
+
+  @@index([brand, goldType, recordedAt])
+  @@index([isAnomalous, approvedAt])
+}
+
+model ExchangeRate {
+  id           String   @id @default(cuid())
+  fromCurrency String
+  toCurrency   String
+  rate         Decimal  @db.Decimal(20, 6)
+  source       String   @default("api")
+  recordedAt   DateTime @default(now())
+
+  @@index([fromCurrency, toCurrency, recordedAt])
+}
+
+// ─── Heat Index (F03) ─────────────────────────────────────────────────────────
+
+model HeatIndexRecord {
+  id                 String   @id @default(cuid())
+  indexValue         Int
+  category           String
+  priceVelocity      Decimal  @db.Decimal(10, 4)
+  spreadSize         BigInt
+  thresholdCrossings Int
+  calculatedAt       DateTime @default(now())
+
+  @@index([calculatedAt])
+}
+
+// ─── Users & Auth (M06) ───────────────────────────────────────────────────────
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  passwordHash String
+  status       UserStatus @default(pending)
+  role         UserRole   @default(user)
+  displayName  String?
+  digestOptIn  Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  deletedAt    DateTime?
+
+  emailVerifications    EmailVerification[]
+  passwordResets        PasswordReset[]
+  loginAttempts         LoginAttempt[]
+  priceAlerts           PriceAlert[]
+  portfolioTransactions PortfolioTransaction[]
+  userPreferences       UserPreference[]
+  behavioralEvents      BehavioralEvent[]
+  viewHistory           ViewHistory[]
+  forecastVotes         ForecastVote[]
+  forecastScores        UserForecastScore[]
+}
+
+model EmailVerification {
+  id        String    @id @default(cuid())
+  userId    String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id])
+}
+
+model PasswordReset {
+  id        String    @id @default(cuid())
+  userId    String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id])
+}
+
+model LoginAttempt {
+  id          String   @id @default(cuid())
+  userId      String?
+  email       String
+  ipAddress   String?
+  success     Boolean
+  attemptedAt DateTime @default(now())
+
+  user        User?    @relation(fields: [userId], references: [id])
+
+  @@index([email, attemptedAt])
+}
+
+// ─── Price Alerts (M07, F05) ──────────────────────────────────────────────────
+
+model PriceAlert {
+  id              String         @id @default(cuid())
+  userId          String
+  brand           GoldBrand
+  goldType        GoldType
+  thresholdPrice  BigInt
+  condition       AlertCondition
+  status          AlertStatus    @default(active)
+  repeatMode      Boolean        @default(false)
+  lastTriggeredAt DateTime?
+  trendN          Int?
+  spreadThreshold BigInt?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  user            User           @relation(fields: [userId], references: [id])
+  triggerHistory  AlertTriggerHistory[]
+
+  @@index([userId, status])
+}
+
+model AlertTriggerHistory {
+  id             String     @id @default(cuid())
+  alertId        String
+  triggeredAt    DateTime   @default(now())
+  priceAtTrigger BigInt
+  emailSentAt    DateTime?
+
+  alert          PriceAlert @relation(fields: [alertId], references: [id])
+}
+
+// ─── Portfolio Tracker (F02) ──────────────────────────────────────────────────
+
+model PortfolioTransaction {
+  id           String    @id @default(cuid())
+  userId       String
+  type         String
+  brand        GoldBrand
+  goldType     GoldType
+  quantity     Decimal   @db.Decimal(10, 4)
+  pricePerTael BigInt
+  transactedAt DateTime
+  note         String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user         User      @relation(fields: [userId], references: [id])
+
+  @@index([userId, transactedAt])
+}
+
+// ─── Morning Digest (F04) ─────────────────────────────────────────────────────
+
+model MorningDigest {
+  id           String   @id @default(cuid())
+  date         String
+  content      String   @db.Text
+  sjcBuyPrice  BigInt
+  sjcSellPrice BigInt
+  xauUsd       Decimal  @db.Decimal(10, 2)
+  changeVsPrev Decimal  @db.Decimal(6, 2)
+  aiGenerated  Boolean  @default(false)
+  generatedAt  DateTime @default(now())
+
+  @@unique([date])
+  @@index([generatedAt])
+}
+
+// ─── Personalisation (F09) ────────────────────────────────────────────────────
+
+model UserPreference {
+  id        String    @id @default(cuid())
+  userId    String
+  brand     GoldBrand
+  goldType  GoldType
+  viewCount Int       @default(0)
+  isPinned  Boolean   @default(false)
+  pinOrder  Int?
+  updatedAt DateTime  @updatedAt
+
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@unique([userId, brand, goldType])
+}
+
+model BehavioralEvent {
+  id         String    @id @default(cuid())
+  userId     String
+  brand      GoldBrand
+  goldType   GoldType
+  eventType  String    @default("view")
+  occurredAt DateTime  @default(now())
+
+  user       User      @relation(fields: [userId], references: [id])
+
+  @@index([userId, occurredAt])
+}
+
+// ─── View History (F10) ───────────────────────────────────────────────────────
+
+model ViewHistory {
+  id       String    @id @default(cuid())
+  userId   String
+  brand    GoldBrand
+  goldType GoldType
+  buyPrice BigInt
+  viewedAt DateTime  @default(now())
+
+  user     User      @relation(fields: [userId], references: [id])
+
+  @@index([userId, viewedAt])
+}
+
+// ─── Community Forecast (F07) ─────────────────────────────────────────────────
+
+model ForecastSession {
+  id            String    @id @default(cuid())
+  date          String
+  opensAt       DateTime
+  closesAt      DateTime
+  sessionClosed Boolean   @default(false)
+  scoredAt      DateTime?
+  createdAt     DateTime  @default(now())
+
+  votes         ForecastVote[]
+
+  @@unique([date])
+}
+
+model ForecastVote {
+  id        String            @id @default(cuid())
+  sessionId String
+  userId    String
+  direction ForecastDirection
+  votedAt   DateTime          @default(now())
+  isCorrect Boolean?
+
+  session   ForecastSession   @relation(fields: [sessionId], references: [id])
+  user      User              @relation(fields: [userId], references: [id])
+
+  @@unique([sessionId, userId])
+}
+
+model UserForecastScore {
+  id           String   @id @default(cuid())
+  userId       String
+  month        String
+  totalPoints  Int      @default(0)
+  correctCount Int      @default(0)
+  streak       Int      @default(0)
+  updatedAt    DateTime @updatedAt
+
+  user         User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, month])
+}
+
+// ─── Admin (M08) ──────────────────────────────────────────────────────────────
+
+model AdminAuditLog {
+  id         String   @id @default(cuid())
+  adminId    String
+  action     String
+  entityType String
+  entityId   String?
+  oldValue   Json?
+  newValue   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([adminId, createdAt])
+}
