@@ -1,0 +1,15 @@
+import * as Joi from 'joi';
+
+export const envValidationSchema = Joi.object({
+  DATABASE_URL: Joi.string().uri().required(),
+  JWT_SECRET: Joi.string().min(32).required(),
+  JWT_EXPIRES_IN: Joi.string().default('24h'),
+  PORT: Joi.number().default(4000),
+  APP_URL: Joi.string().uri().default('http://localhost:3000'),
+  SMTP_HOST: Joi.string().optional(),
+  SMTP_PORT: Joi.number().default(587),
+  SMTP_USER: Joi.string().optional().allow(''),
+  SMTP_PASS: Joi.string().optional().allow(''),
+  SMTP_FROM: Joi.string().email().default('noreply@gpls.vn'),
+  OPENAI_API_KEY: Joi.string().optional().allow(''),
+});
