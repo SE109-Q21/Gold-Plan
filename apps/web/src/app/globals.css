@@ -1,26 +1,42 @@
-@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --ink:        #0B0B0F;
+  --ink-2:      #14141A;
+  --ink-3:      #1E1E26;
+  --ink-4:      #2A2B35;
+  --line:       #2C2D38;
+  --hairline:   #1F2029;
+  --mute:       #6B6C77;
+  --bone:       #C7C8D1;
+  --chalk:      #F5F0E6;
+  --gold:        #D4AF37;
+  --gold-soft:   #E8C76B;
+  --gold-deep:   #8E7321;
+  --gold-glow:   rgba(212, 175, 55, 0.18);
+  --gold-ink:    #0B0B0F;
+  --up:    #58C896;
+  --down:  #E5484D;
+  --live:  #9DCC6E;
+  --font-display: 'Bricolage Grotesque', ui-sans-serif, sans-serif;
+  --font-mono:    'JetBrains Mono', ui-monospace, monospace;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--ink); color: var(--chalk); font-family: var(--font-display); -webkit-font-smoothing: antialiased; }
+.display { font-family: var(--font-display); font-variant-numeric: tabular-nums; letter-spacing: -0.025em; }
+.mono { font-family: var(--font-mono); }
+.tabular { font-variant-numeric: tabular-nums; }
+.stamp { display: inline-flex; align-items: center; gap: 6px; font: 700 10px/1 var(--font-mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--mute); }
+.stamp::before { content: ""; width: 5px; height: 5px; background: var(--gold); border-radius: 50%; }
+.live-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--live); animation: live-pulse 1.8s ease-in-out infinite; }
+@keyframes live-pulse { 0%, 100% { box-shadow: 0 0 0 3px rgba(157,204,110,0.15); } 50% { box-shadow: 0 0 0 6px rgba(157,204,110,0.05); } }
+
+@import "tailwindcss";
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  --color-background: var(--ink);
+  --color-foreground: var(--chalk);
+  --font-sans: var(--font-display);
+  --font-mono: var(--font-mono);
 }

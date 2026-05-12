@@ -1,35 +1,27 @@
-import { PriceTable } from '@/components/PriceTable';
-import { PriceHistoryChart } from '@/components/PriceHistoryChart';
-import { ComparisonTable } from '@/components/ComparisonTable';
-import { InternationalPriceCard } from '@/components/InternationalPriceCard';
+'use client';
 
-export default function HomePage() {
+import { useState } from 'react';
+import { DashboardShell, type Tab } from '@/components/dashboard/DashboardShell';
+import { OverviewPage } from '@/components/dashboard/OverviewPage';
+import { MarketsPage } from '@/components/dashboard/MarketsPage';
+import { AlertsPage } from '@/components/dashboard/AlertsPage';
+import { AccountPage } from '@/components/dashboard/AccountPage';
+import { AddAlertModal } from '@/components/dashboard/AddAlertModal';
+
+export default function Page() {
+  const [tab, setTab] = useState<Tab>('home');
+  const [currency, setCurrency] = useState('USD');
+  const [alertOpen, setAlertOpen] = useState(false);
+
   return (
-    <main className="mx-auto max-w-5xl p-4 md:p-8 space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-yellow-700">GPLS — Giá Vàng Việt Nam</h1>
-        <p className="mt-1 text-sm text-gray-500">Tra cứu giá vàng SJC, DOJI theo thời gian thực</p>
-      </div>
-
-      <section>
-        <h2 className="mb-3 text-lg font-semibold text-gray-700">Giá vàng quốc tế</h2>
-        <InternationalPriceCard />
-      </section>
-
-      <section>
-        <h2 className="mb-3 text-lg font-semibold text-gray-700">Giá vàng trong nước</h2>
-        <PriceTable />
-      </section>
-
-      <section>
-        <h2 className="mb-3 text-lg font-semibold text-gray-700">So sánh thương hiệu</h2>
-        <ComparisonTable />
-      </section>
-
-      <section>
-        <h2 className="mb-3 text-lg font-semibold text-gray-700">Lịch sử giá</h2>
-        <PriceHistoryChart />
-      </section>
-    </main>
+    <>
+      <DashboardShell tab={tab} onTab={setTab} currency={currency} onCurrency={setCurrency}>
+        {tab === 'home'    && <OverviewPage currency={currency} onNavigateAlerts={() => setTab('alerts')}/>}
+        {tab === 'chart'   && <MarketsPage/>}
+        {tab === 'alerts'  && <AlertsPage onOpenAdd={() => setAlertOpen(true)}/>}
+        {tab === 'profile' && <AccountPage/>}
+      </DashboardShell>
+      <AddAlertModal open={alertOpen} onClose={() => setAlertOpen(false)}/>
+    </>
   );
 }
