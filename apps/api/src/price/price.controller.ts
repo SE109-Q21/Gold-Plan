@@ -1,6 +1,6 @@
 import { Controller, Get, Query } from '@nestjs/common';
-import { GoldBrand } from '@prisma/client';
 import { PriceService } from './price.service';
+import { DomesticQueryDto } from './dto/domestic-query.dto';
 import { HistoryQueryDto } from './dto/history-query.dto';
 import { ComparisonQueryDto } from './dto/comparison-query.dto';
 
@@ -9,8 +9,8 @@ export class PriceController {
   constructor(private readonly priceService: PriceService) {}
 
   @Get('domestic')
-  getDomestic(@Query('brand') brand?: GoldBrand) {
-    return this.priceService.getCurrentPrices(brand);
+  getDomestic(@Query() query: DomesticQueryDto) {
+    return this.priceService.getCurrentPrices(query.brand);
   }
 
   @Get('history')

@@ -22,9 +22,26 @@ export abstract class BaseCrawlerService {
 
   abstract fetchPrices(): Promise<RawPriceData[]>;
 
-  async crawl(dataSourceId: string): Promise<void> {
+  async crawl(dataSourceName: string): Promise<void> {
+    // Resolve (or create) the DataSource record to obtain a stable FK id
+    let dataSource = await this.prisma.dataSource.findFirst({
+      where: { name: dataSourceName },
+    });
+
+    if (!dataSource) {
+      dataSource = await this.prisma.dataSource.create({
+        data: {
+          name: dataSourceName,
+          brand: this.brand,
+          url: '',
+          crawlType: 'html',
+          frequencyMin: 5,
+        },
+      });
+    }
+
     const session = await this.prisma.crawlSession.create({
-      data: { dataSourceId, status: 'running' },
+      data: { dataSourceId: dataSource.id, status: 'running' },
     });
 
     try {

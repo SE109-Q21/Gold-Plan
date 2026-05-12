@@ -77,9 +77,10 @@ export class PriceService {
   }
 
   async getComparison(goldType: GoldType) {
+    const since = new Date(Date.now() - 24 * 60 * 60_000);
     // 100 records gives each of the 4 brands 25 slots buffer before any are crowded out
     const records = await this.prisma.priceRecord.findMany({
-      where: { goldType, isAnomalous: false },
+      where: { goldType, isAnomalous: false, recordedAt: { gte: since } },
       orderBy: { recordedAt: 'desc' },
       take: 100,
     });

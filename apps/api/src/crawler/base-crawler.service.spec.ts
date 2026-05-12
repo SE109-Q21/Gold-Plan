@@ -11,7 +11,13 @@ class TestCrawler extends BaseCrawlerService {
   fetchPrices = jest.fn<Promise<RawPriceData[]>, []>();
 }
 
+const MOCK_DATA_SOURCE = { id: 'ds-1', name: 'SJC Official', brand: 'SJC' };
+
 const mockPrisma = {
+  dataSource: {
+    findFirst: jest.fn(),
+    create: jest.fn(),
+  },
   crawlSession: {
     create: jest.fn(),
     update: jest.fn(),
@@ -33,6 +39,8 @@ describe('BaseCrawlerService', () => {
       anomalyDetector,
     );
     jest.clearAllMocks();
+    // Default: dataSource already exists
+    mockPrisma.dataSource.findFirst.mockResolvedValue(MOCK_DATA_SOURCE);
   });
 
   it('creates a crawl session, persists records, and marks session complete', async () => {
@@ -46,10 +54,10 @@ describe('BaseCrawlerService', () => {
       { goldType: MIEN_SJC as any, buyPrice: 8_500_000n, sellPrice: 8_600_000n },
     ]);
 
-    await crawler.crawl('source-1');
+    await crawler.crawl('SJC Official');
 
     expect(mockPrisma.crawlSession.create).toHaveBeenCalledWith({
-      data: { dataSourceId: 'source-1', status: 'running' },
+      data: { dataSourceId: MOCK_DATA_SOURCE.id, status: 'running' },
     });
     expect(mockPrisma.priceRecord.create).toHaveBeenCalledTimes(1);
     expect(mockPrisma.crawlSession.update).toHaveBeenCalledWith(
@@ -63,7 +71,7 @@ describe('BaseCrawlerService', () => {
     mockPrisma.crawlSession.update.mockResolvedValue({});
     crawler.fetchPrices.mockRejectedValue(new Error('network error'));
 
-    await crawler.crawl('source-1');
+    await crawler.crawl('SJC Official');
 
     expect(mockPrisma.crawlSession.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ status: 'failed' }) }),
@@ -82,7 +90,7 @@ describe('BaseCrawlerService', () => {
       { goldType: MIEN_SJC as any, buyPrice: 10_500_000n, sellPrice: 10_600_000n }, // +23%
     ]);
 
-    await crawler.crawl('source-1');
+    await crawler.crawl('SJC Official');
 
     expect(mockPrisma.priceRecord.create).toHaveBeenCalledWith(
       expect.objectContaining({

@@ -12,4 +12,6 @@ export const envValidationSchema = Joi.object({
   SMTP_PASS: Joi.string().optional().allow(''),
   SMTP_FROM: Joi.string().email().default('noreply@gpls.vn'),
   OPENAI_API_KEY: Joi.string().optional().allow(''),
+  GOLD_API_KEY: Joi.string().default(''),
+  EXCHANGE_RATE_API_KEY: Joi.string().default(''),
 });
