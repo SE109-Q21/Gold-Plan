@@ -68,12 +68,13 @@ export interface ExchangeRateDto {
 }
 
 export interface SpreadRankingDto {
-  rank: number;
   brand: GoldBrand;
   goldType: GoldType;
+  buyPrice: number;
+  sellPrice: number;
   spreadVnd: number;
-  spreadPercent: number;
-  crawlSessionId: string;
+  spreadPct: number;
+  isMostEfficient: boolean;
 }
 
 export interface ConverterResultDto {
