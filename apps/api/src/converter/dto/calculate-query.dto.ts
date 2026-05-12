@@ -1,12 +1,14 @@
-import { IsIn, IsNumber, IsString, Min } from 'class-validator';
+import { IsIn, IsNumber, Min } from 'class-validator';
 import { Transform } from 'class-transformer';
+
+const GOLD_TYPES = ['MIEN_SJC', 'NHAN_9999', 'VANG_24K', 'VANG_18K'] as const;
 
 export class CalculateQueryDto {
   @IsIn(['TAEL', 'CHI', 'PHAN', 'TROY_OZ', 'GRAM', 'KILOGRAM'])
   unit: 'TAEL' | 'CHI' | 'PHAN' | 'TROY_OZ' | 'GRAM' | 'KILOGRAM';
 
   @Transform(({ value }) => parseFloat(value))
-  @IsNumber()
+  @IsNumber({ allowInfinity: false, allowNaN: false })
   @Min(0.001)
   qty: number;
 
@@ -16,6 +18,6 @@ export class CalculateQueryDto {
   @IsIn(['SJC', 'DOJI'])
   brand: 'SJC' | 'DOJI';
 
-  @IsString()
-  goldType: string;
+  @IsIn(GOLD_TYPES)
+  goldType: (typeof GOLD_TYPES)[number];
 }
