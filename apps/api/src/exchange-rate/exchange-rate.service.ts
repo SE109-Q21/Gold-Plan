@@ -60,7 +60,7 @@ export class ExchangeRateService {
     } catch (err) {
       if (this.cache) {
         this.logger.warn('Exchange rate fetch failed; serving stale cache');
-        return { ...this.cache.data, source: 'stale' };
+        return { ...this.cache.data, source: 'stale', updatedAt: new Date().toISOString() };
       }
       this.logger.error('Exchange rate fetch failed and no cache available — using fallback defaults');
       return {

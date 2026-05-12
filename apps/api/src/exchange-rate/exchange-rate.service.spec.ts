@@ -46,6 +46,7 @@ describe('ExchangeRateService', () => {
 
       expect(axiosGetSpy).toHaveBeenCalledTimes(1);
       expect(result.usdVnd).toBe(25_480);
+      expect(result.eurVnd).toBe(27908);
       expect(result.source).toBe('live');
       expect(result.updatedAt).toBeTruthy();
     });
