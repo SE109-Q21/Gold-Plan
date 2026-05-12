@@ -1,17 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
+import { ExchangeRateDto } from '@gpls/shared';
 
 const CACHE_TTL_MS = 15 * 60_000; // 15 minutes
 
 const DEFAULT_USD_VND = 25_480;
 const DEFAULT_EUR_VND = 27_900;
-
-export interface ExchangeRateDto {
-  usdVnd: number;
-  eurVnd: number;
-  updatedAt: string; // ISO string
-  source: string;    // 'live' | 'stale' | 'fallback'
-}
 
 interface CacheEntry {
   data: ExchangeRateDto;
@@ -49,7 +43,9 @@ export class ExchangeRateService {
       );
 
       const usdVnd = res.data.rates['VND'] ?? DEFAULT_USD_VND;
-      const eurVnd = Math.round(usdVnd * (res.data.rates['EUR'] ? (1 / res.data.rates['EUR']) : 1.095));
+      const eurVnd = res.data.rates['EUR']
+        ? Math.round(usdVnd / res.data.rates['EUR'])
+        : DEFAULT_EUR_VND;
 
       const dto: ExchangeRateDto = {
         usdVnd,
