@@ -39,3 +39,23 @@ export interface SpreadDto {
   spreadPercent: number;
   crawlSessionId: string;
 }
+
+export interface ChartPointDto {
+  recordedAt: string;
+  buyPrice: number;
+  sellPrice: number;
+}
+
+export interface ComparisonBrandDto {
+  brand: GoldBrand;
+  buyPrice: number;
+  sellPrice: number;
+  isBestBuy: boolean;
+  isBestSell: boolean;
+  crawlSessionId: string;
+}
+
+export interface ComparisonRowDto {
+  goldType: GoldType;
+  brands: ComparisonBrandDto[];
+}
