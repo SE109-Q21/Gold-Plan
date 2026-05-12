@@ -77,11 +77,9 @@ export interface SpreadRankingDto {
 }
 
 export interface ConverterResultDto {
-  inputAmount: number;
-  inputUnit: string;   // 'USD' | 'VND' | 'gram' | 'tael' | 'troy_oz'
-  outputAmount: number;
-  outputUnit: string;
-  exchangeRate: number;
-  goldPriceUsd: number;
-  calculatedAt: string; // ISO string
+  weightInGrams: number;
+  weightInTael: number;
+  valuations: { VND: number; USD: number; EUR: number };
+  priceUsed: number;      // pricePerTaelVnd used
+  priceUpdatedAt: string; // ISO string from when price was fetched
 }

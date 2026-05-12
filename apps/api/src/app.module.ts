@@ -10,6 +10,7 @@ import { UsersModule } from './users/users.module';
 import { HealthController } from './health/health.controller';
 import { envValidationSchema } from './config/env.validation';
 import { ExchangeRateModule } from './exchange-rate/exchange-rate.module';
+import { ConverterModule } from './converter/converter.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { ExchangeRateModule } from './exchange-rate/exchange-rate.module';
     AuthModule,
     UsersModule,
     ExchangeRateModule,
+    ConverterModule,
   ],
   controllers: [HealthController],
 })
