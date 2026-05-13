@@ -85,6 +85,30 @@ export interface ConverterResultDto {
   priceUpdatedAt: string; // ISO string from when price was fetched
 }
 
+// ─── Plan 4: DCA ─────────────────────────────────────────────────────────────
+
+export interface DcaDataPointDto {
+  date: string;
+  price: number;
+  cumulativeGold: number;
+  cumulativeSpent: number;
+  cumulativeValue: number;
+  lumpSumValue: number;
+}
+
+export interface DcaResultDto {
+  averageCostVnd: number;
+  totalGoldTael: number;
+  totalSpentVnd: number;
+  currentValueVnd: number;
+  dcaPnlVnd: number;
+  dcaPnlPct: number;
+  lumpSumCostVnd: number;
+  lumpSumCurrentValueVnd: number;
+  lumpSumPnlPct: number;
+  dataPoints: DcaDataPointDto[];
+}
+
 // ─── Plan 6: Alerts & Admin ──────────────────────────────────────────────────
 
 export interface PriceAlertDto {
