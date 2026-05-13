@@ -191,3 +191,80 @@ export interface AdminUserDto {
   createdAt: string;
   alertCount: number;
 }
+
+// ─── Plan 7: Portfolio ────────────────────────────────────────────────────────
+
+export interface PortfolioTransactionDto {
+  id: string;
+  userId: string;
+  type: 'BUY' | 'SELL';
+  brand: string;
+  goldType: string;
+  quantity: number;
+  pricePerTael: number;
+  transactedAt: string;
+  note: string | null;
+}
+
+export interface PortfolioHoldingDto {
+  brand: string;
+  goldType: string;
+  netQty: number;
+  avgCostPerTael: number;
+  currentBuyPrice: number;
+  currentValueVnd: number;
+  costBasisVnd: number;
+  pnlVnd: number;
+  pnlPct: number;
+}
+
+export interface PortfolioSummaryDto {
+  holdings: PortfolioHoldingDto[];
+  totalValueVnd: number;
+  totalCostVnd: number;
+  totalPnlVnd: number;
+  totalPnlPct: number;
+}
+
+export interface PortfolioChartPointDto {
+  date: string;
+  valueVnd: number;
+}
+
+export interface AllocationBreakdownDto {
+  byBrand: { brand: string; pct: number }[];
+  byGoldType: { goldType: string; pct: number }[];
+}
+
+export interface PaginatedDto<T> {
+  items: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+// ─── Plan 7: Personalisation ──────────────────────────────────────────────────
+
+export interface PersonalisationItemDto {
+  brand: string;
+  goldType: string;
+  viewCount: number;
+  isPinned: boolean;
+  pinOrder: number | null;
+}
+
+// ─── Plan 7: Browsing History ─────────────────────────────────────────────────
+
+export interface BrowsingContextDto {
+  lastViewedAt: string;
+  deltaPct: number | null;
+}
+
+export interface BrowsingHistoryItemDto {
+  id: string;
+  brand: string;
+  goldType: string;
+  buyPrice: number;
+  viewedAt: string;
+}

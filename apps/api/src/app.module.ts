@@ -17,6 +17,8 @@ import { AlertsModule } from './alerts/alerts.module';
 import { HeatIndexModule } from './heat-index/heat-index.module';
 import { DcaModule } from './dca/dca.module';
 import { PortfolioModule } from './portfolio/portfolio.module';
+import { BrowsingHistoryModule } from './browsing-history/browsing-history.module';
+import { PersonalisationModule } from './personalisation/personalisation.module';
 
 @Module({
   imports: [
@@ -40,6 +42,8 @@ import { PortfolioModule } from './portfolio/portfolio.module';
     HeatIndexModule,
     DcaModule,
     PortfolioModule,
+    BrowsingHistoryModule,
+    PersonalisationModule,
   ],
   controllers: [HealthController],
 })
