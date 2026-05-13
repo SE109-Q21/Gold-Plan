@@ -13,6 +13,7 @@ import { ExchangeRateModule } from './exchange-rate/exchange-rate.module';
 import { ConverterModule } from './converter/converter.module';
 import { SpreadModule } from './spread/spread.module';
 import { AdminModule } from './admin/admin.module';
+import { AlertsModule } from './alerts/alerts.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { AdminModule } from './admin/admin.module';
     ConverterModule,
     SpreadModule,
     AdminModule,
+    AlertsModule,
   ],
   controllers: [HealthController],
 })
