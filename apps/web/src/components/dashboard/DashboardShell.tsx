@@ -23,14 +23,27 @@ function IconSearch({ s = 16 }: { s?: number }) {
 function IconPlus({ s = 16 }: { s?: number }) {
   return <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>;
 }
+function IconConvert({ s = 20 }: { s?: number }) {
+  return (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M8 3H5a2 2 0 0 0-2 2v3"/>
+      <path d="M21 8V5a2 2 0 0 0-2-2h-3"/>
+      <path d="M3 16v3a2 2 0 0 0 2 2h3"/>
+      <path d="M16 21h3a2 2 0 0 0 2-2v-3"/>
+      <path d="M9 12h6"/>
+      <path d="M12 9l3 3-3 3"/>
+    </svg>
+  );
+}
 
-export { IconHome, IconChart, IconBell, IconUser, IconSearch, IconPlus };
+export { IconHome, IconChart, IconBell, IconUser, IconSearch, IconPlus, IconConvert };
 
 const NAV_ITEMS = [
-  { id: 'home',    label: 'overview',  Icon: IconHome },
-  { id: 'chart',   label: 'markets',   Icon: IconChart },
-  { id: 'alerts',  label: 'alerts',    Icon: IconBell },
-  { id: 'profile', label: 'account',   Icon: IconUser },
+  { id: 'home',      label: 'overview',   Icon: IconHome,    href: null },
+  { id: 'chart',     label: 'markets',    Icon: IconChart,   href: null },
+  { id: 'alerts',    label: 'alerts',     Icon: IconBell,    href: null },
+  { id: 'profile',   label: 'account',    Icon: IconUser,    href: null },
+  { id: 'converter', label: 'converter',  Icon: IconConvert, href: '/tools/converter' },
 ] as const;
 
 type Tab = 'home' | 'chart' | 'alerts' | 'profile';
@@ -79,10 +92,11 @@ function Sidebar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
       {/* Nav */}
       <nav style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '16px 12px', flex: 1 }}>
         <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.16em', textTransform: 'uppercase', padding: '4px 12px 8px' }}>workspace</div>
-        {NAV_ITEMS.map(it => {
+        {NAV_ITEMS.filter(it => !it.href).map(it => {
           const active = tab === it.id;
+          const handleClick = () => onChange(it.id as Tab);
           return (
-            <button key={it.id} onClick={() => onChange(it.id as Tab)} style={{
+            <button key={it.id} onClick={handleClick} style={{
               display: 'flex', alignItems: 'center', gap: 12,
               padding: '10px 12px', border: 0,
               background: active ? 'var(--ink-3)' : 'transparent',
@@ -94,6 +108,27 @@ function Sidebar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
             }}>
               {active && <span style={{ position: 'absolute', left: -12, top: 8, bottom: 8, width: 3, background: 'var(--gold)', borderRadius: '0 2px 2px 0' }}/>}
               <span style={{ color: active ? 'var(--gold)' : 'var(--mute)' }}>
+                <it.Icon s={16}/>
+              </span>
+              <span>{it.label}</span>
+            </button>
+          );
+        })}
+        <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.16em', textTransform: 'uppercase', padding: '20px 12px 8px' }}>tools</div>
+        {NAV_ITEMS.filter(it => !!it.href).map(it => {
+          const handleClick = () => router.push(it.href as string);
+          return (
+            <button key={it.id} onClick={handleClick} style={{
+              display: 'flex', alignItems: 'center', gap: 12,
+              padding: '10px 12px', border: 0,
+              background: 'transparent',
+              color: 'var(--bone)',
+              borderRadius: 6, cursor: 'pointer',
+              font: '500 13px/1 var(--font-display)',
+              position: 'relative',
+              transition: 'background 140ms var(--ease), color 140ms var(--ease)',
+            }}>
+              <span style={{ color: 'var(--mute)' }}>
                 <it.Icon s={16}/>
               </span>
               <span>{it.label}</span>
