@@ -16,6 +16,7 @@ import { AdminModule } from './admin/admin.module';
 import { AlertsModule } from './alerts/alerts.module';
 import { HeatIndexModule } from './heat-index/heat-index.module';
 import { DcaModule } from './dca/dca.module';
+import { PortfolioModule } from './portfolio/portfolio.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { DcaModule } from './dca/dca.module';
     AlertsModule,
     HeatIndexModule,
     DcaModule,
+    PortfolioModule,
   ],
   controllers: [HealthController],
 })
