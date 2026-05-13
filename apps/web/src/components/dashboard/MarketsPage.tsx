@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { usePriceHistory } from '@/lib/price.api';
+import { useSpreadRanking } from '@/lib/spread.api';
 import { LineChart } from '@/components/ui/ChartPrimitives';
 import type { GoldBrand, GoldType } from '@gpls/shared';
 
@@ -9,12 +10,7 @@ const ASSETS = ['XAU/USD', 'XAU/VND', 'SJC', 'DOJI', 'PNJ'] as const;
 type Range = '1D' | '1W' | '1M';
 const RANGES: Range[] = ['1D', '1W', '1M'];
 
-const BRANDS_MOCK = [
-  { code: 'SJC',  name: 'SJC',           buy: 76420000, sell: 78920000 },
-  { code: 'DOJI', name: 'DOJI',          buy: 76300000, sell: 78700000 },
-  { code: 'PNJ',  name: 'PNJ',           buy: 76250000, sell: 78650000 },
-  { code: 'BTMC', name: 'Bảo Tín',       buy: 76180000, sell: 78510000 },
-];
+const GOLD_TYPES: GoldType[] = ['MIEN_SJC', 'NHAN_9999', 'VANG_24K', 'VANG_18K'];
 
 const TICKS_MOCK = [
   { t: '14:32:08', p: 2345.67, d: '+0.42', down: false },
@@ -24,6 +20,107 @@ const TICKS_MOCK = [
   { t: '14:31:16', p: 2344.94, d: '+0.12', down: false },
   { t: '14:31:03', p: 2344.82, d: '−0.08', down: true  },
 ];
+
+function SpreadRankingSection() {
+  const [goldType, setGoldType] = useState<GoldType>('MIEN_SJC');
+  const [showTip, setShowTip] = useState(false);
+  const { data, isLoading } = useSpreadRanking(goldType);
+
+  const fmtSpread = (n: number) => (n / 1_000_000).toFixed(2) + 'M₫';
+  const maxSpread = data && data.length > 0 ? Math.max(...data.map(d => d.spreadVnd)) : 1;
+
+  const barColor = (index: number, isMostEfficient: boolean): string => {
+    if (isMostEfficient) return 'var(--up)';
+    if (index === 1) return 'var(--gold)';
+    return 'var(--down)';
+  };
+
+  return (
+    <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, padding: 22 }}>
+      {/* Header row */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+        <h3 style={{ font: '700 16px/1 var(--font-display)', margin: 0 }}>spread ranking</h3>
+        <span
+          onMouseEnter={() => setShowTip(true)}
+          onMouseLeave={() => setShowTip(false)}
+          style={{ position: 'relative', cursor: 'help', font: '700 11px/1 var(--font-mono)', color: 'var(--mute)', background: 'var(--ink-3)', border: '1px solid var(--line)', borderRadius: '50%', width: 18, height: 18, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+        >
+          ?
+          {showTip && (
+            <span style={{ position: 'absolute', bottom: 'calc(100% + 6px)', right: 0, width: 220, background: 'var(--ink-4)', border: '1px solid var(--line)', borderRadius: 8, padding: '8px 10px', font: '500 11px/1.5 var(--font-mono)', color: 'var(--chalk)', zIndex: 10, pointerEvents: 'none', whiteSpace: 'normal' }}>
+              Spread is how much you lose if you buy and sell immediately. Smaller spread = less cost.
+            </span>
+          )}
+        </span>
+      </div>
+
+      {/* Gold type selector */}
+      <div style={{ display: 'flex', gap: 4, marginBottom: 18, flexWrap: 'wrap' }}>
+        {GOLD_TYPES.map(gt => (
+          <button
+            key={gt}
+            onClick={() => setGoldType(gt)}
+            style={{ display: 'inline-flex', alignItems: 'center', height: 32, padding: '0 10px', border: `1px solid ${goldType === gt ? 'var(--gold)' : 'var(--line)'}`, borderRadius: 0, background: goldType === gt ? 'var(--gold)' : 'transparent', color: goldType === gt ? '#0B0B0F' : 'var(--bone)', font: '700 11px/1 var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}
+          >
+            {gt}
+          </button>
+        ))}
+      </div>
+
+      {/* Loading state */}
+      {isLoading && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {[0, 1, 2].map(i => (
+            <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                <div style={{ height: 12, width: 48, background: 'var(--ink-3)', borderRadius: 2, opacity: 0.6 }} />
+                <div style={{ height: 12, width: 56, background: 'var(--ink-3)', borderRadius: 2, opacity: 0.6 }} />
+              </div>
+              <div style={{ height: 6, background: 'var(--ink-3)', borderRadius: 2, overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${70 - i * 20}%`, background: 'var(--ink-4)', borderRadius: 2, opacity: 0.5 }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!isLoading && (!data || data.length === 0) && (
+        <div style={{ padding: '24px 0', textAlign: 'center', font: '500 13px/1 var(--font-mono)', color: 'var(--mute)' }}>
+          No data available
+        </div>
+      )}
+
+      {/* Bar chart */}
+      {!isLoading && data && data.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {data.map((item, i) => (
+            <div key={item.brand}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ font: '700 12px/1 var(--font-mono)', color: item.isMostEfficient ? 'var(--up)' : 'var(--chalk)' }}>
+                    {item.brand}
+                  </span>
+                  {item.isMostEfficient && (
+                    <span style={{ font: '700 9px/1 var(--font-mono)', letterSpacing: '0.08em', textTransform: 'uppercase', background: 'rgba(88,200,150,0.15)', color: 'var(--up)', border: '1px solid rgba(88,200,150,0.3)', borderRadius: 4, padding: '2px 6px' }}>
+                      most efficient
+                    </span>
+                  )}
+                </div>
+                <span style={{ font: '700 12px/1 var(--font-mono)', fontVariantNumeric: 'tabular-nums', color: 'var(--chalk)' }}>
+                  {fmtSpread(item.spreadVnd)}
+                </span>
+              </div>
+              <div style={{ height: 6, background: 'var(--ink-3)', borderRadius: 2, overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${(item.spreadVnd / maxSpread) * 100}%`, background: barColor(i, item.isMostEfficient), borderRadius: 2, transition: 'width 0.3s ease' }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function MarketsPage() {
   const [range, setRange] = useState<Range>('1M');
@@ -98,24 +195,7 @@ export function MarketsPage() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-        <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, padding: 22 }}>
-          <h3 style={{ font: '700 16px/1 var(--font-display)', margin: '0 0 14px' }}>spread ranking</h3>
-          {BRANDS_MOCK.slice().sort((a, b) => (a.sell - a.buy) - (b.sell - b.buy)).map((b, i) => {
-            const spread = b.sell - b.buy;
-            const pct = (spread / 3000000) * 100;
-            return (
-              <div key={b.code} style={{ marginBottom: 12 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span className="mono" style={{ fontSize: 12, fontWeight: 700, color: i === 0 ? 'var(--gold)' : 'var(--chalk)' }}>{i + 1}. {b.name}</span>
-                  <span style={{ font: '700 13px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>{(spread / 1_000_000).toFixed(2)}M₫</span>
-                </div>
-                <div style={{ height: 6, background: 'var(--ink-3)', borderRadius: 2, overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${pct}%`, background: i === 0 ? 'var(--gold)' : 'var(--ink-4)' }}/>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <SpreadRankingSection />
 
         <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, padding: 22 }}>
           <h3 style={{ font: '700 16px/1 var(--font-display)', margin: '0 0 14px' }}>recent ticks</h3>
