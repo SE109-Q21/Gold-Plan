@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useInternationalPrice, useDomesticPrices, usePriceHistory, useComparison } from '@/lib/price.api';
 import { useExchangeRates } from '@/lib/exchange-rate.api';
+import { useHeatIndex } from '@/lib/heat-index.api';
 import { LineChart, Sparkline } from '@/components/ui/ChartPrimitives';
 import { IconPlus } from '@/components/dashboard/DashboardShell';
 import type { GoldType } from '@gpls/shared';
@@ -29,6 +30,88 @@ function minsAgo(iso: string): string {
   const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 60_000);
   if (diff < 1) return 'just now';
   return `${diff}m ago`;
+}
+
+function HeatIndexGauge() {
+  const { data, isLoading } = useHeatIndex();
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  const score = data?.value ?? 0;
+  const label = data?.category ?? '—';
+  const zoneColor = score <= 33 ? '#60A5FA' : score <= 66 ? '#FBBF24' : '#EF4444';
+  const arcLen = Math.PI * 50; // ≈ 157
+  const visibleArc = (score / 100) * arcLen;
+
+  const needleAngle = (score / 100) * Math.PI;
+  const needleX = 60 - Math.cos(needleAngle) * 50;
+  const needleY = 66 - Math.sin(needleAngle) * 50;
+
+  const tooltipContent = data
+    ? `Velocity: ${data.priceVelocity.toFixed(1)}% · Spread: ${(data.spreadSize / 1_000_000).toFixed(2)}M₫ · Crossings: ${data.thresholdCrossings}`
+    : '';
+
+  if (isLoading) return (
+    <div style={{ height: 76, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--mute)', font: '500 12px/1 var(--font-mono)' }}>
+      loading…
+    </div>
+  );
+
+  return (
+    <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 22 }}>
+      <svg width="120" height="76" viewBox="0 0 120 76">
+        {/* Background arc */}
+        <path d="M10 66 A50 50 0 0 1 110 66" stroke="#22232B" strokeWidth="8" fill="none" strokeLinecap="round"/>
+        {/* Colored arc up to score */}
+        <path d="M10 66 A50 50 0 0 1 110 66"
+          stroke={zoneColor} strokeWidth="8" fill="none" strokeLinecap="round"
+          strokeDasharray={`${visibleArc} ${arcLen}`}
+          strokeDashoffset="0"
+        />
+        {/* Needle dot */}
+        <circle cx={needleX} cy={needleY} r="7" fill={zoneColor} stroke="#0B0B0F" strokeWidth="2"/>
+      </svg>
+      <div>
+        <div style={{ font: '800 44px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>
+          {score}
+        </div>
+        <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '0.12em', textTransform: 'uppercase', marginTop: 4 }}>
+          / 100 · {label.toLowerCase()}
+        </div>
+      </div>
+      {/* "?" info icon with tooltip */}
+      <span
+        onMouseEnter={() => setShowTooltip(true)}
+        onMouseLeave={() => setShowTooltip(false)}
+        style={{ position: 'absolute', top: 0, right: 0, cursor: 'help', font: '700 11px/1 var(--font-mono)', color: 'var(--mute)', padding: '2px 6px', border: '1px solid var(--line)', borderRadius: 4 }}
+      >
+        ?
+        {showTooltip && tooltipContent && (
+          <span style={{ position: 'absolute', bottom: '120%', right: 0, background: 'var(--ink-3)', border: '1px solid var(--line)', borderRadius: 8, padding: '8px 12px', font: '500 11px/1.5 var(--font-mono)', color: 'var(--chalk)', whiteSpace: 'nowrap', zIndex: 100 }}>
+            {tooltipContent}
+          </span>
+        )}
+      </span>
+    </div>
+  );
+}
+
+function HeatIndexStats() {
+  const { data } = useHeatIndex();
+  const stats = [
+    { l: 'velocity', v: data ? `${data.priceVelocity.toFixed(1)}%` : '—' },
+    { l: 'spread', v: data ? `${(data.spreadSize / 1_000_000).toFixed(2)}M` : '—' },
+    { l: 'crossings', v: data ? `${data.thresholdCrossings}` : '—' },
+  ];
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginTop: 18, paddingTop: 14, borderTop: '1px solid var(--hairline)' }}>
+      {stats.map(s => (
+        <div key={s.l}>
+          <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 4 }}>{s.l}</div>
+          <div style={{ font: '700 16px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>{s.v}</div>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function ExchangeRateCard() {
@@ -283,27 +366,9 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
         <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, padding: 20 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
             <h3 style={{ font: '700 16px/1 var(--font-display)', margin: 0 }}>market heat</h3>
-            <span className="mono" style={{ fontSize: 10, color: 'var(--gold)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>hot</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
-            <svg width="120" height="76" viewBox="0 0 120 76">
-              <path d="M10 66 A50 50 0 0 1 110 66" stroke="#22232B" strokeWidth="8" fill="none" strokeLinecap="round"/>
-              <path d="M10 66 A50 50 0 0 1 102 32" stroke="#D4AF37" strokeWidth="8" fill="none" strokeLinecap="round"/>
-              <circle cx="102" cy="32" r="7" fill="#D4AF37" stroke="#0B0B0F" strokeWidth="2"/>
-            </svg>
-            <div>
-              <div style={{ font: '800 44px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>72</div>
-              <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '0.12em', textTransform: 'uppercase', marginTop: 4 }}>/ 100 · accumulating</div>
-            </div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginTop: 18, paddingTop: 14, borderTop: '1px solid var(--hairline)' }}>
-            {[{ l: 'volume', v: '+18%' }, { l: 'spread', v: '2.4M' }, { l: 'sentiment', v: '64↑' }].map(s => (
-              <div key={s.l}>
-                <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 4 }}>{s.l}</div>
-                <div style={{ font: '700 16px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>{s.v}</div>
-              </div>
-            ))}
-          </div>
+          <HeatIndexGauge />
+          <HeatIndexStats />
         </div>
 
         {/* Alerts widget */}
