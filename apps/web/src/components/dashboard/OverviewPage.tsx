@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useInternationalPrice, useDomesticPrices, usePriceHistory, useComparison } from '@/lib/price.api';
+import { useExchangeRates } from '@/lib/exchange-rate.api';
 import { LineChart, Sparkline } from '@/components/ui/ChartPrimitives';
 import { IconPlus } from '@/components/dashboard/DashboardShell';
 import type { GoldType } from '@gpls/shared';
@@ -23,6 +24,72 @@ const ALERT_MOCK = [
 
 function fmtVnd(n: number) { return (n / 1_000_000).toFixed(2) + 'M₫'; }
 function fmtUsd(n: number) { return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+
+function minsAgo(iso: string): string {
+  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 60_000);
+  if (diff < 1) return 'just now';
+  return `${diff}m ago`;
+}
+
+function ExchangeRateCard() {
+  const { data: fx } = useExchangeRates();
+
+  const sourceBadgeColor =
+    fx?.source === 'live' ? 'var(--live)' :
+    fx?.source === 'stale' ? 'var(--gold)' :
+    'var(--mute)';
+
+  return (
+    <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, padding: '18px 24px' }}>
+      {/* Card header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <span style={{ font: '700 9px/1 var(--font-mono)', color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase' }}>
+          exchange rates
+        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {fx && (
+            <>
+              <span style={{ font: '700 9px/1 var(--font-mono)', color: sourceBadgeColor, letterSpacing: '0.14em', textTransform: 'uppercase' }}>
+                {fx.source}
+              </span>
+              <span style={{ font: '700 9px/1 var(--font-mono)', color: 'var(--mute)', letterSpacing: '0.08em' }}>
+                {minsAgo(fx.updatedAt)}
+              </span>
+            </>
+          )}
+          {!fx && (
+            <span style={{ font: '700 9px/1 var(--font-mono)', color: 'var(--mute)', letterSpacing: '0.08em' }}>loading…</span>
+          )}
+        </div>
+      </div>
+
+      {/* Two-column rate display */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        {/* USD/VND */}
+        <div style={{ padding: 14, background: 'var(--ink-3)', border: '1px solid var(--line)', borderRadius: 10 }}>
+          <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 6 }}>
+            usd / vnd
+          </div>
+          <div style={{ font: '700 22px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>
+            {fx ? fx.usdVnd.toLocaleString('en-US', { maximumFractionDigits: 0 }) : '—'}
+          </div>
+          <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', marginTop: 6 }}>per 1 usd</div>
+        </div>
+
+        {/* EUR/VND */}
+        <div style={{ padding: 14, background: 'var(--ink-3)', border: '1px solid var(--line)', borderRadius: 10 }}>
+          <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 6 }}>
+            eur / vnd
+          </div>
+          <div style={{ font: '700 22px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>
+            {fx ? fx.eurVnd.toLocaleString('en-US', { maximumFractionDigits: 0 }) : '—'}
+          </div>
+          <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', marginTop: 6 }}>per 1 eur</div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function OverviewPage({ currency, onNavigateAlerts }: { currency: string; onNavigateAlerts: () => void }) {
   const [range, setRange] = useState<Range>('1M');
@@ -106,6 +173,9 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
             </div>
           </div>
         </div>
+
+        {/* Exchange Rate card */}
+        <ExchangeRateCard />
 
         {/* Chart card */}
         <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, padding: 24 }}>
