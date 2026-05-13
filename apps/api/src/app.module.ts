@@ -12,6 +12,7 @@ import { envValidationSchema } from './config/env.validation';
 import { ExchangeRateModule } from './exchange-rate/exchange-rate.module';
 import { ConverterModule } from './converter/converter.module';
 import { SpreadModule } from './spread/spread.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { SpreadModule } from './spread/spread.module';
     ExchangeRateModule,
     ConverterModule,
     SpreadModule,
+    AdminModule,
   ],
   controllers: [HealthController],
 })
