@@ -84,3 +84,86 @@ export interface ConverterResultDto {
   priceUsed: number;      // pricePerTaelVnd used
   priceUpdatedAt: string; // ISO string from when price was fetched
 }
+
+// ─── Plan 6: Alerts & Admin ──────────────────────────────────────────────────
+
+export interface PriceAlertDto {
+  id: string;
+  userId: string;
+  brand: GoldBrand;
+  goldType: GoldType;
+  thresholdPrice: string;  // BigInt serialized as string for JSON
+  condition: 'lte' | 'gte';
+  status: 'active' | 'triggered' | 'inactive';
+  repeatMode: boolean;
+  lastTriggeredAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  history?: AlertTriggerHistoryDto[];
+}
+
+export interface AlertTriggerHistoryDto {
+  id: string;
+  alertId: string;
+  triggeredAt: string;
+  priceAtTrigger: string;  // BigInt as string
+  emailSentAt: string | null;
+}
+
+export interface CreateAlertDto {
+  brand: GoldBrand;
+  goldType: GoldType;
+  condition: 'lte' | 'gte';
+  thresholdPrice: number;  // number on frontend, converted to BigInt on backend
+  repeatMode?: boolean;
+}
+
+export interface AdminStatsDto {
+  totalUsers: number;
+  activeUsers: number;
+  alertsSentToday: number;
+  crawlSuccessRate: number;
+  dataSources: DataSourceStatusDto[];
+}
+
+export interface DataSourceStatusDto {
+  id: string;
+  name: string;
+  brand: GoldBrand;
+  url: string;
+  isActive: boolean;
+  lastCrawledAt: string | null;
+  lastStatus: string | null;
+}
+
+export interface DataSourceAdminDto extends DataSourceStatusDto {
+  crawlType: string;
+  frequencyMin: number;
+  createdAt: string;
+}
+
+export interface AnomalyRecordDto {
+  id: string;
+  brand: GoldBrand;
+  goldType: GoldType;
+  buyPrice: string;
+  sellPrice: string;
+  recordedAt: string;
+  isAnomalous: boolean;
+  anomalyReason: string | null;
+  anomalyReview: {
+    action: string;
+    reviewedAt: string;
+    reviewedBy: string;
+  } | null;
+}
+
+export interface AdminUserDto {
+  id: string;
+  email: string;
+  displayName: string | null;
+  status: string;
+  role: string;
+  createdAt: string;
+  alertCount: number;
+}
