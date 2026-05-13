@@ -15,6 +15,7 @@ import { SpreadModule } from './spread/spread.module';
 import { AdminModule } from './admin/admin.module';
 import { AlertsModule } from './alerts/alerts.module';
 import { HeatIndexModule } from './heat-index/heat-index.module';
+import { DcaModule } from './dca/dca.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { HeatIndexModule } from './heat-index/heat-index.module';
     AdminModule,
     AlertsModule,
     HeatIndexModule,
+    DcaModule,
   ],
   controllers: [HealthController],
 })
