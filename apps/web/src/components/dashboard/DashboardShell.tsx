@@ -35,8 +35,15 @@ function IconConvert({ s = 20 }: { s?: number }) {
     </svg>
   );
 }
+function IconDca({ s = 20 }: { s?: number }) {
+  return (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+    </svg>
+  );
+}
 
-export { IconHome, IconChart, IconBell, IconUser, IconSearch, IconPlus, IconConvert };
+export { IconHome, IconChart, IconBell, IconUser, IconSearch, IconPlus, IconConvert, IconDca };
 
 const NAV_ITEMS = [
   { id: 'home',      label: 'overview',   Icon: IconHome,    href: null },
@@ -44,6 +51,7 @@ const NAV_ITEMS = [
   { id: 'alerts',    label: 'alerts',     Icon: IconBell,    href: null },
   { id: 'profile',   label: 'account',    Icon: IconUser,    href: null },
   { id: 'converter', label: 'converter',  Icon: IconConvert, href: '/tools/converter' },
+  { id: 'dca-sim',   label: 'dca sim',    Icon: IconDca,     href: '/tools/dca-simulator' },
 ] as const;
 
 type Tab = 'home' | 'chart' | 'alerts' | 'profile';
