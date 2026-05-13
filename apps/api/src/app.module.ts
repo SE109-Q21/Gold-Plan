@@ -14,6 +14,7 @@ import { ConverterModule } from './converter/converter.module';
 import { SpreadModule } from './spread/spread.module';
 import { AdminModule } from './admin/admin.module';
 import { AlertsModule } from './alerts/alerts.module';
+import { HeatIndexModule } from './heat-index/heat-index.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { AlertsModule } from './alerts/alerts.module';
     SpreadModule,
     AdminModule,
     AlertsModule,
+    HeatIndexModule,
   ],
   controllers: [HealthController],
 })
