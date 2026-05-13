@@ -6,7 +6,10 @@ import { useExchangeRates } from '@/lib/exchange-rate.api';
 import { useHeatIndex } from '@/lib/heat-index.api';
 import { LineChart, Sparkline } from '@/components/ui/ChartPrimitives';
 import { IconPlus } from '@/components/dashboard/DashboardShell';
-import type { GoldType } from '@gpls/shared';
+import type { GoldType, ComparisonBrandDto } from '@gpls/shared';
+import { useAuth } from '@/contexts/auth-context';
+import { usePersonalisationOrder, useRecordView, useAddPin, useRemovePin } from '@/lib/personalisation.api';
+import { useBrowsingContext, useRecordBrowse } from '@/lib/browsing-history.api';
 
 const RANGE_LABELS = ['1D', '1W', '1M'] as const;
 type Range = '1D' | '1W' | '1M';
@@ -174,14 +177,168 @@ function ExchangeRateCard() {
   );
 }
 
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+function daysAgo(iso: string): string {
+  const d = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
+  if (d === 0) return 'today';
+  if (d === 1) return '1d ago';
+  return `${d}d ago`;
+}
+
+function PinIcon({ pinned, onClick }: { pinned: boolean; onClick: (e: React.MouseEvent) => void }) {
+  return (
+    <button
+      onClick={onClick}
+      title={pinned ? 'Unpin' : 'Pin'}
+      style={{
+        background: 'transparent',
+        border: 'none',
+        cursor: 'pointer',
+        padding: '2px 4px',
+        display: 'flex',
+        alignItems: 'center',
+        color: pinned ? 'var(--gold)' : 'var(--mute)',
+        fontSize: 14,
+        lineHeight: 1,
+        flexShrink: 0,
+      }}
+    >
+      📌
+    </button>
+  );
+}
+
+interface PriceRowProps {
+  brand: string;
+  goldType: string;
+  buyPrice: number;
+  sellPrice: number;
+  isBestBuy: boolean;
+  isBestSell: boolean;
+  isLoggedIn: boolean;
+  isPinned: boolean;
+  onPin: () => void;
+  onUnpin: () => void;
+  onClick: () => void;
+  rowIndex: number;
+}
+
+function BrowsingBadge({ brand, goldType }: { brand: string; goldType: string }) {
+  const { data: ctx } = useBrowsingContext(brand, goldType, true);
+  if (!ctx) return null;
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginLeft: 6 }}>
+      <span className="mono" style={{ fontSize: 9, color: 'var(--mute)' }}>
+        last seen {daysAgo(ctx.lastViewedAt)}
+      </span>
+      {ctx.deltaPct !== null && (
+        <span
+          className="mono"
+          style={{
+            fontSize: 9,
+            color: ctx.deltaPct >= 0 ? 'var(--up)' : 'var(--down)',
+            fontWeight: 700,
+          }}
+        >
+          Δ {ctx.deltaPct >= 0 ? '+' : ''}{ctx.deltaPct.toFixed(2)}%
+        </span>
+      )}
+    </span>
+  );
+}
+
+function PriceRow({
+  brand, goldType, buyPrice, sellPrice, isBestBuy, isBestSell,
+  isLoggedIn, isPinned, onPin, onUnpin, onClick, rowIndex,
+}: PriceRowProps) {
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        display: 'grid',
+        gridTemplateColumns: '2fr 1fr 1fr 1fr' + (isLoggedIn ? ' 32px' : ''),
+        padding: '16px 24px',
+        alignItems: 'center',
+        borderTop: rowIndex === 0 ? 'none' : '1px solid var(--hairline)',
+        background: isBestBuy ? 'rgba(212,175,55,0.04)' : 'transparent',
+        cursor: isLoggedIn ? 'pointer' : 'default',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{
+          width: 36, height: 36, borderRadius: 6,
+          background: 'var(--ink-3)', border: '1px solid var(--line)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          font: '800 11px/1 var(--font-mono)', color: 'var(--gold)', letterSpacing: '0.06em',
+        }}>
+          {brand.slice(0, 2)}
+        </div>
+        <div style={{ font: '700 14px/1.1 var(--font-display)' }}>{brand}</div>
+      </div>
+      <div style={{ textAlign: 'right' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <div style={{ font: '700 15px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>
+            {fmtVnd(buyPrice)}
+          </div>
+          {isLoggedIn && <BrowsingBadge brand={brand} goldType={goldType} />}
+        </div>
+        {isBestBuy && (
+          <div className="mono" style={{ fontSize: 9, color: 'var(--up)', letterSpacing: '0.14em', textTransform: 'uppercase', marginTop: 4 }}>
+            ▲ best
+          </div>
+        )}
+      </div>
+      <div style={{ textAlign: 'right' }}>
+        <div style={{
+          font: '700 15px/1 var(--font-display)',
+          fontVariantNumeric: 'tabular-nums',
+          color: isBestSell ? 'var(--gold)' : 'var(--chalk)',
+        }}>
+          {fmtVnd(sellPrice)}
+        </div>
+        {isBestSell && (
+          <div className="mono" style={{ fontSize: 9, color: 'var(--gold)', letterSpacing: '0.14em', textTransform: 'uppercase', marginTop: 4 }}>
+            ▼ lowest
+          </div>
+        )}
+      </div>
+      <div style={{ textAlign: 'right' }}>
+        <div className="mono" style={{ fontSize: 13, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+          {((sellPrice - buyPrice) / 1_000_000).toFixed(2)}M
+        </div>
+      </div>
+      {isLoggedIn && (
+        <PinIcon
+          pinned={isPinned}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (isPinned) onUnpin();
+            else onPin();
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
 export function OverviewPage({ currency, onNavigateAlerts }: { currency: string; onNavigateAlerts: () => void }) {
   const [range, setRange] = useState<Range>('1M');
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+
+  const { user } = useAuth();
+  const isLoggedIn = user !== null;
 
   const { data: intl } = useInternationalPrice();
   const { data: domestic } = useDomesticPrices();
   const { data: history } = usePriceHistory('SJC', 'MIEN_SJC', range);
   const { data: comparison } = useComparison('MIEN_SJC' as GoldType);
+
+  const { data: personalisationOrder } = usePersonalisationOrder();
+  const recordView = useRecordView();
+  const recordBrowse = useRecordBrowse();
+  const addPin = useAddPin();
+  const removePin = useRemovePin();
 
   const chartData = (history ?? []).map(p => p.buyPrice);
   const displayData = chartData.length > 1 ? chartData : [2280, 2295, 2310, 2325, 2345];
@@ -198,9 +355,29 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
   const priceLow = Math.min(...displayData);
 
   // Comparison brands
-  const compBrands = comparison?.[0]?.brands ?? [];
+  const compRow = comparison?.[0];
+  const compBrands = compRow?.brands ?? [];
+  const compGoldType = compRow?.goldType ?? 'MIEN_SJC';
   // Fall back to domestic prices for brand spreads (unused but kept for future)
   void domestic;
+
+  const FALLBACK_BRANDS: ComparisonBrandDto[] = [
+    { brand: 'SJC', buyPrice: 76420000, sellPrice: 78920000, isBestBuy: false, isBestSell: false, crawlSessionId: '' },
+    { brand: 'DOJI', buyPrice: 76300000, sellPrice: 78700000, isBestBuy: true, isBestSell: true, crawlSessionId: '' },
+  ];
+  const displayBrands = compBrands.length > 0 ? compBrands : FALLBACK_BRANDS;
+
+  function handleRowClick(brand: string, goldType: string, buyPrice: number) {
+    if (!isLoggedIn) return;
+    recordView.mutate({ brand, goldType });
+    recordBrowse.mutate({ brand, goldType, buyPrice });
+  }
+
+  function isPinnedRow(brand: string, goldType: string): boolean {
+    return (personalisationOrder ?? []).some(
+      p => p.brand === brand && p.goldType === goldType && p.isPinned,
+    );
+  }
 
   return (
     <div style={{ padding: '24px 28px 40px', display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 20 }}>
@@ -306,32 +483,26 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
             <h3 style={{ font: '700 18px/1 var(--font-display)', margin: 0, letterSpacing: '-0.01em' }}>domestic brand spreads</h3>
             <span className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>vnd per tael · best highlighted</span>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', padding: '12px 24px', font: '700 10px/1 var(--font-mono)', color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase', background: 'var(--ink-3)', borderBottom: '1px solid var(--hairline)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr' + (isLoggedIn ? ' 32px' : ''), padding: '12px 24px', font: '700 10px/1 var(--font-mono)', color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase', background: 'var(--ink-3)', borderBottom: '1px solid var(--hairline)' }}>
             <span>brand</span><span style={{ textAlign: 'right' }}>buy</span><span style={{ textAlign: 'right' }}>sell</span><span style={{ textAlign: 'right' }}>spread</span>
+            {isLoggedIn && <span/>}
           </div>
-          {(compBrands.length > 0 ? compBrands : [
-            { brand: 'SJC', buyPrice: 76420000, sellPrice: 78920000, isBestBuy: false, isBestSell: false },
-            { brand: 'DOJI', buyPrice: 76300000, sellPrice: 78700000, isBestBuy: true, isBestSell: true },
-          ]).map((b, i) => (
-            <div key={b.brand} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', padding: '16px 24px', alignItems: 'center', borderTop: i === 0 ? 'none' : '1px solid var(--hairline)', background: b.isBestBuy ? 'rgba(212,175,55,0.04)' : 'transparent' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 6, background: 'var(--ink-3)', border: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'center', font: '800 11px/1 var(--font-mono)', color: 'var(--gold)', letterSpacing: '0.06em' }}>{b.brand.slice(0, 2)}</div>
-                <div style={{ font: '700 14px/1.1 var(--font-display)' }}>{b.brand}</div>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ font: '700 15px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>{fmtVnd(b.buyPrice)}</div>
-                {b.isBestBuy && <div className="mono" style={{ fontSize: 9, color: 'var(--up)', letterSpacing: '0.14em', textTransform: 'uppercase', marginTop: 4 }}>▲ best</div>}
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ font: '700 15px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums', color: b.isBestSell ? 'var(--gold)' : 'var(--chalk)' }}>{fmtVnd(b.sellPrice)}</div>
-                {b.isBestSell && <div className="mono" style={{ fontSize: 9, color: 'var(--gold)', letterSpacing: '0.14em', textTransform: 'uppercase', marginTop: 4 }}>▼ lowest</div>}
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <div className="mono" style={{ fontSize: 13, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
-                  {((b.sellPrice - b.buyPrice) / 1_000_000).toFixed(2)}M
-                </div>
-              </div>
-            </div>
+          {displayBrands.map((b, i) => (
+            <PriceRow
+              key={b.brand}
+              brand={b.brand}
+              goldType={compGoldType}
+              buyPrice={b.buyPrice}
+              sellPrice={b.sellPrice}
+              isBestBuy={b.isBestBuy}
+              isBestSell={b.isBestSell}
+              isLoggedIn={isLoggedIn}
+              isPinned={isPinnedRow(b.brand, compGoldType)}
+              onPin={() => addPin.mutate({ brand: b.brand, goldType: compGoldType })}
+              onUnpin={() => removePin.mutate({ brand: b.brand, goldType: compGoldType })}
+              onClick={() => handleRowClick(b.brand, compGoldType, b.buyPrice)}
+              rowIndex={i}
+            />
           ))}
         </div>
       </div>

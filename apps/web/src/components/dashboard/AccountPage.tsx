@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 import { apiChangePassword, apiDeleteAccount } from '@/lib/auth.api';
+import { useClearHistory } from '@/lib/browsing-history.api';
 
 function Toggle({ on, onChange }: { on: boolean; onChange: () => void }) {
   return (
@@ -97,6 +98,7 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
 export function AccountPage() {
   const { user, getAccessToken, logout } = useAuth();
   const router = useRouter();
+  const clearHistory = useClearHistory();
   const [theme, setTheme] = useState('DARK');
   const [unit, setUnit] = useState('TAEL');
   const [notifEmail, setNotifEmail] = useState(true);
@@ -122,6 +124,11 @@ export function AccountPage() {
   async function handleSignOut() {
     await logout();
     router.push('/auth/login');
+  }
+
+  async function handleClearHistory() {
+    if (!window.confirm('Clear all browsing history? This cannot be undone.')) return;
+    await clearHistory.mutateAsync();
   }
 
   const initials = user
@@ -186,6 +193,38 @@ export function AccountPage() {
           <div style={{ padding: '16px 22px' }}><h3 style={{ font: '700 16px/1 var(--font-display)', margin: 0 }}>data & api</h3></div>
           <Row label="Export history" detail="CSV · last 12 months" right={<button style={{ height: 32, padding: '0 12px', background: 'var(--ink-3)', border: '1px solid var(--line)', borderRadius: 6, cursor: 'pointer', font: '700 11px/1 var(--font-mono)', color: 'var(--bone)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>export</button>}/>
           <Row label="API key" detail="read-only · 1 active" right={<span className="mono" style={{ fontSize: 11, color: 'var(--mute)' }}>gt_live_••••a31f</span>}/>
+          <Row
+            label="Browsing History"
+            detail="View and clear your price viewing history"
+            right={
+              <button
+                onClick={() => router.push('/profile/history')}
+                style={{ height: 32, padding: '0 12px', background: 'var(--ink-3)', border: '1px solid var(--line)', borderRadius: 6, cursor: 'pointer', font: '700 11px/1 var(--font-mono)', color: 'var(--bone)', letterSpacing: '0.04em', textTransform: 'uppercase' }}
+              >
+                view →
+              </button>
+            }
+          />
+          <Row
+            label="Clear Browsing History"
+            detail="Remove all price viewing history"
+            right={
+              <button
+                onClick={handleClearHistory}
+                disabled={clearHistory.isPending}
+                style={{
+                  height: 32, padding: '0 12px',
+                  background: 'transparent', border: '1px solid rgba(229,72,77,0.4)',
+                  borderRadius: 6, cursor: clearHistory.isPending ? 'not-allowed' : 'pointer',
+                  font: '700 11px/1 var(--font-mono)', color: 'var(--down)',
+                  letterSpacing: '0.04em', textTransform: 'uppercase',
+                  opacity: clearHistory.isPending ? 0.6 : 1,
+                }}
+              >
+                {clearHistory.isPending ? '…' : 'clear'}
+              </button>
+            }
+          />
         </div>
 
         <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, borderColor: 'rgba(229,72,77,0.3)' }}>

@@ -35,23 +35,26 @@ function IconConvert({ s = 20 }: { s?: number }) {
     </svg>
   );
 }
-function IconDca({ s = 20 }: { s?: number }) {
+function IconPortfolio({ s = 20 }: { s?: number }) {
   return (
     <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      <rect x="2" y="7" width="20" height="14" rx="2"/>
+      <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+      <line x1="12" y1="12" x2="12" y2="16"/>
+      <line x1="10" y1="14" x2="14" y2="14"/>
     </svg>
   );
 }
 
-export { IconHome, IconChart, IconBell, IconUser, IconSearch, IconPlus, IconConvert, IconDca };
+export { IconHome, IconChart, IconBell, IconUser, IconSearch, IconPlus, IconConvert, IconPortfolio };
 
 const NAV_ITEMS = [
-  { id: 'home',      label: 'overview',   Icon: IconHome,    href: null },
-  { id: 'chart',     label: 'markets',    Icon: IconChart,   href: null },
-  { id: 'alerts',    label: 'alerts',     Icon: IconBell,    href: null },
-  { id: 'profile',   label: 'account',    Icon: IconUser,    href: null },
-  { id: 'converter', label: 'converter',  Icon: IconConvert, href: '/tools/converter' },
-  { id: 'dca-sim',   label: 'dca sim',    Icon: IconDca,     href: '/tools/dca-simulator' },
+  { id: 'home',      label: 'overview',   Icon: IconHome,      href: null },
+  { id: 'chart',     label: 'markets',    Icon: IconChart,     href: null },
+  { id: 'alerts',    label: 'alerts',     Icon: IconBell,      href: null },
+  { id: 'profile',   label: 'account',    Icon: IconUser,      href: null },
+  { id: 'portfolio', label: 'portfolio',  Icon: IconPortfolio, href: '/portfolio' },
+  { id: 'converter', label: 'converter',  Icon: IconConvert,   href: '/tools/converter' },
 ] as const;
 
 type Tab = 'home' | 'chart' | 'alerts' | 'profile';
