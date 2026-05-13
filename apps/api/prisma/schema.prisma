@@ -103,7 +103,8 @@ model PriceRecord {
   approvedAt     DateTime?
   rejectedAt     DateTime?
 
-  crawlSession   CrawlSession @relation(fields: [crawlSessionId], references: [id])
+  crawlSession   CrawlSession  @relation(fields: [crawlSessionId], references: [id])
+  anomalyReview  AnomalyReview?
 
   @@index([brand, goldType, recordedAt])
   @@index([isAnomalous, approvedAt])
@@ -367,4 +368,14 @@ model AdminAuditLog {
   createdAt  DateTime @default(now())
 
   @@index([adminId, createdAt])
+}
+
+model AnomalyReview {
+  id            String      @id @default(cuid())
+  priceRecordId String      @unique
+  reviewedBy    String
+  action        String      // "approved" | "rejected"
+  reviewedAt    DateTime    @default(now())
+
+  priceRecord   PriceRecord @relation(fields: [priceRecordId], references: [id])
 }
