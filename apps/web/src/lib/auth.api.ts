@@ -39,14 +39,14 @@ export async function apiRegister(email: string, password: string): Promise<{ me
 export async function apiLogin(
   email: string,
   password: string,
-): Promise<{ accessToken: string; user: { id: string; email: string; role: string } }> {
+): Promise<{ accessToken: string; user: { id: string; email: string; role: string; digestOptIn: boolean } }> {
   const res = await fetch(`${API}/auth/login`, {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
   });
-  return handleResponse<{ accessToken: string; user: { id: string; email: string; role: string } }>(res);
+  return handleResponse<{ accessToken: string; user: { id: string; email: string; role: string; digestOptIn: boolean } }>(res);
 }
 
 export async function apiLogout(): Promise<void> {
@@ -97,13 +97,13 @@ export async function apiRefreshToken(): Promise<{ accessToken: string }> {
 
 export async function apiGetMe(
   accessToken: string,
-): Promise<{ id: string; email: string; role: string; displayName?: string }> {
+): Promise<{ id: string; email: string; role: string; displayName?: string; digestOptIn: boolean }> {
   const res = await fetch(`${API}/users/me`, {
     method: 'GET',
     credentials: 'include',
     headers: { Authorization: `Bearer ${accessToken}` },
   });
-  return handleResponse<{ id: string; email: string; role: string; displayName?: string }>(res);
+  return handleResponse<{ id: string; email: string; role: string; displayName?: string; digestOptIn: boolean }>(res);
 }
 
 export async function apiChangePassword(

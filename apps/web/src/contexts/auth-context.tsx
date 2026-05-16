@@ -14,6 +14,7 @@ interface AuthUser {
   email: string;
   role: string;
   displayName?: string;
+  digestOptIn: boolean;
 }
 
 interface AuthContextValue {
@@ -21,6 +22,7 @@ interface AuthContextValue {
   isLoading: boolean;
   getAccessToken: () => string | null;
   login(email: string, password: string): Promise<void>;
+  loginWithToken(accessToken: string): Promise<void>;
   logout(): Promise<void>;
   register(email: string, password: string): Promise<{ message: string }>;
   refreshToken(): Promise<string | null>;
@@ -92,6 +94,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(me);
   }, [setAccessToken]);
 
+  const loginWithToken = useCallback(async (accessToken: string) => {
+    setAccessToken(accessToken);
+    const me = await apiGetMe(accessToken);
+    setUser(me as AuthUser);
+  }, [setAccessToken]);
+
   const logout = useCallback(async () => {
     try {
       await apiLogout();
@@ -110,6 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isLoading,
     getAccessToken: () => tokenRef.current,
     login,
+    loginWithToken,
     logout,
     register,
     refreshToken,

@@ -12,6 +12,7 @@ import { usePersonalisationOrder, useRecordView, useAddPin, useRemovePin } from 
 import { useBrowsingContext, useRecordBrowse } from '@/lib/browsing-history.api';
 import { DigestCard } from '@/components/DigestCard';
 import { ForecastVoteWidget } from '@/components/ForecastVoteWidget';
+import { HeatIndexHistoryChart } from '@/components/HeatIndexHistoryChart';
 
 const RANGE_LABELS = ['1D', '1W', '1M'] as const;
 type Range = '1D' | '1W' | '1M';
@@ -545,6 +546,9 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
           <HeatIndexGauge />
           <HeatIndexStats />
         </div>
+
+        {/* Heat Index 7-day trend */}
+        <HeatIndexHistoryChart />
 
         {/* Alerts widget */}
         <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, padding: 20 }}>

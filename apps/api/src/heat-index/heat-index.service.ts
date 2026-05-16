@@ -116,6 +116,15 @@ export class HeatIndexService {
     };
   }
 
+  async getHistory(days = 7): Promise<HeatIndexDto[]> {
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    const records = await this.prisma.heatIndexRecord.findMany({
+      where: { calculatedAt: { gte: since } },
+      orderBy: { calculatedAt: 'asc' },
+    });
+    return records.map(r => this.toDto(r));
+  }
+
   async getCurrent(): Promise<HeatIndexDto> {
     const latest = await this.prisma.heatIndexRecord.findFirst({
       orderBy: { calculatedAt: 'desc' },

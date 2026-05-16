@@ -140,7 +140,7 @@ model HeatIndexRecord {
 model User {
   id           String     @id @default(cuid())
   email        String     @unique
-  passwordHash String
+  passwordHash String?
   status       UserStatus @default(pending)
   role         UserRole   @default(user)
   displayName  String?

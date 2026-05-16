@@ -150,6 +150,11 @@ export class AuthService {
       );
     }
 
+    if (!user.passwordHash) {
+      await this.recordLoginAttempt(user.id, email, null, false);
+      throw new UnauthorizedException('This account uses social login');
+    }
+
     const passwordMatch = await bcrypt.compare(password, user.passwordHash);
 
     if (!passwordMatch) {
@@ -326,6 +331,55 @@ export class AuthService {
     res.clearCookie('refreshToken', { path: '/api/auth/refresh' });
 
     return { message: 'Account deleted' };
+  }
+
+  // ─── Google OAuth ─────────────────────────────────────────────────────────────
+
+  async googleLogin(
+    googleUser: { email: string; displayName: string },
+    res: Response,
+  ): Promise<{ accessToken: string }> {
+    let user = await this.prisma.user.findUnique({
+      where: { email: googleUser.email },
+    });
+
+    if (!user) {
+      user = await this.prisma.user.create({
+        data: {
+          email: googleUser.email,
+          passwordHash: null,
+          status: 'active',
+          role: 'user',
+          displayName: googleUser.displayName,
+        },
+      });
+    } else if (user.status === 'deleted' || user.status === 'locked') {
+      throw new UnauthorizedException('Account not accessible');
+    } else if (user.status === 'pending') {
+      // Auto-activate accounts that were pending — Google verified the email
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { status: 'active' },
+      });
+      user = { ...user, status: 'active' };
+    }
+
+    const accessToken = this.jwtService.signAccess({
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+    });
+    const refreshToken = this.jwtService.signRefresh({ sub: user.id });
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: '/api/auth/refresh',
+    });
+
+    return { accessToken };
   }
 
   // ─── Private Helpers ──────────────────────────────────────────────────────────

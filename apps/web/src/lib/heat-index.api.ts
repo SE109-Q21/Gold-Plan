@@ -15,3 +15,15 @@ export function useHeatIndex() {
     refetchInterval: 5 * 60_000,   // 5 min
   });
 }
+
+export function useHeatIndexHistory(days = 7) {
+  return useQuery({
+    queryKey: ['heat-index', 'history', days],
+    queryFn: () =>
+      apiClient
+        .get<HeatIndexDto[]>(`/heat-index/history?days=${days}`)
+        .then(r => r.data),
+    staleTime: 10 * 60_000,
+    refetchInterval: 60 * 60_000,
+  });
+}

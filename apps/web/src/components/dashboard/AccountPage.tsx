@@ -5,10 +5,11 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 import { apiChangePassword, apiDeleteAccount } from '@/lib/auth.api';
 import { useClearHistory } from '@/lib/browsing-history.api';
+import { useSubscribeDigest } from '@/lib/digest.api';
 
-function Toggle({ on, onChange }: { on: boolean; onChange: () => void }) {
+function Toggle({ on, onChange, disabled }: { on: boolean; onChange: () => void; disabled?: boolean }) {
   return (
-    <button onClick={onChange} style={{ width: 42, height: 24, padding: 2, flexShrink: 0, background: on ? 'var(--gold)' : 'var(--ink-3)', border: `1px solid ${on ? 'var(--gold)' : 'var(--line)'}`, borderRadius: 99, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+    <button onClick={onChange} disabled={disabled} style={{ width: 42, height: 24, padding: 2, flexShrink: 0, background: on ? 'var(--gold)' : 'var(--ink-3)', border: `1px solid ${on ? 'var(--gold)' : 'var(--line)'}`, borderRadius: 99, cursor: disabled ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', opacity: disabled ? 0.6 : 1 }}>
       <span style={{ width: 18, height: 18, borderRadius: 99, background: on ? '#0B0B0F' : '#5a5b65', transform: on ? 'translateX(18px)' : 'translateX(0)', transition: 'transform 180ms var(--ease)' }}/>
     </button>
   );
@@ -99,11 +100,12 @@ export function AccountPage() {
   const { user, getAccessToken, logout } = useAuth();
   const router = useRouter();
   const clearHistory = useClearHistory();
+  const subscribeDigest = useSubscribeDigest();
   const [theme, setTheme] = useState('DARK');
   const [unit, setUnit] = useState('TAEL');
   const [notifEmail, setNotifEmail] = useState(true);
   const [notifPush, setNotifPush] = useState(true);
-  const [notifDigest, setNotifDigest] = useState(false);
+  const [notifDigest, setNotifDigest] = useState(user?.digestOptIn ?? false);
   const [showChangePw, setShowChangePw] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
 
@@ -178,7 +180,7 @@ export function AccountPage() {
           <div style={{ padding: '16px 22px' }}><h3 style={{ font: '700 16px/1 var(--font-display)', margin: 0 }}>notifications</h3></div>
           <Row label="Email alerts" detail="within 2 min of trigger" right={<Toggle on={notifEmail} onChange={() => setNotifEmail(!notifEmail)}/>}/>
           <Row label="Push alerts" detail="device push · iOS, Android" right={<Toggle on={notifPush} onChange={() => setNotifPush(!notifPush)}/>}/>
-          <Row label="Morning digest" detail="market summary at 07:30 · opt-in" right={<Toggle on={notifDigest} onChange={() => setNotifDigest(!notifDigest)}/>}/>
+          <Row label="Morning digest" detail="market summary at 07:30 · opt-in" right={<Toggle on={notifDigest} disabled={subscribeDigest.isPending} onChange={() => { setNotifDigest(!notifDigest); subscribeDigest.mutate(!notifDigest); }} />}/>
         </div>
       </div>
 
