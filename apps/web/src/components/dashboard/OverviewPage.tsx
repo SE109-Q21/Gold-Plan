@@ -271,10 +271,14 @@ function DragHandle({ dragHandleProps }: { dragHandleProps?: React.HTMLAttribute
 function BrowsingBadge({ brand, goldType }: { brand: string; goldType: string }) {
   const { data: ctx } = useBrowsingContext(brand, goldType, true);
   if (!ctx) return null;
+  const formattedPrice = ctx.buyPrice != null
+    ? new Intl.NumberFormat('vi-VN').format(ctx.buyPrice) + '₫'
+    : null;
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginLeft: 6 }}>
       <span className="mono" style={{ fontSize: 9, color: 'var(--mute)' }}>
-        last seen {daysAgo(ctx.lastViewedAt)}
+        Đã xem {daysAgo(ctx.lastViewedAt)}
+        {formattedPrice && <> · {formattedPrice}</>}
       </span>
       {ctx.deltaPct !== null && (
         <span
@@ -285,7 +289,7 @@ function BrowsingBadge({ brand, goldType }: { brand: string; goldType: string })
             fontWeight: 700,
           }}
         >
-          Δ {ctx.deltaPct >= 0 ? '+' : ''}{ctx.deltaPct.toFixed(2)}%
+          ({ctx.deltaPct >= 0 ? '+' : ''}{ctx.deltaPct.toFixed(2)}%)
         </span>
       )}
     </span>

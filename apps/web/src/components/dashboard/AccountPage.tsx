@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/auth-context';
 import { apiChangePassword, apiDeleteAccount } from '@/lib/auth.api';
 import { useClearHistory } from '@/lib/browsing-history.api';
 import { useSubscribeDigest } from '@/lib/digest.api';
+import { useResetPreferences } from '@/lib/personalisation.api';
 
 function Toggle({ on, onChange, disabled }: { on: boolean; onChange: () => void; disabled?: boolean }) {
   return (
@@ -101,6 +102,7 @@ export function AccountPage() {
   const router = useRouter();
   const clearHistory = useClearHistory();
   const subscribeDigest = useSubscribeDigest();
+  const resetPrefs = useResetPreferences();
   const [theme, setTheme] = useState('DARK');
   const [unit, setUnit] = useState('TAEL');
   const [notifEmail, setNotifEmail] = useState(true);
@@ -173,6 +175,30 @@ export function AccountPage() {
           <Row label="Display currency" detail="all prices render in this currency" right={<Segmented options={['USD', 'VND', 'EUR']} value="USD" onChange={() => {}}/>}/>
           <Row label="Theme" detail="dark by default" right={<Segmented options={['DARK', 'LIGHT', 'AUTO']} value={theme} onChange={setTheme}/>}/>
           <Row label="Unit of mass" detail="prices converted from troy oz" right={<Segmented options={['TROY OZ', 'TAEL', 'GRAM']} value={unit} onChange={setUnit}/>}/>
+          <Row
+            label="Khôi phục mặc định"
+            detail="đặt lại tất cả tuỳ chọn và vị trí ghim"
+            right={
+              <button
+                onClick={() => {
+                  if (window.confirm('Xoá tất cả tuỳ chọn cá nhân và vị trí ghim?')) {
+                    resetPrefs.mutate();
+                  }
+                }}
+                disabled={resetPrefs.isPending}
+                style={{
+                  height: 32, padding: '0 12px',
+                  background: 'transparent', border: '1px solid rgba(229,72,77,0.4)',
+                  borderRadius: 6, cursor: resetPrefs.isPending ? 'not-allowed' : 'pointer',
+                  font: '700 11px/1 var(--font-mono)', color: 'var(--down)',
+                  letterSpacing: '0.04em', textTransform: 'uppercase',
+                  opacity: resetPrefs.isPending ? 0.6 : 1,
+                }}
+              >
+                {resetPrefs.isPending ? '…' : 'reset'}
+              </button>
+            }
+          />
         </div>
 
         {/* Notifications */}

@@ -21,6 +21,14 @@ const GOLD_TYPE_LABELS: Record<GoldType, string> = {
   VANG_18K: 'Vàng 18K',
 };
 
+const BRANDS: GoldBrand[] = ['SJC', 'DOJI', 'PNJ', 'BAO_TIN'];
+const BRAND_LABELS: Record<GoldBrand, string> = {
+  SJC: 'SJC',
+  DOJI: 'DOJI',
+  PNJ: 'PNJ',
+  BAO_TIN: 'Bảo Tín',
+};
+
 function formatDate(iso: string, range: Range): string {
   const d = new Date(iso);
   if (range === '1D') return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
@@ -31,13 +39,10 @@ function formatVndShort(value: number): string {
   return `${(value / 1_000_000).toFixed(1)}M`;
 }
 
-interface Props {
-  brand?: GoldBrand;
-}
-
-export function PriceHistoryChart({ brand = 'SJC' }: Props) {
+export function PriceHistoryChart() {
   const [range, setRange] = useState<Range>('1D');
   const [goldType, setGoldType] = useState<GoldType>('MIEN_SJC');
+  const [brand, setBrand] = useState<GoldBrand>('SJC');
 
   const { data: points, isLoading, error } = usePriceHistory(brand, goldType, range);
 
@@ -63,6 +68,15 @@ export function PriceHistoryChart({ brand = 'SJC' }: Props) {
             </button>
           ))}
         </div>
+        <select
+          value={brand}
+          onChange={(e) => setBrand(e.target.value as GoldBrand)}
+          className="rounded border border-gray-300 px-2 py-1 text-sm"
+        >
+          {BRANDS.map((b) => (
+            <option key={b} value={b}>{BRAND_LABELS[b]}</option>
+          ))}
+        </select>
         <select
           value={goldType}
           onChange={(e) => setGoldType(e.target.value as GoldType)}
