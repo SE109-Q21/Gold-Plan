@@ -159,6 +159,7 @@ model User {
   viewHistory           ViewHistory[]
   forecastVotes         ForecastVote[]
   forecastScores        UserForecastScore[]
+  smartAlerts           SmartAlert[]
 }
 
 model EmailVerification {
@@ -378,4 +379,38 @@ model AnomalyReview {
   reviewedAt    DateTime    @default(now())
 
   priceRecord   PriceRecord @relation(fields: [priceRecordId], references: [id])
+}
+
+// ─── AI Digest (F04) ─────────────────────────────────────────────────────────
+
+model GoldDigest {
+  id           String   @id @default(cuid())
+  date         DateTime @unique
+  sjcBuyVnd    BigInt
+  sjcSellVnd   BigInt
+  xauUsd       Float
+  pctChangeSjc Float
+  highlight    String
+  aiSummary    String?
+  generatedAt  DateTime @default(now())
+
+  @@index([date(sort: Desc)])
+}
+
+// ─── Smart Alerts (F05) ──────────────────────────────────────────────────────
+
+model SmartAlert {
+  id          String      @id @default(cuid())
+  userId      String
+  brand       GoldBrand
+  goldType    GoldType
+  condition1  Json
+  condition2  Json?
+  status      AlertStatus @default(active)
+  lastFiredAt DateTime?
+  createdAt   DateTime    @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
 }

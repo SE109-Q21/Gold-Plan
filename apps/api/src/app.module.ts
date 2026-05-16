@@ -19,6 +19,7 @@ import { DcaModule } from './dca/dca.module';
 import { PortfolioModule } from './portfolio/portfolio.module';
 import { BrowsingHistoryModule } from './browsing-history/browsing-history.module';
 import { PersonalisationModule } from './personalisation/personalisation.module';
+import { AiModule } from './ai/ai.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { PersonalisationModule } from './personalisation/personalisation.module'
     PortfolioModule,
     BrowsingHistoryModule,
     PersonalisationModule,
+    AiModule,
   ],
   controllers: [HealthController],
 })
