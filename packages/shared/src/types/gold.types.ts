@@ -78,6 +78,12 @@ export interface SpreadRankingDto {
   isMostEfficient: boolean;
 }
 
+export interface SpreadHistoryPointDto {
+  recordedAt: string; // ISO
+  spreadVnd: number;
+  spreadPct: number;
+}
+
 export interface ConverterResultDto {
   weightInGrams: number;
   weightInTael: number;
@@ -271,6 +277,7 @@ export interface PersonalisationItemDto {
 export interface BrowsingContextDto {
   lastViewedAt: string;
   deltaPct: number | null;
+  buyPrice: number;
 }
 
 export interface BrowsingHistoryItemDto {

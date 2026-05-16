@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { GoldBrand, GoldType } from '@prisma/client';
 import { PrismaService } from '../database/prisma.service';
-import { SpreadRankingDto } from '@gpls/shared';
+import { SpreadRankingDto, SpreadHistoryPointDto } from '@gpls/shared';
 
 const BRANDS: GoldBrand[] = [
   GoldBrand.SJC,
@@ -13,6 +13,29 @@ const BRANDS: GoldBrand[] = [
 @Injectable()
 export class SpreadService {
   constructor(private readonly prisma: PrismaService) {}
+
+  async getSpreadHistory(
+    brand: GoldBrand,
+    goldType: GoldType,
+    days = 7,
+  ): Promise<SpreadHistoryPointDto[]> {
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    const records = await this.prisma.priceRecord.findMany({
+      where: { brand, goldType, isAnomalous: false, recordedAt: { gte: since } },
+      orderBy: { recordedAt: 'asc' },
+      select: { buyPrice: true, sellPrice: true, recordedAt: true },
+    });
+
+    return records.map((r) => {
+      const buy = Number(r.buyPrice);
+      const sell = Number(r.sellPrice);
+      return {
+        recordedAt: r.recordedAt.toISOString(),
+        spreadVnd: sell - buy,
+        spreadPct: Math.round(((sell - buy) / buy) * 10000) / 100,
+      };
+    });
+  }
 
   async getSpreadRanking(goldType: GoldType): Promise<SpreadRankingDto[]> {
     // Fetch the latest non-anomalous record per brand for this goldType

@@ -56,14 +56,16 @@ export class MailService {
       condition: string;
       thresholdPrice: bigint;
       currentPrice: bigint;
+      chartSvg?: string;
     },
   ): Promise<void> {
-    const condLabel = data.condition === 'gte' ? '≥' : '≤';
+    const condLabel = data.condition === 'gte' ? '≥' : data.condition === 'smart' ? '↑↓' : '≤';
     const fmt = (n: bigint) => Number(n).toLocaleString('vi-VN') + ' ₫';
-    const subject = `GoldTracker Alert: ${data.brand} ${data.goldType} ${condLabel} ${fmt(data.thresholdPrice)}`;
+    const subject = `GoldTracker Alert: ${data.brand} ${data.goldType}`;
     const html = `<p>Your alert was triggered!</p>
-    <p><strong>${data.brand} ${data.goldType}</strong> buy price is now <strong>${fmt(data.currentPrice)}</strong>
-    (your threshold: ${condLabel} ${fmt(data.thresholdPrice)})</p>`;
+  <p><strong>${data.brand} ${data.goldType}</strong> buy price is now <strong>${fmt(data.currentPrice)}</strong></p>
+  ${data.chartSvg ? `<div style="margin:16px 0">${data.chartSvg}</div><p style="font-size:11px;color:#888">24-hour price chart</p>` : ''}
+  <hr/><p style="font-size:11px;color:#888">For reference only — not financial advice.</p>`;
     await this.send(to, subject, html);
   }
 

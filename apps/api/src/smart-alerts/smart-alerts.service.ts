@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { AlertStatus, SmartAlert } from '@prisma/client';
+import { AlertStatus, GoldBrand, GoldType, SmartAlert } from '@prisma/client';
 import { PrismaService } from '../database/prisma.service';
 import { MailService } from '../mail/mail.service';
 import { CreateSmartAlertDto } from './dto/create-smart-alert.dto';
@@ -142,12 +142,14 @@ export class SmartAlertsService {
           });
 
           if (user) {
+            const chartSvg = await this.buildPriceChartSvg(alert.brand, alert.goldType);
             await this.mailService.sendAlertEmail(user.email, {
               brand: alert.brand,
               goldType: alert.goldType,
               condition: 'smart',
               thresholdPrice: BigInt(0),
               currentPrice: BigInt(records[0]?.buyPrice ?? 0),
+              chartSvg,
             });
           }
         }
@@ -212,6 +214,39 @@ export class SmartAlertsService {
     priceVnd: number,
   ): boolean {
     return condition === 'lte' ? buyPrice <= priceVnd : buyPrice >= priceVnd;
+  }
+
+  private async buildPriceChartSvg(brand: GoldBrand, goldType: GoldType): Promise<string> {
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const records = await this.prisma.priceRecord.findMany({
+      where: { brand, goldType, isAnomalous: false, recordedAt: { gte: since } },
+      orderBy: { recordedAt: 'asc' },
+      select: { buyPrice: true, recordedAt: true },
+    });
+
+    if (records.length < 2) return '';
+
+    const prices = records.map((r) => Number(r.buyPrice));
+    const min = Math.min(...prices) * 0.999;
+    const max = Math.max(...prices) * 1.001;
+    const W = 460, H = 100, padX = 10, padTop = 10;
+
+    const points = prices
+      .map((p, i) => {
+        const x = padX + (i / (prices.length - 1)) * W;
+        const y = padTop + H - ((p - min) / (max - min)) * H;
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      })
+      .join(' ');
+
+    const firstTime = new Date(records[0].recordedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+    const lastTime = new Date(records[records.length - 1].recordedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 130" width="480" height="130" style="display:block;background:#14141A;border-radius:8px">
+  <polyline points="${points}" stroke="#D4AF37" stroke-width="2" fill="none"/>
+  <text x="${padX}" y="128" fill="#888" font-size="10" font-family="monospace">${firstTime}</text>
+  <text x="${padX + W}" y="128" fill="#888" font-size="10" font-family="monospace" text-anchor="end">${lastTime}</text>
+</svg>`;
   }
 
   private attachNaturalLanguage(alert: SmartAlert): SmartAlertWithNL {

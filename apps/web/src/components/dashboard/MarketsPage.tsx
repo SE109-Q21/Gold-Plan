@@ -1,8 +1,17 @@
 'use client';
 
 import { useState } from 'react';
+import {
+  LineChart as ReLineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts';
 import { usePriceHistory, type HistoryRange } from '@/lib/price.api';
-import { useSpreadRanking } from '@/lib/spread.api';
+import { useSpreadRanking, useSpreadHistory } from '@/lib/spread.api';
 import { LineChart } from '@/components/ui/ChartPrimitives';
 import type { GoldBrand, GoldType } from '@gpls/shared';
 import { useAuth } from '@/contexts/auth-context';
@@ -14,6 +23,7 @@ const RANGES: Range[] = ['1D', '1W', '1M', '3M', '1Y'];
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
 const GOLD_TYPES: GoldType[] = ['MIEN_SJC', 'NHAN_9999', 'VANG_24K', 'VANG_18K'];
+const BRANDS: GoldBrand[] = ['SJC', 'DOJI', 'PNJ', 'BAO_TIN'];
 
 const TICKS_MOCK = [
   { t: '14:32:08', p: 2345.67, d: '+0.42', down: false },
@@ -40,7 +50,6 @@ function SpreadRankingSection() {
 
   return (
     <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, padding: 22 }}>
-      {/* Header row */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
         <h3 style={{ font: '700 16px/1 var(--font-display)', margin: 0 }}>spread ranking</h3>
         <span
@@ -57,7 +66,6 @@ function SpreadRankingSection() {
         </span>
       </div>
 
-      {/* Gold type selector */}
       <div style={{ display: 'flex', gap: 4, marginBottom: 18, flexWrap: 'wrap' }}>
         {GOLD_TYPES.map(gt => (
           <button
@@ -70,7 +78,6 @@ function SpreadRankingSection() {
         ))}
       </div>
 
-      {/* Loading state */}
       {isLoading && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {[0, 1, 2].map(i => (
@@ -87,14 +94,12 @@ function SpreadRankingSection() {
         </div>
       )}
 
-      {/* Empty state */}
       {!isLoading && (!data || data.length === 0) && (
         <div style={{ padding: '24px 0', textAlign: 'center', font: '500 13px/1 var(--font-mono)', color: 'var(--mute)' }}>
           No data available
         </div>
       )}
 
-      {/* Bar chart */}
       {!isLoading && data && data.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {data.map((item, i) => (
@@ -120,6 +125,114 @@ function SpreadRankingSection() {
             </div>
           ))}
         </div>
+      )}
+    </div>
+  );
+}
+
+function SpreadHistoryChart() {
+  const [brand, setBrand] = useState<GoldBrand>('SJC');
+  const [goldType, setGoldType] = useState<GoldType>('MIEN_SJC');
+  const { data, isLoading } = useSpreadHistory(brand, goldType, 7);
+
+  const fmtDate = (iso: string) => {
+    const d = new Date(iso);
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    return `${dd}/${mm}`;
+  };
+
+  const chartData = (data ?? []).map((pt) => ({
+    date: fmtDate(pt.recordedAt),
+    spreadVnd: pt.spreadVnd,
+    spreadPct: pt.spreadPct,
+  }));
+
+  const fmtVnd = (v: number) => (v / 1_000_000).toFixed(2) + 'M';
+
+  return (
+    <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, padding: 22 }}>
+      <div style={{ marginBottom: 14 }}>
+        <h3 style={{ font: '700 16px/1 var(--font-display)', margin: '0 0 4px' }}>xu hướng chênh lệch 7 ngày</h3>
+        <div style={{ font: '500 10px/1 var(--font-mono)', color: 'var(--mute)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+          7-day spread trend
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 4, marginBottom: 8, flexWrap: 'wrap' }}>
+        {BRANDS.map(b => (
+          <button
+            key={b}
+            onClick={() => setBrand(b)}
+            style={{ display: 'inline-flex', alignItems: 'center', height: 28, padding: '0 8px', border: `1px solid ${brand === b ? 'var(--gold)' : 'var(--line)'}`, borderRadius: 0, background: brand === b ? 'var(--gold)' : 'transparent', color: brand === b ? '#0B0B0F' : 'var(--bone)', font: '700 10px/1 var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}
+          >
+            {b}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ display: 'flex', gap: 4, marginBottom: 18, flexWrap: 'wrap' }}>
+        {GOLD_TYPES.map(gt => (
+          <button
+            key={gt}
+            onClick={() => setGoldType(gt)}
+            style={{ display: 'inline-flex', alignItems: 'center', height: 28, padding: '0 8px', border: `1px solid ${goldType === gt ? 'var(--gold)' : 'var(--line)'}`, borderRadius: 0, background: goldType === gt ? 'var(--gold)' : 'transparent', color: goldType === gt ? '#0B0B0F' : 'var(--bone)', font: '700 10px/1 var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}
+          >
+            {gt}
+          </button>
+        ))}
+      </div>
+
+      {isLoading && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 4 }}>
+          {[80, 55, 70].map((w, i) => (
+            <div
+              key={i}
+              style={{ height: 14, width: `${w}%`, background: 'var(--ink-3)', borderRadius: 3, opacity: 0.55 }}
+            />
+          ))}
+        </div>
+      )}
+
+      {!isLoading && (!chartData || chartData.length === 0) && (
+        <div style={{ padding: '32px 0', textAlign: 'center', font: '500 13px/1 var(--font-mono)', color: 'var(--mute)' }}>
+          Chưa có dữ liệu
+        </div>
+      )}
+
+      {!isLoading && chartData.length > 0 && (
+        <ResponsiveContainer width="100%" height={200}>
+          <ReLineChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
+            <XAxis
+              dataKey="date"
+              tick={{ fill: '#5a5b65', fontSize: 10, fontFamily: 'var(--font-mono)' }}
+              axisLine={false}
+              tickLine={false}
+            />
+            <YAxis
+              tickFormatter={fmtVnd}
+              tick={{ fill: '#5a5b65', fontSize: 10, fontFamily: 'var(--font-mono)' }}
+              axisLine={false}
+              tickLine={false}
+              width={52}
+              label={{ value: 'Chênh lệch (₫)', angle: -90, position: 'insideLeft', offset: 12, style: { fill: '#5a5b65', fontSize: 9, fontFamily: 'var(--font-mono)' } }}
+            />
+            <Tooltip
+              contentStyle={{ background: '#14141A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, font: '500 11px/1.5 var(--font-mono)', color: '#e8e6df' }}
+              formatter={(value) => [typeof value === 'number' ? (value / 1_000_000).toFixed(3) + 'M₫' : '-', 'spread']}
+              labelStyle={{ color: '#5a5b65', marginBottom: 4 }}
+            />
+            <Line
+              type="monotone"
+              dataKey="spreadVnd"
+              stroke="#D4AF37"
+              strokeWidth={2}
+              dot={false}
+              activeDot={{ r: 4, fill: '#D4AF37', stroke: '#0B0B0F', strokeWidth: 2 }}
+            />
+          </ReLineChart>
+        </ResponsiveContainer>
       )}
     </div>
   );
@@ -220,6 +333,8 @@ export function MarketsPage() {
           ))}
         </div>
       </div>
+
+      <SpreadHistoryChart />
     </div>
   );
 }
