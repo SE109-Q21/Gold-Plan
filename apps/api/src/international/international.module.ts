@@ -5,5 +5,6 @@ import { InternationalController } from './international.controller';
 @Module({
   providers: [InternationalService],
   controllers: [InternationalController],
+  exports: [InternationalService],
 })
 export class InternationalModule {}

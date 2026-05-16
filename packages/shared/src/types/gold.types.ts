@@ -268,3 +268,58 @@ export interface BrowsingHistoryItemDto {
   buyPrice: number;
   viewedAt: string;
 }
+
+// ─── Plan 8: AI Chat ──────────────────────────────────────────────────────────
+
+export interface AiChatMessageDto {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+// ─── Plan 8: Digest ───────────────────────────────────────────────────────────
+
+export interface DigestDto {
+  id: string;
+  date: string;        // ISO string
+  sjcBuyVnd: number;
+  sjcSellVnd: number;
+  xauUsd: number;
+  pctChangeSjc: number;
+  highlight: string;
+  aiSummary: string | null;
+  generatedAt: string; // ISO string
+}
+
+export interface DigestArchiveDto {
+  items: DigestDto[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+// ─── Plan 8: Smart Alerts ─────────────────────────────────────────────────────
+
+export interface SmartAlertCondition {
+  type: 'TREND' | 'SPREAD' | 'THRESHOLD';
+  params: Record<string, unknown>;
+}
+
+export interface SmartAlertDto {
+  id: string;
+  userId: string;
+  brand: string;
+  goldType: string;
+  condition1: SmartAlertCondition;
+  condition2: SmartAlertCondition | null;
+  status: 'active' | 'triggered' | 'inactive';
+  lastFiredAt: string | null;
+  createdAt: string;
+  naturalLanguage: string;
+}
+
+export interface CreateSmartAlertDto {
+  brand: string;
+  goldType: string;
+  condition1: SmartAlertCondition;
+  condition2?: SmartAlertCondition;
+}

@@ -21,6 +21,7 @@ import { BrowsingHistoryModule } from './browsing-history/browsing-history.modul
 import { PersonalisationModule } from './personalisation/personalisation.module';
 import { AiModule } from './ai/ai.module';
 import { DigestModule } from './digest/digest.module';
+import { SmartAlertsModule } from './smart-alerts/smart-alerts.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { DigestModule } from './digest/digest.module';
     PersonalisationModule,
     AiModule,
     DigestModule,
+    SmartAlertsModule,
   ],
   controllers: [HealthController],
 })
