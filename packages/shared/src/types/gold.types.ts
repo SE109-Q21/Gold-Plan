@@ -323,3 +323,48 @@ export interface CreateSmartAlertDto {
   condition1: SmartAlertCondition;
   condition2?: SmartAlertCondition;
 }
+
+// ─── Plan 9: Forecast ─────────────────────────────────────────────────────────
+
+export interface ForecastSessionDto {
+  id: string;
+  date: string;
+  opensAt: string;
+  closesAt: string;
+  sessionClosed: boolean;
+  actualResult: 'up' | 'down' | 'flat' | null;
+  userVote: 'up' | 'down' | 'flat' | null; // null if not voted
+  ratios: { up: number; down: number; flat: number } | null; // null until user votes
+  totalVotes: number;
+}
+
+export interface ForecastVoteDto {
+  id: string;
+  sessionId: string;
+  direction: 'up' | 'down' | 'flat';
+  votedAt: string;
+  isCorrect: boolean | null;
+  actualResult: 'up' | 'down' | 'flat' | null;
+  sessionDate: string;
+}
+
+export interface LeaderboardEntryDto {
+  rank: number;
+  userId: string;
+  displayName: string | null;
+  totalPoints: number;
+  correctCount: number;
+  streak: number;
+}
+
+export interface LeaderboardDto {
+  month: string;
+  entries: LeaderboardEntryDto[];
+}
+
+export interface VoteHistoryDto {
+  items: ForecastVoteDto[];
+  total: number;
+  page: number;
+  totalPages: number;
+}

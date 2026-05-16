@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/auth-context';
 import { usePersonalisationOrder, useRecordView, useAddPin, useRemovePin } from '@/lib/personalisation.api';
 import { useBrowsingContext, useRecordBrowse } from '@/lib/browsing-history.api';
 import { DigestCard } from '@/components/DigestCard';
+import { ForecastVoteWidget } from '@/components/ForecastVoteWidget';
 
 const RANGE_LABELS = ['1D', '1W', '1M'] as const;
 type Range = '1D' | '1W' | '1M';
@@ -567,6 +568,9 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
             <IconPlus s={15}/> new alert
           </button>
         </div>
+
+        {/* Community forecast */}
+        <ForecastVoteWidget />
       </div>
     </div>
     </div>

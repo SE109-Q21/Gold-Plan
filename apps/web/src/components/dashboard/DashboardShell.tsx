@@ -45,16 +45,28 @@ function IconPortfolio({ s = 20 }: { s?: number }) {
     </svg>
   );
 }
+function IconTrophy({ s = 20 }: { s?: number }) {
+  return (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 9H3a1 1 0 0 0-1 1v1a4 4 0 0 0 4 4"/>
+      <path d="M18 9h3a1 1 0 0 1 1 1v1a4 4 0 0 1-4 4"/>
+      <path d="M12 17v4"/>
+      <path d="M8 21h8"/>
+      <path d="M7 4h10l1 9a5 5 0 0 1-5 5h0a5 5 0 0 1-5-5Z"/>
+    </svg>
+  );
+}
 
-export { IconHome, IconChart, IconBell, IconUser, IconSearch, IconPlus, IconConvert, IconPortfolio };
+export { IconHome, IconChart, IconBell, IconUser, IconSearch, IconPlus, IconConvert, IconPortfolio, IconTrophy };
 
 const NAV_ITEMS = [
-  { id: 'home',      label: 'overview',   Icon: IconHome,      href: null },
-  { id: 'chart',     label: 'markets',    Icon: IconChart,     href: null },
-  { id: 'alerts',    label: 'alerts',     Icon: IconBell,      href: null },
-  { id: 'profile',   label: 'account',    Icon: IconUser,      href: null },
-  { id: 'portfolio', label: 'portfolio',  Icon: IconPortfolio, href: '/portfolio' },
-  { id: 'converter', label: 'converter',  Icon: IconConvert,   href: '/tools/converter' },
+  { id: 'home',        label: 'overview',        Icon: IconHome,      href: null },
+  { id: 'chart',       label: 'markets',         Icon: IconChart,     href: null },
+  { id: 'alerts',      label: 'alerts',          Icon: IconBell,      href: null },
+  { id: 'profile',     label: 'account',         Icon: IconUser,      href: null },
+  { id: 'portfolio',   label: 'portfolio',       Icon: IconPortfolio, href: '/portfolio' },
+  { id: 'converter',   label: 'converter',       Icon: IconConvert,   href: '/tools/converter' },
+  { id: 'leaderboard', label: 'bảng xếp hạng',  Icon: IconTrophy,    href: '/leaderboard' },
 ] as const;
 
 type Tab = 'home' | 'chart' | 'alerts' | 'profile';
