@@ -2,6 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { GoldBrand, GoldType } from '@prisma/client';
 
+export interface LowestSeenItemDto {
+  brand: string;
+  goldType: string;
+  lowestPrice: number;
+}
+
 export interface BrowsingContextDto {
   lastViewedAt: string;
   deltaPct: number | null;
@@ -110,6 +116,21 @@ export class BrowsingHistoryService {
 
     const min = result._min.buyPrice;
     return min !== null ? Number(min) : null;
+  }
+
+  async getAllLowestSeen(userId: string): Promise<LowestSeenItemDto[]> {
+    // Group by brand + goldType and find the minimum buyPrice for each pair
+    const rows = await this.prisma.viewHistory.groupBy({
+      by: ['brand', 'goldType'],
+      where: { userId },
+      _min: { buyPrice: true },
+    });
+
+    return rows.map((r) => ({
+      brand: r.brand as string,
+      goldType: r.goldType as string,
+      lowestPrice: r._min.buyPrice !== null ? Number(r._min.buyPrice) : 0,
+    }));
   }
 
   async clearHistory(userId: string): Promise<void> {

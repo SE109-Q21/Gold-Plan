@@ -18,6 +18,7 @@ export interface DomesticPriceDto {
 
 export interface InternationalPriceDto {
   spotPriceUsd: number;
+  spotPriceEur: number;
   spotPriceVnd: number;
   exchangeRate: number;
   recordedAt: string;
@@ -150,6 +151,17 @@ export interface AdminStatsDto {
   dataSources: DataSourceStatusDto[];
 }
 
+export type AdminStatsPeriod = 'day' | 'week' | 'month';
+
+export interface AdminPeriodStatsDto {
+  period: AdminStatsPeriod;
+  since: string;
+  newUsers: number;
+  alertsSent: number;
+  crawlSuccessRate: number;
+  totalCrawls: number;
+}
+
 export interface DataSourceStatusDto {
   id: string;
   name: string;
@@ -267,6 +279,12 @@ export interface BrowsingHistoryItemDto {
   goldType: string;
   buyPrice: number;
   viewedAt: string;
+}
+
+export interface LowestSeenItemDto {
+  brand: string;
+  goldType: string;
+  lowestPrice: number;
 }
 
 // ─── Plan 8: AI Chat ──────────────────────────────────────────────────────────

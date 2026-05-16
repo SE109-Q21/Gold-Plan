@@ -1,6 +1,8 @@
 'use client';
 
-import { useAdminStats } from '@/lib/admin.api';
+import { useState } from 'react';
+import { useAdminStats, useAdminPeriodStats } from '@/lib/admin.api';
+import type { AdminStatsPeriod } from '@gpls/shared';
 
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 
@@ -59,6 +61,83 @@ function StatusBadge({ active }: { active: boolean }) {
   );
 }
 
+// ─── Period Stats Section ──────────────────────────────────────────────────────
+
+const PERIOD_LABELS: { key: AdminStatsPeriod; label: string }[] = [
+  { key: 'day', label: 'Today' },
+  { key: 'week', label: '7 Days' },
+  { key: 'month', label: '30 Days' },
+];
+
+function PeriodStatsSection() {
+  const [period, setPeriod] = useState<AdminStatsPeriod>('day');
+  const { data, isLoading } = useAdminPeriodStats(period);
+
+  const cards = [
+    { label: 'New Users', value: isLoading ? '—' : (data?.newUsers ?? '—') },
+    { label: 'Alerts Sent', value: isLoading ? '—' : (data?.alertsSent ?? '—') },
+    {
+      label: 'Crawl Success',
+      value: isLoading ? '—' : (data?.crawlSuccessRate ?? '—'),
+      unit: '%',
+    },
+    { label: 'Total Crawls', value: isLoading ? '—' : (data?.totalCrawls ?? '—') },
+  ];
+
+  return (
+    <div style={{ marginBottom: 36 }}>
+      {/* Section header with period switcher */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 16,
+      }}>
+        <h2 style={{
+          font: '700 16px/1 var(--font-display)',
+          margin: 0,
+          letterSpacing: '-0.01em',
+        }}>
+          Statistics
+        </h2>
+        <div style={{ display: 'flex', gap: 0 }}>
+          {PERIOD_LABELS.map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => setPeriod(key)}
+              style={{
+                padding: '6px 14px',
+                font: '700 11px/1 var(--font-mono)',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                border: '1px solid var(--line)',
+                borderRight: key === 'month' ? '1px solid var(--line)' : 'none',
+                borderRadius: key === 'day' ? '6px 0 0 6px' : key === 'month' ? '0 6px 6px 0' : 0,
+                background: period === key ? 'var(--gold)' : 'transparent',
+                color: period === key ? '#0B0B0F' : 'var(--bone)',
+                cursor: 'pointer',
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 4 stat cards */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(4, 1fr)',
+        gap: 16,
+      }}>
+        {cards.map(({ label, value, unit }) => (
+          <StatCard key={label} label={label} value={value} unit={unit} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Overview Page ────────────────────────────────────────────────────────────
 
 export default function AdminOverviewPage() {
@@ -105,6 +184,9 @@ export default function AdminOverviewPage() {
           unit="%"
         />
       </div>
+
+      {/* Period Statistics */}
+      <PeriodStatsSection />
 
       {/* Data Sources Table */}
       <div style={{

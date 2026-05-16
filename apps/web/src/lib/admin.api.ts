@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from './api-client';
 import type {
   AdminStatsDto,
+  AdminPeriodStatsDto,
+  AdminStatsPeriod,
   DataSourceAdminDto,
   AdminUserDto,
   AnomalyRecordDto,
@@ -14,6 +16,18 @@ export function useAdminStats() {
   return useQuery({
     queryKey: ['admin', 'stats'],
     queryFn: () => apiClient.get<AdminStatsDto>('/admin/stats').then(r => r.data),
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+  });
+}
+
+export function useAdminPeriodStats(period: AdminStatsPeriod) {
+  return useQuery({
+    queryKey: ['admin', 'stats', 'period', period],
+    queryFn: () =>
+      apiClient
+        .get<AdminPeriodStatsDto>('/admin/stats/period', { params: { period } })
+        .then((r) => r.data),
     staleTime: 30_000,
     refetchInterval: 60_000,
   });

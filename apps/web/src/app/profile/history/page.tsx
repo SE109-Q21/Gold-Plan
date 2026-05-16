@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useBrowsingHistory, useClearHistory } from '@/lib/browsing-history.api';
+import { useBrowsingHistory, useClearHistory, useLowestSeen } from '@/lib/browsing-history.api';
 import { useAuth } from '@/contexts/auth-context';
 
 function fmtDate(iso: string): string {
@@ -25,7 +25,13 @@ export default function BrowsingHistoryPage() {
   const [page, setPage] = useState(1);
 
   const { data, isLoading } = useBrowsingHistory(page);
+  const { data: lowestData } = useLowestSeen();
   const clearHistory = useClearHistory();
+
+  // Build a lookup map: "brand|goldType" -> lowestPrice
+  const lowestMap = new Map<string, number>(
+    (lowestData ?? []).map((item) => [`${item.brand}|${item.goldType}`, item.lowestPrice]),
+  );
 
   async function handleClearAll() {
     if (!window.confirm('Clear all browsing history? This cannot be undone.')) return;
@@ -111,7 +117,7 @@ export default function BrowsingHistoryPage() {
         <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, overflow: 'hidden' }}>
           {/* Table header */}
           <div style={{
-            display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr 1fr',
+            display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr 1fr 1fr 1fr',
             padding: '12px 24px',
             font: '700 10px/1 var(--font-mono)', color: 'var(--mute)',
             letterSpacing: '0.14em', textTransform: 'uppercase',
@@ -121,6 +127,8 @@ export default function BrowsingHistoryPage() {
             <span>brand</span>
             <span>gold type</span>
             <span style={{ textAlign: 'right' }}>buy price</span>
+            <span style={{ textAlign: 'right' }}>giá thấp nhất</span>
+            <span style={{ textAlign: 'right' }}>vs thấp nhất</span>
           </div>
 
           {isLoading && (
@@ -135,25 +143,54 @@ export default function BrowsingHistoryPage() {
             </div>
           )}
 
-          {!isLoading && items.map((item, i) => (
-            <div
-              key={item.id}
-              style={{
-                display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr 1fr',
-                padding: '14px 24px', alignItems: 'center',
-                borderTop: i === 0 ? 'none' : '1px solid var(--hairline)',
-              }}
-            >
-              <div className="mono" style={{ fontSize: 12, color: 'var(--bone)' }}>
-                {fmtDate(item.viewedAt)}
+          {!isLoading && items.map((item, i) => {
+            const lowestPrice = lowestMap.get(`${item.brand}|${item.goldType}`);
+            const isLowest = lowestPrice !== undefined && item.buyPrice === lowestPrice;
+            const vsPct = lowestPrice !== undefined && lowestPrice > 0
+              ? ((item.buyPrice - lowestPrice) / lowestPrice) * 100
+              : null;
+
+            return (
+              <div
+                key={item.id}
+                style={{
+                  display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr 1fr 1fr 1fr',
+                  padding: '14px 24px', alignItems: 'center',
+                  borderTop: i === 0 ? 'none' : '1px solid var(--hairline)',
+                }}
+              >
+                <div className="mono" style={{ fontSize: 12, color: 'var(--bone)' }}>
+                  {fmtDate(item.viewedAt)}
+                </div>
+                <div style={{ font: '700 13px/1 var(--font-display)' }}>{item.brand}</div>
+                <div className="mono" style={{ fontSize: 11, color: 'var(--mute)' }}>{item.goldType}</div>
+                <div style={{
+                  textAlign: 'right',
+                  font: '700 14px/1 var(--font-display)',
+                  fontVariantNumeric: 'tabular-nums',
+                  color: isLowest ? 'var(--up)' : undefined,
+                }}>
+                  {fmtVnd(item.buyPrice)}
+                </div>
+                <div style={{
+                  textAlign: 'right',
+                  font: '600 13px/1 var(--font-display)',
+                  fontVariantNumeric: 'tabular-nums',
+                  color: 'var(--up)',
+                }}>
+                  {lowestPrice !== undefined ? fmtVnd(lowestPrice) : '—'}
+                </div>
+                <div style={{
+                  textAlign: 'right',
+                  font: '600 12px/1 var(--font-mono)',
+                  fontVariantNumeric: 'tabular-nums',
+                  color: vsPct === null ? 'var(--mute)' : vsPct === 0 ? 'var(--up)' : 'var(--bone)',
+                }}>
+                  {vsPct === null ? '—' : vsPct === 0 ? '= thấp nhất' : `+${vsPct.toFixed(1)}%`}
+                </div>
               </div>
-              <div style={{ font: '700 13px/1 var(--font-display)' }}>{item.brand}</div>
-              <div className="mono" style={{ fontSize: 11, color: 'var(--mute)' }}>{item.goldType}</div>
-              <div style={{ textAlign: 'right', font: '700 14px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>
-                {fmtVnd(item.buyPrice)}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Pagination */}

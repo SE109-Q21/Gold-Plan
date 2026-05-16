@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDcaSimulate } from '@/lib/dca.api';
+import { useAddTransaction } from '@/lib/portfolio.api';
 import type { DcaDataPointDto } from '@gpls/shared';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -284,6 +285,8 @@ export default function DcaSimulatorPage() {
   const [frequency, setFrequency] = useState<Frequency>('weekly');
   const [qty, setQty] = useState(0.5);
   const [submitted, setSubmitted] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState<string | null>(null);
 
   const goldType = BRAND_GOLD_TYPE[brand];
   const maxDate = todayMinus14();
@@ -293,10 +296,42 @@ export default function DcaSimulatorPage() {
     : null;
 
   const { data, isLoading, error } = useDcaSimulate(params);
+  const addTransaction = useAddTransaction();
 
   const handleSimulate = () => {
     if (!startDate) return;
     setSubmitted(true);
+    setSaveMsg(null);
+  };
+
+  const isLoggedIn = typeof window !== 'undefined' && !!localStorage.getItem('access_token');
+
+  const handleSaveToPortfolio = async () => {
+    if (!data || !data.dataPoints.length) return;
+    const confirmed = window.confirm(
+      `Lưu ${data.dataPoints.length} giao dịch vào danh mục? Mỗi lần mua ${qty} tael ${brand}.`
+    );
+    if (!confirmed) return;
+    setSaving(true);
+    setSaveMsg(null);
+    try {
+      for (const point of data.dataPoints) {
+        await addTransaction.mutateAsync({
+          type: 'BUY',
+          brand,
+          goldType,
+          quantity: qty,
+          pricePerTael: point.price,
+          transactedAt: new Date(point.date).toISOString(),
+          note: `DCA simulation — ${frequency}`,
+        });
+      }
+      setSaveMsg(`${data.dataPoints.length} giao dịch đã được lưu vào danh mục`);
+    } catch {
+      setSaveMsg('Lỗi: không thể lưu giao dịch. Vui lòng thử lại.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   // P&L helpers
@@ -635,6 +670,42 @@ export default function DcaSimulatorPage() {
                 <LumpSumDetail label="Lump Sum current value" value={fmtVnd(data.lumpSumCurrentValueVnd)}/>
                 <LumpSumDetail label="Lump Sum P&L" value={`${data.lumpSumPnlPct >= 0 ? '+' : ''}${data.lumpSumPnlPct.toFixed(2)}%`}/>
               </div>
+
+              {/* Save to Portfolio */}
+              {isLoggedIn && (
+                <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+                  <button
+                    onClick={handleSaveToPortfolio}
+                    disabled={saving}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      height: 42,
+                      padding: '0 22px',
+                      background: saving ? 'rgba(212,175,55,0.4)' : 'var(--gold)',
+                      border: 0,
+                      borderRadius: 10,
+                      cursor: saving ? 'not-allowed' : 'pointer',
+                      font: '700 13px/1 var(--font-display)',
+                      color: '#0B0B0F',
+                      letterSpacing: '0.04em',
+                      transition: 'background 140ms',
+                    }}
+                  >
+                    {saving ? 'Đang lưu…' : 'Lưu vào danh mục'}
+                  </button>
+                  {saveMsg && (
+                    <span style={{
+                      font: '500 12px/1.4 var(--font-mono)',
+                      color: saveMsg.startsWith('Lỗi') ? 'var(--down)' : 'var(--up)',
+                      letterSpacing: '0.04em',
+                    }}>
+                      {saveMsg}
+                    </span>
+                  )}
+                </div>
+              )}
             </>
           )}
 

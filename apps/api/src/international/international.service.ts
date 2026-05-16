@@ -6,6 +6,7 @@ const CACHE_TTL_MS = 5 * 60_000;
 
 export interface InternationalPriceDto {
   spotPriceUsd: number;
+  spotPriceEur: number;
   spotPriceVnd: number;
   exchangeRate: number;
   recordedAt: string;
@@ -42,11 +43,15 @@ export class InternationalService {
       ]);
 
       const spotPriceUsd = goldRes.data.price;
-      const exchangeRate = fxRes.data.rates['VND'] ?? 25_000;
-      const dto = this.buildDto(spotPriceUsd, exchangeRate);
+      // exchangerate-api returns rates relative to USD base, so rates['EUR'] = EUR per 1 USD
+      const usdVnd = fxRes.data.rates['VND'] ?? 25_000;
+      const eurPerUsd = fxRes.data.rates['EUR'] ?? 0.92;
+      const spotPriceEur = spotPriceUsd * eurPerUsd;
+      const exchangeRate = usdVnd;
+      const dto = this.buildDto(spotPriceUsd, spotPriceEur, exchangeRate);
 
       this.cache = { data: dto, expiresAt: Date.now() + CACHE_TTL_MS };
-      this.logger.log(`International price fetched: $${spotPriceUsd}`);
+      this.logger.log(`International price fetched: $${spotPriceUsd} / €${dto.spotPriceEur}`);
       return dto;
     } catch (err) {
       if (this.cache) {
@@ -57,9 +62,10 @@ export class InternationalService {
     }
   }
 
-  private buildDto(spotPriceUsd: number, exchangeRate: number): InternationalPriceDto {
+  private buildDto(spotPriceUsd: number, spotPriceEur: number, exchangeRate: number): InternationalPriceDto {
     return {
       spotPriceUsd,
+      spotPriceEur: Math.round(spotPriceEur * 100) / 100,
       spotPriceVnd: Math.round(spotPriceUsd * TAEL_PER_TROY_OZ * exchangeRate),
       exchangeRate,
       recordedAt: new Date().toISOString(),

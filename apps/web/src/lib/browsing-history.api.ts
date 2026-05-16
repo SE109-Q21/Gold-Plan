@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from './api-client';
-import type { BrowsingContextDto, BrowsingHistoryItemDto } from '@gpls/shared';
+import type { BrowsingContextDto, BrowsingHistoryItemDto, LowestSeenItemDto } from '@gpls/shared';
 
 export function useBrowsingContext(brand: string, goldType: string, enabled = true) {
   return useQuery({
@@ -23,6 +23,14 @@ export function useRecordBrowse() {
   return useMutation({
     mutationFn: ({ brand, goldType, buyPrice }: { brand: string; goldType: string; buyPrice: number }) =>
       apiClient.post('/browsing-history/record', { brand, goldType, buyPrice }),
+  });
+}
+
+export function useLowestSeen() {
+  return useQuery({
+    queryKey: ['browsing-history', 'lowest'],
+    queryFn: () => apiClient.get<LowestSeenItemDto[]>('/browsing-history/lowest').then(r => r.data),
+    staleTime: 60_000,
   });
 }
 

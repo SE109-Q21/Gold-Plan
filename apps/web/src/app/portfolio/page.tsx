@@ -241,9 +241,77 @@ function PnlChart({ data, loading }: { data: { date: string; valueVnd: number }[
   );
 }
 
-// ─── Allocation bar ───────────────────────────────────────────────────────────
+// ─── Allocation donut chart ───────────────────────────────────────────────────
 
-const ALLOC_COLORS = ['#D4AF37', '#A88A2B', '#7A6420', '#4E3F13', '#2E2509'];
+const BRAND_COLOR: Record<string, string> = {
+  SJC:     '#D4AF37',
+  DOJI:    '#C0C0C0',
+  PNJ:     '#CD7F32',
+  BAO_TIN: '#8B7355',
+};
+
+const ALLOC_PALETTE = ['#D4AF37', '#C0C0C0', '#CD7F32', '#8B7355', '#6B8E23', '#4682B4'];
+
+function allocColor(label: string, idx: number): string {
+  return BRAND_COLOR[label] ?? ALLOC_PALETTE[idx % ALLOC_PALETTE.length];
+}
+
+function DonutChart({ items }: { items: { label: string; pct: number }[] }) {
+  const CX = 80, CY = 80, OR = 70, IR = 45;
+
+  function describeArc(startDeg: number, endDeg: number): string {
+    const toRad = (d: number) => (d - 90) * (Math.PI / 180);
+    const x1 = CX + OR * Math.cos(toRad(startDeg));
+    const y1 = CY + OR * Math.sin(toRad(startDeg));
+    const x2 = CX + OR * Math.cos(toRad(endDeg));
+    const y2 = CY + OR * Math.sin(toRad(endDeg));
+    const ix1 = CX + IR * Math.cos(toRad(endDeg));
+    const iy1 = CY + IR * Math.sin(toRad(endDeg));
+    const ix2 = CX + IR * Math.cos(toRad(startDeg));
+    const iy2 = CY + IR * Math.sin(toRad(startDeg));
+    const large = endDeg - startDeg > 180 ? 1 : 0;
+    return [
+      `M${x1.toFixed(2)},${y1.toFixed(2)}`,
+      `A${OR},${OR} 0 ${large} 1 ${x2.toFixed(2)},${y2.toFixed(2)}`,
+      `L${ix1.toFixed(2)},${iy1.toFixed(2)}`,
+      `A${IR},${IR} 0 ${large} 0 ${ix2.toFixed(2)},${iy2.toFixed(2)}`,
+      'Z',
+    ].join(' ');
+  }
+
+  // Single item: full circle as two half-arcs
+  if (items.length === 1) {
+    const c = allocColor(items[0].label, 0);
+    return (
+      <svg viewBox="0 0 160 160" width={160} height={160} style={{ display: 'block' }}>
+        <circle cx={CX} cy={CY} r={OR} fill={c}/>
+        <circle cx={CX} cy={CY} r={IR} fill="var(--ink-2)"/>
+      </svg>
+    );
+  }
+
+  const slices: { path: string; color: string }[] = [];
+  let cursor = 0;
+  for (let i = 0; i < items.length; i++) {
+    const sweep = (items[i].pct / 100) * 360;
+    if (sweep > 0) {
+      slices.push({
+        path: describeArc(cursor, cursor + sweep - 0.4),
+        color: allocColor(items[i].label, i),
+      });
+    }
+    cursor += sweep;
+  }
+
+  return (
+    <svg viewBox="0 0 160 160" width={160} height={160} style={{ display: 'block' }}>
+      {slices.map((s, i) => (
+        <path key={i} d={s.path} fill={s.color}/>
+      ))}
+      <circle cx={CX} cy={CY} r={IR} fill="var(--ink-2)"/>
+    </svg>
+  );
+}
 
 function AllocationGroup({
   title,
@@ -255,36 +323,28 @@ function AllocationGroup({
   loading: boolean;
 }) {
   return (
-    <div style={{ flex: 1, minWidth: 0 }}>
+    <div style={{ flex: 1, minWidth: 200 }}>
       <SectionLabel>{title}</SectionLabel>
       {loading ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <Skeleton w="100%" h={8} radius={4}/>
+          <Skeleton w={160} h={160} radius={80}/>
           <Skeleton w="80%" h={12} radius={3}/>
         </div>
       ) : items.length === 0 ? (
         <div style={{ font: '500 11px/1 var(--font-mono)', color: 'var(--mute)' }}>no data</div>
       ) : (
         <>
-          {/* Stacked bar */}
-          <div style={{ display: 'flex', height: 8, borderRadius: 4, overflow: 'hidden', gap: 1, marginBottom: 12 }}>
-            {items.map((item, i) => (
-              <div
-                key={item.label}
-                style={{
-                  flex: item.pct,
-                  background: ALLOC_COLORS[i % ALLOC_COLORS.length],
-                  minWidth: item.pct > 0 ? 2 : 0,
-                  transition: 'flex 400ms var(--ease)',
-                }}
-              />
-            ))}
-          </div>
+          {/* Donut chart */}
+          <DonutChart items={items}/>
           {/* Legend */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginTop: 14 }}>
             {items.map((item, i) => (
               <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ width: 8, height: 8, borderRadius: 2, background: ALLOC_COLORS[i % ALLOC_COLORS.length], flexShrink: 0 }}/>
+                <div style={{
+                  width: 9, height: 9, borderRadius: '50%',
+                  background: allocColor(item.label, i),
+                  flexShrink: 0,
+                }}/>
                 <span style={{ font: '600 11px/1 var(--font-mono)', color: 'var(--bone)', flex: 1 }}>
                   {item.label}
                 </span>

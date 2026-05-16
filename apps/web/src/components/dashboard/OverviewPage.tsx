@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useInternationalPrice, useDomesticPrices, usePriceHistory, useComparison } from '@/lib/price.api';
 import { useExchangeRates } from '@/lib/exchange-rate.api';
 import { useHeatIndex } from '@/lib/heat-index.api';
@@ -8,11 +8,26 @@ import { LineChart, Sparkline } from '@/components/ui/ChartPrimitives';
 import { IconPlus } from '@/components/dashboard/DashboardShell';
 import type { GoldType, ComparisonBrandDto } from '@gpls/shared';
 import { useAuth } from '@/contexts/auth-context';
-import { usePersonalisationOrder, useRecordView, useAddPin, useRemovePin } from '@/lib/personalisation.api';
+import { usePersonalisationOrder, useRecordView, useAddPin, useRemovePin, useReorderPins } from '@/lib/personalisation.api';
 import { useBrowsingContext, useRecordBrowse } from '@/lib/browsing-history.api';
 import { DigestCard } from '@/components/DigestCard';
 import { ForecastVoteWidget } from '@/components/ForecastVoteWidget';
 import { HeatIndexHistoryChart } from '@/components/HeatIndexHistoryChart';
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 const RANGE_LABELS = ['1D', '1W', '1M'] as const;
 type Range = '1D' | '1W' | '1M';
@@ -225,6 +240,32 @@ interface PriceRowProps {
   onUnpin: () => void;
   onClick: () => void;
   rowIndex: number;
+  dragHandleProps?: React.HTMLAttributes<HTMLDivElement>;
+}
+
+function DragHandle({ dragHandleProps }: { dragHandleProps?: React.HTMLAttributes<HTMLDivElement> }) {
+  return (
+    <div
+      {...dragHandleProps}
+      title="Drag to reorder"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: 20,
+        height: 20,
+        cursor: 'grab',
+        color: 'var(--mute)',
+        fontSize: 13,
+        flexShrink: 0,
+        opacity: 0.5,
+        userSelect: 'none',
+        touchAction: 'none',
+      }}
+    >
+      ⠿
+    </div>
+  );
 }
 
 function BrowsingBadge({ brand, goldType }: { brand: string; goldType: string }) {
@@ -253,14 +294,14 @@ function BrowsingBadge({ brand, goldType }: { brand: string; goldType: string })
 
 function PriceRow({
   brand, goldType, buyPrice, sellPrice, isBestBuy, isBestSell,
-  isLoggedIn, isPinned, onPin, onUnpin, onClick, rowIndex,
+  isLoggedIn, isPinned, onPin, onUnpin, onClick, rowIndex, dragHandleProps,
 }: PriceRowProps) {
   return (
     <div
       onClick={onClick}
       style={{
         display: 'grid',
-        gridTemplateColumns: '2fr 1fr 1fr 1fr' + (isLoggedIn ? ' 32px' : ''),
+        gridTemplateColumns: (isPinned && isLoggedIn ? '20px ' : '') + '2fr 1fr 1fr 1fr' + (isLoggedIn ? ' 32px' : ''),
         padding: '16px 24px',
         alignItems: 'center',
         borderTop: rowIndex === 0 ? 'none' : '1px solid var(--hairline)',
@@ -268,6 +309,9 @@ function PriceRow({
         cursor: isLoggedIn ? 'pointer' : 'default',
       }}
     >
+      {isPinned && isLoggedIn && (
+        <DragHandle dragHandleProps={dragHandleProps} />
+      )}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <div style={{
           width: 36, height: 36, borderRadius: 6,
@@ -325,6 +369,38 @@ function PriceRow({
   );
 }
 
+// ─── SortablePriceRow ─────────────────────────────────────────────────────────
+
+type SortablePriceRowProps = Omit<PriceRowProps, 'dragHandleProps'> & { id: string };
+
+function SortablePriceRow(props: SortablePriceRowProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: props.id });
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    position: 'relative',
+    zIndex: isDragging ? 1 : 'auto',
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <PriceRow
+        {...props}
+        dragHandleProps={{ ...attributes, ...listeners }}
+      />
+    </div>
+  );
+}
+
 export function OverviewPage({ currency, onNavigateAlerts }: { currency: string; onNavigateAlerts: () => void }) {
   const [range, setRange] = useState<Range>('1M');
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
@@ -342,6 +418,14 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
   const recordBrowse = useRecordBrowse();
   const addPin = useAddPin();
   const removePin = useRemovePin();
+  const reorderPins = useReorderPins();
+
+  // Local order state for pinned brands (used by DnD)
+  const [pinnedOrder, setPinnedOrder] = useState<Array<{ brand: string; goldType: string }> | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+  );
 
   const chartData = (history ?? []).map(p => p.buyPrice);
   const displayData = chartData.length > 1 ? chartData : [2280, 2295, 2310, 2325, 2345];
@@ -381,6 +465,34 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
       p => p.brand === brand && p.goldType === goldType && p.isPinned,
     );
   }
+
+  // Build the sorted list of pinned brand+goldType keys from server data,
+  // falling back to local state during an active drag session
+  const serverPinnedItems = (personalisationOrder ?? [])
+    .filter((p) => p.isPinned)
+    .sort((a, b) => (a.pinOrder ?? 0) - (b.pinOrder ?? 0))
+    .map((p) => ({ brand: p.brand, goldType: p.goldType }));
+
+  const activePinnedItems = pinnedOrder ?? serverPinnedItems;
+  const pinnedIds = activePinnedItems.map((p) => `${p.brand}__${p.goldType}`);
+
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (!over || active.id === over.id) {
+        setPinnedOrder(null);
+        return;
+      }
+      const oldIndex = activePinnedItems.findIndex((p) => `${p.brand}__${p.goldType}` === active.id);
+      const newIndex = activePinnedItems.findIndex((p) => `${p.brand}__${p.goldType}` === over.id);
+      const newOrder = arrayMove(activePinnedItems, oldIndex, newIndex);
+      setPinnedOrder(newOrder);
+      reorderPins.mutate(newOrder, {
+        onSettled: () => setPinnedOrder(null),
+      });
+    },
+    [activePinnedItems, reorderPins],
+  );
 
   return (
     <div style={{ padding: '24px 28px 40px' }}>
@@ -492,23 +604,55 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
             <span>brand</span><span style={{ textAlign: 'right' }}>buy</span><span style={{ textAlign: 'right' }}>sell</span><span style={{ textAlign: 'right' }}>spread</span>
             {isLoggedIn && <span/>}
           </div>
-          {displayBrands.map((b, i) => (
-            <PriceRow
-              key={b.brand}
-              brand={b.brand}
-              goldType={compGoldType}
-              buyPrice={b.buyPrice}
-              sellPrice={b.sellPrice}
-              isBestBuy={b.isBestBuy}
-              isBestSell={b.isBestSell}
-              isLoggedIn={isLoggedIn}
-              isPinned={isPinnedRow(b.brand, compGoldType)}
-              onPin={() => addPin.mutate({ brand: b.brand, goldType: compGoldType })}
-              onUnpin={() => removePin.mutate({ brand: b.brand, goldType: compGoldType })}
-              onClick={() => handleRowClick(b.brand, compGoldType, b.buyPrice)}
-              rowIndex={i}
-            />
-          ))}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext items={pinnedIds} strategy={verticalListSortingStrategy}>
+              {displayBrands.map((b, i) => {
+                const pinned = isPinnedRow(b.brand, compGoldType);
+                const id = `${b.brand}__${compGoldType}`;
+                if (pinned && isLoggedIn) {
+                  return (
+                    <SortablePriceRow
+                      key={b.brand}
+                      id={id}
+                      brand={b.brand}
+                      goldType={compGoldType}
+                      buyPrice={b.buyPrice}
+                      sellPrice={b.sellPrice}
+                      isBestBuy={b.isBestBuy}
+                      isBestSell={b.isBestSell}
+                      isLoggedIn={isLoggedIn}
+                      isPinned={true}
+                      onPin={() => addPin.mutate({ brand: b.brand, goldType: compGoldType })}
+                      onUnpin={() => removePin.mutate({ brand: b.brand, goldType: compGoldType })}
+                      onClick={() => handleRowClick(b.brand, compGoldType, b.buyPrice)}
+                      rowIndex={i}
+                    />
+                  );
+                }
+                return (
+                  <PriceRow
+                    key={b.brand}
+                    brand={b.brand}
+                    goldType={compGoldType}
+                    buyPrice={b.buyPrice}
+                    sellPrice={b.sellPrice}
+                    isBestBuy={b.isBestBuy}
+                    isBestSell={b.isBestSell}
+                    isLoggedIn={isLoggedIn}
+                    isPinned={false}
+                    onPin={() => addPin.mutate({ brand: b.brand, goldType: compGoldType })}
+                    onUnpin={() => removePin.mutate({ brand: b.brand, goldType: compGoldType })}
+                    onClick={() => handleRowClick(b.brand, compGoldType, b.buyPrice)}
+                    rowIndex={i}
+                  />
+                );
+              })}
+            </SortableContext>
+          </DndContext>
         </div>
       </div>
 

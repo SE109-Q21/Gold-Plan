@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { BrowsingHistoryService, BrowsingContextDto, BrowsingHistoryItemDto } from './browsing-history.service';
+import { BrowsingHistoryService, BrowsingContextDto, BrowsingHistoryItemDto, LowestSeenItemDto } from './browsing-history.service';
 import { RecordBrowseDto } from './dto/record-browse.dto';
 
 @UseGuards(JwtAuthGuard)
@@ -47,6 +47,13 @@ export class BrowsingHistoryController {
       page ? parseInt(page, 10) : 1,
       limit ? parseInt(limit, 10) : 20,
     );
+  }
+
+  @Get('lowest')
+  async getLowest(
+    @CurrentUser() user: { sub: string; email: string; role: string },
+  ): Promise<LowestSeenItemDto[]> {
+    return this.service.getAllLowestSeen(user.sub);
   }
 
   @Delete()

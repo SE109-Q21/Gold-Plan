@@ -29,12 +29,18 @@ export function InternationalPriceCard() {
 
   return (
     <div className="rounded-lg border border-gray-200 bg-gradient-to-br from-yellow-50 to-white p-4">
-      <h3 className="text-sm font-medium text-gray-500">Giá vàng quốc tế (XAU/USD)</h3>
+      <h3 className="text-sm font-medium text-gray-500">Giá vàng quốc tế</h3>
       <div className="mt-2 flex items-end gap-3">
         <span className="text-2xl font-bold text-yellow-700">
-          ${data.spotPriceUsd.toLocaleString('en-US', { maximumFractionDigits: 2 })}
-          <span className="ml-1 text-sm font-normal text-gray-400">/oz</span>
+          ${data.spotPriceUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          <span className="ml-1 text-sm font-normal text-gray-400">/ troy oz</span>
         </span>
+      </div>
+      <div className="mt-1 text-sm text-gray-600">
+        <span className="font-semibold text-yellow-800">
+          €{data.spotPriceEur.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        </span>
+        {' '}/ troy oz
       </div>
       <div className="mt-1 text-sm text-gray-600">
         ≈{' '}

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
-import { AdminStatsDto, DataSourceStatusDto } from '@gpls/shared';
+import { AdminStatsDto, AdminPeriodStatsDto, AdminStatsPeriod, DataSourceStatusDto } from '@gpls/shared';
 import { CreateDataSourceDto, UpdateDataSourceDto } from './dto/admin.dto';
 
 export { CreateDataSourceDto, UpdateDataSourceDto };
@@ -71,6 +71,41 @@ export class AdminService {
       alertsSentToday,
       crawlSuccessRate,
       dataSources: dataSourceStatuses,
+    };
+  }
+
+  async getStatsByPeriod(period: AdminStatsPeriod): Promise<AdminPeriodStatsDto> {
+    const now = new Date();
+    let since: Date;
+    if (period === 'day') {
+      since = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    } else if (period === 'week') {
+      since = new Date(now);
+      since.setDate(now.getDate() - 7);
+    } else {
+      since = new Date(now);
+      since.setDate(now.getDate() - 30);
+    }
+
+    const [newUsers, alertsSent, crawlSessions] = await Promise.all([
+      this.prisma.user.count({ where: { createdAt: { gte: since } } }),
+      this.prisma.alertTriggerHistory.count({ where: { triggeredAt: { gte: since } } }),
+      this.prisma.crawlSession.findMany({
+        where: { startedAt: { gte: since } },
+        select: { status: true },
+      }),
+    ]);
+
+    const totalCrawls = crawlSessions.length;
+    const successCrawls = crawlSessions.filter((s) => s.status === 'completed').length;
+
+    return {
+      period,
+      since: since.toISOString(),
+      newUsers,
+      alertsSent,
+      crawlSuccessRate: totalCrawls > 0 ? Math.round((successCrawls / totalCrawls) * 100) : 0,
+      totalCrawls,
     };
   }
 

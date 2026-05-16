@@ -30,6 +30,14 @@ export class AdminController {
     return this.adminService.getStats();
   }
 
+  // GET /admin/stats/period?period=day|week|month
+  @Get('stats/period')
+  getStatsByPeriod(@Query('period') period: 'day' | 'week' | 'month' = 'day') {
+    const p: 'day' | 'week' | 'month' =
+      period === 'week' || period === 'month' ? period : 'day';
+    return this.adminService.getStatsByPeriod(p);
+  }
+
   // GET /admin/users?page=1&limit=20&status=active&role=user
   @Get('users')
   listUsers(
