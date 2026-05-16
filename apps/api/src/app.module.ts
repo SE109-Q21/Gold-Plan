@@ -20,6 +20,7 @@ import { PortfolioModule } from './portfolio/portfolio.module';
 import { BrowsingHistoryModule } from './browsing-history/browsing-history.module';
 import { PersonalisationModule } from './personalisation/personalisation.module';
 import { AiModule } from './ai/ai.module';
+import { DigestModule } from './digest/digest.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { AiModule } from './ai/ai.module';
     BrowsingHistoryModule,
     PersonalisationModule,
     AiModule,
+    DigestModule,
   ],
   controllers: [HealthController],
 })

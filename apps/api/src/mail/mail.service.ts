@@ -67,6 +67,38 @@ export class MailService {
     await this.send(to, subject, html);
   }
 
+  async sendDigestEmail(
+    to: string,
+    data: {
+      date: string;
+      sjcBuyVnd: number;
+      sjcSellVnd: number;
+      xauUsd: number;
+      pctChangeSjc: number;
+      highlight: string;
+      aiSummary?: string | null;
+    },
+  ): Promise<void> {
+    const fmtVnd = (n: number) => n.toLocaleString('vi-VN') + ' ₫';
+    const pctLabel = data.pctChangeSjc >= 0
+      ? `+${data.pctChangeSjc.toFixed(2)}%`
+      : `${data.pctChangeSjc.toFixed(2)}%`;
+    const subject = `GoldTracker Morning Digest — ${data.date}`;
+    const html = `
+      <h2>📊 Morning Gold Digest — ${data.date}</h2>
+      <table>
+        <tr><td><strong>SJC Buy</strong></td><td>${fmtVnd(data.sjcBuyVnd)}</td></tr>
+        <tr><td><strong>SJC Sell</strong></td><td>${fmtVnd(data.sjcSellVnd)}</td></tr>
+        <tr><td><strong>XAU/USD</strong></td><td>$${data.xauUsd.toFixed(2)}</td></tr>
+        <tr><td><strong>vs Yesterday</strong></td><td>${pctLabel}</td></tr>
+      </table>
+      <p><strong>Highlight:</strong> ${data.highlight}</p>
+      ${data.aiSummary ? `<p><em>${data.aiSummary}</em></p>` : ''}
+      <hr/><p style="font-size:11px;color:#888">GoldTracker · For reference only — not financial advice.</p>
+    `;
+    await this.send(to, subject, html);
+  }
+
   // ---------------------------------------------------------------------------
   // Private helpers
   // ---------------------------------------------------------------------------
