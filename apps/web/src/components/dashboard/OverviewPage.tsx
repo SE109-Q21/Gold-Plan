@@ -10,6 +10,7 @@ import type { GoldType, ComparisonBrandDto } from '@gpls/shared';
 import { useAuth } from '@/contexts/auth-context';
 import { usePersonalisationOrder, useRecordView, useAddPin, useRemovePin } from '@/lib/personalisation.api';
 import { useBrowsingContext, useRecordBrowse } from '@/lib/browsing-history.api';
+import { DigestCard } from '@/components/DigestCard';
 
 const RANGE_LABELS = ['1D', '1W', '1M'] as const;
 type Range = '1D' | '1W' | '1M';
@@ -380,7 +381,9 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
   }
 
   return (
-    <div style={{ padding: '24px 28px 40px', display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 20 }}>
+    <div style={{ padding: '24px 28px 40px' }}>
+      <DigestCard />
+    <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 20 }}>
       {/* ── Left column */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20, minWidth: 0 }}>
 
@@ -565,6 +568,7 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
           </button>
         </div>
       </div>
+    </div>
     </div>
   );
 }

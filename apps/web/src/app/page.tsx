@@ -7,6 +7,7 @@ import { MarketsPage } from '@/components/dashboard/MarketsPage';
 import { AlertsPage } from '@/components/dashboard/AlertsPage';
 import { AccountPage } from '@/components/dashboard/AccountPage';
 import { AddAlertModal } from '@/components/dashboard/AddAlertModal';
+import { AiChatWidget } from '@/components/AiChatWidget';
 
 export default function Page() {
   const [tab, setTab] = useState<Tab>('home');
@@ -22,6 +23,7 @@ export default function Page() {
         {tab === 'profile' && <AccountPage/>}
       </DashboardShell>
       <AddAlertModal open={alertOpen} onClose={() => setAlertOpen(false)}/>
+      <AiChatWidget />
     </>
   );
 }
