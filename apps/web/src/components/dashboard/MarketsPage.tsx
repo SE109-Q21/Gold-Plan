@@ -1,14 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { usePriceHistory } from '@/lib/price.api';
+import { usePriceHistory, type HistoryRange } from '@/lib/price.api';
 import { useSpreadRanking } from '@/lib/spread.api';
 import { LineChart } from '@/components/ui/ChartPrimitives';
 import type { GoldBrand, GoldType } from '@gpls/shared';
+import { useAuth } from '@/contexts/auth-context';
 
 const ASSETS = ['XAU/USD', 'XAU/VND', 'SJC', 'DOJI', 'PNJ'] as const;
-type Range = '1D' | '1W' | '1M';
-const RANGES: Range[] = ['1D', '1W', '1M'];
+type Range = HistoryRange;
+const RANGES: Range[] = ['1D', '1W', '1M', '3M', '1Y'];
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
 const GOLD_TYPES: GoldType[] = ['MIEN_SJC', 'NHAN_9999', 'VANG_24K', 'VANG_18K'];
 
@@ -126,6 +129,7 @@ export function MarketsPage() {
   const [range, setRange] = useState<Range>('1M');
   const [asset, setAsset] = useState('SJC');
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+  const { user } = useAuth();
 
   const { data: history } = usePriceHistory('SJC' as GoldBrand, 'MIEN_SJC' as GoldType, range);
   const chartData = (history ?? []).map(p => p.buyPrice);
@@ -168,10 +172,18 @@ export function MarketsPage() {
               </span>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 4 }}>
+          <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
             {RANGES.map(r => (
               <button key={r} onClick={() => setRange(r)} style={{ display: 'inline-flex', alignItems: 'center', height: 32, padding: '0 10px', border: `1px solid ${range === r ? 'var(--gold)' : 'var(--line)'}`, borderRadius: 0, background: range === r ? 'var(--gold)' : 'transparent', color: range === r ? '#0B0B0F' : 'var(--bone)', font: '700 11px/1 var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}>{r}</button>
             ))}
+            {user && (
+              <button
+                onClick={() => window.open(`${API_BASE}/prices/history/export?brand=SJC&goldType=MIEN_SJC&range=${range}`)}
+                style={{ display: 'inline-flex', alignItems: 'center', height: 32, padding: '0 10px', border: '1px solid var(--line)', borderRadius: 0, background: 'transparent', color: 'var(--mute)', font: '700 11px/1 var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer', marginLeft: 8 }}
+              >
+                export csv
+              </button>
+            )}
           </div>
         </div>
 

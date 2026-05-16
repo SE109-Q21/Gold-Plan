@@ -20,10 +20,12 @@ export async function fetchInternationalPrice(): Promise<InternationalPriceDto> 
   return data;
 }
 
+export type HistoryRange = '1D' | '1W' | '1M' | '3M' | '1Y';
+
 export async function fetchPriceHistory(
   brand: GoldBrand,
   goldType: GoldType,
-  range: '1D' | '1W' | '1M',
+  range: HistoryRange,
 ): Promise<ChartPointDto[]> {
   const { data } = await apiClient.get<ChartPointDto[]>('/prices/history', {
     params: { brand, goldType, range },
@@ -59,7 +61,7 @@ export function useInternationalPrice() {
 export function usePriceHistory(
   brand: GoldBrand,
   goldType: GoldType,
-  range: '1D' | '1W' | '1M',
+  range: HistoryRange,
 ) {
   return useQuery({
     queryKey: ['prices', 'history', brand, goldType, range],

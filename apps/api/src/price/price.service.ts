@@ -11,6 +11,26 @@ const RANGE_MS: Record<string, number> = {
   '1D': 24 * 60 * 60_000,
   '1W': 7 * 24 * 60 * 60_000,
   '1M': 30 * 24 * 60 * 60_000,
+  '3M': 90 * 24 * 60 * 60_000,
+  '1Y': 365 * 24 * 60 * 60_000,
+};
+
+type HistoryRange = '1D' | '1W' | '1M' | '3M' | '1Y';
+
+const RANGE_TAKE: Record<HistoryRange, number> = {
+  '1D': 500,
+  '1W': 500,
+  '1M': 500,
+  '3M': 5000,
+  '1Y': 10000,
+};
+
+const RANGE_MAX_POINTS: Record<HistoryRange, number> = {
+  '1D': 500,
+  '1W': 500,
+  '1M': 500,
+  '3M': 500,
+  '1Y': 365,
 };
 
 function getStatus(recordedAt: Date): 'live' | 'recent' | 'outdated' {
@@ -61,19 +81,50 @@ export class PriceService {
     });
   }
 
-  async getHistory(brand: GoldBrand, goldType: GoldType, range: '1D' | '1W' | '1M') {
+  private thinRecords<T extends { recordedAt: Date }>(records: T[], maxPoints: number): T[] {
+    if (records.length <= maxPoints) return records;
+    const step = Math.ceil(records.length / maxPoints);
+    return records.filter((_, i) => i % step === 0);
+  }
+
+  async getHistory(brand: GoldBrand, goldType: GoldType, range: HistoryRange) {
     const since = new Date(Date.now() - RANGE_MS[range]);
+    const take = RANGE_TAKE[range];
+    const maxPoints = RANGE_MAX_POINTS[range];
+
     const records = await this.prisma.priceRecord.findMany({
       where: { brand, goldType, isAnomalous: false, recordedAt: { gte: since } },
       orderBy: { recordedAt: 'asc' },
-      take: 2000,
+      take,
     });
 
-    return records.map((r) => ({
+    const thinned = this.thinRecords(records, maxPoints);
+
+    return thinned.map((r) => ({
       recordedAt: r.recordedAt.toISOString(),
       buyPrice: Number(r.buyPrice),
       sellPrice: Number(r.sellPrice),
     }));
+  }
+
+  async exportCsv(brand: GoldBrand, goldType: GoldType, range: HistoryRange): Promise<string> {
+    const since = new Date(Date.now() - RANGE_MS[range]);
+    const records = await this.prisma.priceRecord.findMany({
+      where: { brand, goldType, isAnomalous: false, recordedAt: { gte: since } },
+      orderBy: { recordedAt: 'asc' },
+      take: 10000,
+    });
+
+    const rows = records.map((r) => ({
+      timestamp: r.recordedAt.toISOString(),
+      buyPrice: Number(r.buyPrice),
+      sellPrice: Number(r.sellPrice),
+      brand: r.brand,
+      goldType: r.goldType,
+    }));
+
+    const Papa = await import('papaparse');
+    return Papa.unparse(rows);
   }
 
   async getComparison(goldType: GoldType) {

@@ -315,13 +315,14 @@ model ViewHistory {
 // ─── Community Forecast (F07) ─────────────────────────────────────────────────
 
 model ForecastSession {
-  id            String    @id @default(cuid())
+  id            String            @id @default(cuid())
   date          String
   opensAt       DateTime
   closesAt      DateTime
-  sessionClosed Boolean   @default(false)
+  sessionClosed Boolean           @default(false)
   scoredAt      DateTime?
-  createdAt     DateTime  @default(now())
+  actualResult  ForecastDirection?
+  createdAt     DateTime          @default(now())
 
   votes         ForecastVote[]
 
