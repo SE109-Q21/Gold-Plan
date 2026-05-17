@@ -6,7 +6,8 @@ import { useInternationalPrice, useDomesticPrices, usePriceHistory, useCompariso
 import { useExchangeRates } from '@/lib/exchange-rate.api';
 import { useHeatIndex } from '@/lib/heat-index.api';
 import { useAlerts } from '@/lib/alerts.api';
-import { LineChart, Sparkline } from '@/components/ui/ChartPrimitives';
+import { Sparkline } from '@/components/ui/ChartPrimitives';
+import { PriceChart } from '@/components/ui/PriceChart';
 import { IconPlus } from '@/components/dashboard/DashboardShell';
 import type { GoldType, ComparisonBrandDto } from '@gpls/shared';
 import { useAuth } from '@/contexts/auth-context';
@@ -403,7 +404,7 @@ function SortablePriceRow(props: SortablePriceRowProps) {
 
 export function OverviewPage({ currency, onNavigateAlerts }: { currency: string; onNavigateAlerts: () => void }) {
   const [range, setRange] = useState<Range>('1M');
-  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+  const [hoverPrice, setHoverPrice] = useState<number | null>(null);
 
   const { user } = useAuth();
   const isLoggedIn = user !== null;
@@ -447,17 +448,7 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
 
   const chartData = (history ?? []).map(p => p.buyPrice);
   const displayData = chartData.length > 1 ? chartData : [2280, 2295, 2310, 2325, 2345];
-
-  function onChartMove(e: React.MouseEvent<HTMLDivElement>) {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const i = Math.round((x / rect.width) * (displayData.length - 1));
-    setHoverIdx(Math.min(Math.max(i, 0), displayData.length - 1));
-  }
-
-  const hoverVal = hoverIdx !== null ? displayData[hoverIdx] : displayData[displayData.length - 1];
-  const priceHigh = Math.max(...displayData);
-  const priceLow = Math.min(...displayData);
+  const hoverVal = hoverPrice ?? displayData[displayData.length - 1];
 
   // Comparison brands
   const compRow = comparison?.[0];
@@ -594,22 +585,7 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
               ))}
             </div>
           </div>
-          <div onMouseMove={onChartMove} onMouseLeave={() => setHoverIdx(null)} style={{ cursor: 'crosshair' }}>
-            <LineChart data={displayData} w={720} h={260} hoverIdx={hoverIdx}/>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0, marginTop: 20, paddingTop: 18, borderTop: '1px solid var(--hairline)' }}>
-            {[
-              { lbl: 'High', val: fmtVnd(priceHigh), tint: null },
-              { lbl: 'Low', val: fmtVnd(priceLow), tint: null },
-              { lbl: 'Signal', val: 'Buy bias', tint: 'var(--up)' },
-              { lbl: 'Range', val: range, tint: 'var(--gold)' },
-            ].map((s, i) => (
-              <div key={s.lbl} style={{ paddingLeft: i === 0 ? 0 : 18, borderLeft: i === 0 ? 'none' : '1px solid var(--hairline)' }}>
-                <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 6 }}>{s.lbl}</div>
-                <div style={{ font: '700 18px/1 var(--font-display)', color: s.tint || 'var(--chalk)', fontVariantNumeric: 'tabular-nums' }}>{s.val}</div>
-              </div>
-            ))}
-          </div>
+          <PriceChart history={history ?? []} range={range} onHoverPrice={setHoverPrice} chartId="overview-pc" />
         </div>
 
         {/* Brand spreads table */}
