@@ -1,8 +1,8 @@
 'use client';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/auth-context';
 import {
   usePortfolio,
   usePortfolioChart,
@@ -638,9 +638,8 @@ function AddTransactionModal({ onClose }: { onClose: () => void }) {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
-export default function PortfolioPage() {
+function PortfolioContent() {
   const router = useRouter();
-  const { user, isLoading: authLoading } = useAuth();
 
   const [showModal, setShowModal] = useState(false);
   const [txPage, setTxPage] = useState(1);
@@ -650,39 +649,6 @@ export default function PortfolioPage() {
   const { data: alloc, isLoading: allocLoading } = usePortfolioAllocation();
   const { data: txData, isLoading: txLoading } = useTransactions(txPage);
   const deleteTx = useDeleteTransaction();
-
-  // Auth gate
-  if (authLoading) {
-    return (
-      <div style={{ minHeight: '100vh', background: 'var(--ink)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ font: '500 13px/1 var(--font-mono)', color: 'var(--mute)', letterSpacing: '0.08em' }}>loading…</div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div style={{ minHeight: '100vh', background: 'var(--ink)', color: 'var(--chalk)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ font: '800 28px/1 var(--font-display)', letterSpacing: '-0.02em', marginBottom: 12 }}>
-            portfolio
-          </div>
-          <div style={{ font: '500 14px/1.5 var(--font-display)', color: 'var(--mute)', marginBottom: 24 }}>
-            Please log in to view your portfolio
-          </div>
-          <a href="/" style={{
-            display: 'inline-flex', alignItems: 'center', gap: 6,
-            font: '600 13px/1 var(--font-mono)',
-            color: 'var(--gold)',
-            letterSpacing: '0.08em',
-            textDecoration: 'none',
-          }}>
-            ← back to home
-          </a>
-        </div>
-      </div>
-    );
-  }
 
   // Derived values
   const pnlPositive = (summary?.totalPnlVnd ?? 0) >= 0;
@@ -1037,4 +1003,8 @@ export default function PortfolioPage() {
       {showModal && <AddTransactionModal onClose={() => setShowModal(false)}/>}
     </>
   );
+}
+
+export default function PortfolioPage() {
+  return <ProtectedRoute><PortfolioContent /></ProtectedRoute>;
 }

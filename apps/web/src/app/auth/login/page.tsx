@@ -1,14 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 import { ApiError } from '@/lib/auth.api';
 
-export default function LoginPage() {
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
+
+function LoginForm() {
   const { login } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const from = searchParams.get('from');
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +25,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login(email, password);
-      router.push('/');
+      router.push(from && from.startsWith('/') ? from : '/');
     } catch (err: unknown) {
       if (err instanceof ApiError && err.status === 429) {
         setError('Too many failed attempts. Try again in 15 minutes.');
@@ -31,6 +36,10 @@ export default function LoginPage() {
       setLoading(false);
     }
   }
+
+  const googleHref = from && from.startsWith('/')
+    ? `${API_BASE}/auth/google?from=${encodeURIComponent(from)}`
+    : `${API_BASE}/auth/google`;
 
   return (
     <div style={pageStyle}>
@@ -92,10 +101,7 @@ export default function LoginPage() {
           <span style={dividerLineStyle} />
         </div>
 
-        <a
-          href={`${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api'}/auth/google`}
-          style={googleBtnStyle}
-        >
+        <a href={googleHref} style={googleBtnStyle}>
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ flexShrink: 0 }}>
             <path d="M17.64 9.20455C17.64 8.56636 17.5827 7.95273 17.4764 7.36364H9V10.845H13.8436C13.635 11.97 13.0009 12.9232 12.0477 13.5614V15.8195H14.9564C16.6582 14.2527 17.64 11.9455 17.64 9.20455Z" fill="#4285F4"/>
             <path d="M9 18C11.43 18 13.4673 17.1941 14.9564 15.8195L12.0477 13.5614C11.2418 14.1014 10.2109 14.4205 9 14.4205C6.65591 14.4205 4.67182 12.8373 3.96409 10.71H0.957275V13.0418C2.43818 15.9832 5.48182 18 9 18Z" fill="#34A853"/>
@@ -111,6 +117,14 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div style={pageStyle} />}>
+      <LoginForm />
+    </Suspense>
   );
 }
 

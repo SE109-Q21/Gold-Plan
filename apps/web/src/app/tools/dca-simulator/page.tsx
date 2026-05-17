@@ -4,6 +4,8 @@ import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDcaSimulate } from '@/lib/dca.api';
 import { useAddTransaction } from '@/lib/portfolio.api';
+import { useAuth } from '@/contexts/auth-context';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 import type { DcaDataPointDto } from '@gpls/shared';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -277,8 +279,9 @@ function IconArrowLeft({ s = 16 }: { s?: number }) {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
-export default function DcaSimulatorPage() {
+function DcaSimulatorContent() {
   const router = useRouter();
+  const { user } = useAuth();
 
   const [brand, setBrand] = useState<Brand>('SJC');
   const [startDate, setStartDate] = useState('');
@@ -304,7 +307,7 @@ export default function DcaSimulatorPage() {
     setSaveMsg(null);
   };
 
-  const isLoggedIn = typeof window !== 'undefined' && !!localStorage.getItem('access_token');
+  const isLoggedIn = !!user;
 
   const handleSaveToPortfolio = async () => {
     if (!data || !data.dataPoints.length) return;
@@ -726,4 +729,8 @@ function LumpSumDetail({ label, value }: { label: string; value: string }) {
       </div>
     </div>
   );
+}
+
+export default function DcaSimulatorPage() {
+  return <ProtectedRoute><DcaSimulatorContent /></ProtectedRoute>;
 }

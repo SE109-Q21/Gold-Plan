@@ -1,9 +1,9 @@
 'use client';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useBrowsingHistory, useClearHistory, useLowestSeen } from '@/lib/browsing-history.api';
-import { useAuth } from '@/contexts/auth-context';
 
 function fmtDate(iso: string): string {
   const d = new Date(iso);
@@ -19,9 +19,8 @@ function fmtVnd(n: number): string {
   return (n / 1_000_000).toFixed(2) + 'M₫';
 }
 
-export default function BrowsingHistoryPage() {
+function BrowsingHistoryContent() {
   const router = useRouter();
-  const { user } = useAuth();
   const [page, setPage] = useState(1);
 
   const { data, isLoading } = useBrowsingHistory(page);
@@ -37,36 +36,6 @@ export default function BrowsingHistoryPage() {
     if (!window.confirm('Clear all browsing history? This cannot be undone.')) return;
     await clearHistory.mutateAsync();
     setPage(1);
-  }
-
-  if (!user) {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: 'var(--ink)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 12,
-        color: 'var(--chalk)',
-        font: '500 14px/1.4 var(--font-display)',
-      }}>
-        <div style={{ font: '700 20px/1 var(--font-display)' }}>Please log in</div>
-        <div style={{ color: 'var(--mute)', fontSize: 13 }}>You need to be logged in to view your browsing history.</div>
-        <button
-          onClick={() => router.push('/auth/login')}
-          style={{
-            marginTop: 8, height: 38, padding: '0 20px',
-            background: 'var(--gold)', border: 0, borderRadius: 8,
-            cursor: 'pointer', font: '700 12px/1 var(--font-mono)',
-            color: '#0B0B0F', letterSpacing: '0.06em', textTransform: 'uppercase',
-          }}
-        >
-          Log in
-        </button>
-      </div>
-    );
   }
 
   const items = data?.items ?? [];
@@ -240,4 +209,8 @@ export default function BrowsingHistoryPage() {
       </div>
     </div>
   );
+}
+
+export default function BrowsingHistoryPage() {
+  return <ProtectedRoute><BrowsingHistoryContent /></ProtectedRoute>;
 }

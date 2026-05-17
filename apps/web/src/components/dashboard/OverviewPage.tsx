@@ -68,7 +68,7 @@ function HeatIndexGauge() {
   const needleY = 66 - Math.sin(needleAngle) * 50;
 
   const tooltipContent = data
-    ? `Velocity: ${data.priceVelocity.toFixed(1)}% · Spread: ${(data.spreadSize / 1_000_000).toFixed(2)}M₫ · Crossings: ${data.thresholdCrossings}`
+    ? `Velocity: ${data.priceVelocity?.toFixed(1) ?? '—'}% · Spread: ${data.spreadSize != null ? (data.spreadSize / 1_000_000).toFixed(2) : '—'}M₫ · Crossings: ${data.thresholdCrossings ?? '—'}`
     : '';
 
   if (isLoading) return (
@@ -119,8 +119,8 @@ function HeatIndexGauge() {
 function HeatIndexStats() {
   const { data } = useHeatIndex();
   const stats = [
-    { l: 'velocity', v: data ? `${data.priceVelocity.toFixed(1)}%` : '—' },
-    { l: 'spread', v: data ? `${(data.spreadSize / 1_000_000).toFixed(2)}M` : '—' },
+    { l: 'velocity', v: data ? `${data.priceVelocity?.toFixed(1) ?? '—'}%` : '—' },
+    { l: 'spread', v: data ? `${data.spreadSize != null ? (data.spreadSize / 1_000_000).toFixed(2) : '—'}M` : '—' },
     { l: 'crossings', v: data ? `${data.thresholdCrossings}` : '—' },
   ];
   return (

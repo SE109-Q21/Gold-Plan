@@ -1,4 +1,5 @@
 'use client';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -136,7 +137,7 @@ function SkeletonCard() {
   );
 }
 
-export default function DigestArchivePage() {
+function DigestArchiveContent() {
   const router = useRouter();
   const [page, setPage] = useState(1);
   const { data, isLoading } = useDigestArchive(page);
@@ -227,4 +228,8 @@ export default function DigestArchivePage() {
       </div>
     </div>
   );
+}
+
+export default function DigestArchivePage() {
+  return <ProtectedRoute><DigestArchiveContent /></ProtectedRoute>;
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 
@@ -212,6 +212,28 @@ function Sidebar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
 }
 
 function TopBar({ currency, onCurrency }: { currency: string; onCurrency: (c: string) => void }) {
+  const [bellOpen, setBellOpen] = useState(false);
+  const [hasUnread, setHasUnread] = useState(true);
+  const bellRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleOutside(e: MouseEvent) {
+      if (bellRef.current && !bellRef.current.contains(e.target as Node)) {
+        setBellOpen(false);
+      }
+    }
+    if (bellOpen) {
+      document.addEventListener('mousedown', handleOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleOutside);
+  }, [bellOpen]);
+
+  function handleBellClick() {
+    const next = !bellOpen;
+    setBellOpen(next);
+    if (next) setHasUnread(false);
+  }
+
   return (
     <header style={{
       height: 56, flexShrink: 0,
@@ -233,10 +255,38 @@ function TopBar({ currency, onCurrency }: { currency: string; onCurrency: (c: st
             <button key={c} onClick={() => onCurrency(c)} style={{ padding: '5px 10px', border: 0, cursor: 'pointer', background: currency === c ? 'var(--gold)' : 'transparent', color: currency === c ? '#0B0B0F' : 'var(--bone)', font: '700 10px/1 var(--font-mono)', letterSpacing: '0.1em', borderRadius: 4 }}>{c}</button>
           ))}
         </div>
-        <button style={{ width: 34, height: 34, background: 'transparent', border: '1px solid var(--line)', borderRadius: 6, cursor: 'pointer', color: 'var(--bone)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-          <IconBell s={15}/>
-          <span style={{ position: 'absolute', top: 6, right: 7, width: 7, height: 7, borderRadius: 99, background: 'var(--gold)', boxShadow: '0 0 0 2px var(--ink-2)' }}/>
-        </button>
+        {/* Bell with dropdown */}
+        <div ref={bellRef} style={{ position: 'relative' }}>
+          <button
+            onClick={handleBellClick}
+            style={{ width: 34, height: 34, background: bellOpen ? 'var(--ink-3)' : 'transparent', border: '1px solid var(--line)', borderRadius: 6, cursor: 'pointer', color: 'var(--bone)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}
+          >
+            <IconBell s={15}/>
+            {!bellOpen && hasUnread && (
+              <span style={{ position: 'absolute', top: 6, right: 7, width: 7, height: 7, borderRadius: 99, background: 'var(--gold)', boxShadow: '0 0 0 2px var(--ink-2)' }}/>
+            )}
+          </button>
+          {bellOpen && (
+            <div style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, width: 300, background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 12, zIndex: 200, overflow: 'hidden' }}>
+              {/* Header */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid var(--line)' }}>
+                <span style={{ font: '700 9px/1 var(--font-mono)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--mute)' }}>Notifications</span>
+                <button
+                  onClick={() => {}}
+                  style={{ background: 'transparent', border: 0, cursor: 'pointer', font: '600 11px/1 var(--font-mono)', color: 'var(--gold)', padding: 0 }}
+                >
+                  all &rarr;
+                </button>
+              </div>
+              {/* Empty state */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 20px', gap: 10 }}>
+                <span style={{ color: 'var(--gold)' }}><IconBell s={28}/></span>
+                <span style={{ fontSize: 13, color: 'var(--chalk)', fontWeight: 600 }}>No notifications yet</span>
+                <span style={{ fontSize: 11, color: 'var(--mute)', textAlign: 'center', lineHeight: 1.5 }}>Alerts you set up will appear here</span>
+              </div>
+            </div>
+          )}
+        </div>
         <div style={{ width: 32, height: 32, borderRadius: 99, background: 'linear-gradient(135deg, #D4AF37, #8E7321)', display: 'flex', alignItems: 'center', justifyContent: 'center', font: '800 11px/1 var(--font-display)', color: '#0B0B0F' }}>GT</div>
       </div>
     </header>

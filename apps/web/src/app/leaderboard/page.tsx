@@ -1,4 +1,5 @@
 'use client';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 import { useState } from 'react';
 import { useLeaderboard } from '@/lib/forecast.api';
@@ -77,7 +78,7 @@ function EntryRow({ entry, index }: { entry: LeaderboardEntryDto; index: number 
   );
 }
 
-export default function LeaderboardPage() {
+function LeaderboardContent() {
   const [month, setMonth] = useState<string>(() => new Date().toISOString().slice(0, 7));
   const { data, isLoading, isError } = useLeaderboard(month);
 
@@ -182,4 +183,8 @@ export default function LeaderboardPage() {
       )}
     </div>
   );
+}
+
+export default function LeaderboardPage() {
+  return <ProtectedRoute><LeaderboardContent /></ProtectedRoute>;
 }

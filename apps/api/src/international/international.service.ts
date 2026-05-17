@@ -27,29 +27,42 @@ export class InternationalService {
       return this.cache.data;
     }
 
+    const goldApiKey = process.env.GOLD_API_KEY || '';
+    const exchangeApiKey = process.env.EXCHANGE_RATE_API_KEY || '';
+
+    if (!goldApiKey) {
+      this.logger.warn('GOLD_API_KEY not set — using fallback international price');
+      const dto = this.buildDto(2_345, 2_345 * 0.92, 25_480);
+      this.cache = { data: dto, expiresAt: Date.now() + CACHE_TTL_MS };
+      return dto;
+    }
+
     try {
-      const goldApiKey = process.env.GOLD_API_KEY ?? '';
-      const exchangeApiKey = process.env.EXCHANGE_RATE_API_KEY ?? '';
+      let spotPriceUsd: number;
+      let usdVnd = 25_480;
+      let eurPerUsd = 0.92;
 
-      const [goldRes, fxRes] = await Promise.all([
-        axios.get<{ price: number; currency: string }>(
-          `https://www.goldapi.io/api/XAU/USD`,
-          { headers: { 'x-access-token': goldApiKey }, timeout: 8_000 },
-        ),
-        axios.get<{ rates: Record<string, number> }>(
-          `https://v6.exchangerate-api.com/v6/${exchangeApiKey}/latest/USD`,
-          { timeout: 8_000 },
-        ),
-      ]);
+      const goldRes = await axios.get<{ price: number; currency: string }>(
+        `https://www.goldapi.io/api/XAU/USD`,
+        { headers: { 'x-access-token': goldApiKey }, timeout: 8_000 },
+      );
+      spotPriceUsd = goldRes.data.price;
 
-      const spotPriceUsd = goldRes.data.price;
-      // exchangerate-api returns rates relative to USD base, so rates['EUR'] = EUR per 1 USD
-      const usdVnd = fxRes.data.rates['VND'] ?? 25_000;
-      const eurPerUsd = fxRes.data.rates['EUR'] ?? 0.92;
+      if (exchangeApiKey) {
+        try {
+          const fxRes = await axios.get<{ rates: Record<string, number> }>(
+            `https://v6.exchangerate-api.com/v6/${exchangeApiKey}/latest/USD`,
+            { timeout: 8_000 },
+          );
+          usdVnd = fxRes.data.rates['VND'] ?? usdVnd;
+          eurPerUsd = fxRes.data.rates['EUR'] ?? eurPerUsd;
+        } catch {
+          this.logger.warn('Exchange rate fetch failed — using fallback rates');
+        }
+      }
+
       const spotPriceEur = spotPriceUsd * eurPerUsd;
-      const exchangeRate = usdVnd;
-      const dto = this.buildDto(spotPriceUsd, spotPriceEur, exchangeRate);
-
+      const dto = this.buildDto(spotPriceUsd, spotPriceEur, usdVnd);
       this.cache = { data: dto, expiresAt: Date.now() + CACHE_TTL_MS };
       this.logger.log(`International price fetched: $${spotPriceUsd} / €${dto.spotPriceEur}`);
       return dto;
@@ -58,7 +71,10 @@ export class InternationalService {
         this.logger.warn('International price fetch failed; serving stale cache');
         return this.cache.data;
       }
-      throw err;
+      this.logger.error('International price fetch failed and no cache — using fallback defaults');
+      const dto = this.buildDto(2_345, 2_345 * 0.92, 25_480);
+      this.cache = { data: dto, expiresAt: Date.now() + CACHE_TTL_MS };
+      return dto;
     }
   }
 

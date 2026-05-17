@@ -1,4 +1,5 @@
 'use client';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 import { useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
@@ -163,7 +164,7 @@ function IconArrowLeft({ s = 16 }: { s?: number }) {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
-export default function ConverterPage() {
+function ConverterContent() {
   const router = useRouter();
 
   // Controls state
@@ -512,4 +513,8 @@ function InfoItem({ label, value, loading }: { label: string; value: string; loa
       )}
     </div>
   );
+}
+
+export default function ConverterPage() {
+  return <ProtectedRoute><ConverterContent /></ProtectedRoute>;
 }
