@@ -4,12 +4,12 @@ import { GoldBrand, GoldType, HeatIndexRecord } from '@prisma/client';
 import { PrismaService } from '../database/prisma.service';
 
 export interface HeatIndexDto {
-  score: number;
-  label: 'Cold' | 'Warm' | 'Hot';
-  velocityPct: number;
-  spreadVnd: number;
-  crossings: number;
-  computedAt: string;
+  value: number;
+  category: string;
+  priceVelocity: number;
+  spreadSize: number;
+  thresholdCrossings: number;
+  updatedAt: string;
 }
 
 @Injectable()
@@ -29,8 +29,7 @@ export class HeatIndexService {
     spreadSize: bigint;
     thresholdCrossings: number;
   }> {
-    // Component 1 — Price Velocity (40 pts max)
-    // Get last 10 SJC MIEN_SJC PriceRecords today, ordered by recordedAt desc
+    // Component 1 — Price Velocity (40% weight)
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
@@ -46,31 +45,28 @@ export class HeatIndexService {
     });
 
     let velocityScore = 0;
+    let avgChangePct = 0;
     if (recentRecords.length >= 2) {
       let totalChangePct = 0;
       let count = 0;
       for (let i = 0; i < recentRecords.length - 1; i++) {
-        const price1 = Number(recentRecords[i].buyPrice);
-        const price2 = Number(recentRecords[i + 1].buyPrice);
-        if (price2 > 0) {
-          totalChangePct += Math.abs((price1 - price2) / price2) * 100;
+        const pCurrent = Number(recentRecords[i].buyPrice);
+        const pPrev = Number(recentRecords[i + 1].buyPrice);
+        if (pPrev > 0) {
+          totalChangePct += Math.abs((pCurrent - pPrev) / pPrev) * 100;
           count++;
         }
       }
-      const averageChangePct = count > 0 ? totalChangePct / count : 0;
-      velocityScore = Math.min(averageChangePct / 2.0, 1.0) * 40;
+      avgChangePct = count > 0 ? totalChangePct / count : 0;
+      // Scale: 0.5% avg change = 40 pts
+      velocityScore = Math.min((avgChangePct / 0.5) * 40, 40);
     }
 
-    // Component 2 — Spread Size (30 pts max)
-    // Get latest SJC MIEN_SJC record's (sellPrice - buyPrice)
-    const latestRecord = recentRecords.length > 0
-      ? recentRecords[0]
+    // Component 2 — Buy-sell spread size (30% weight)
+    const latestRecord = recentRecords.length > 0 
+      ? recentRecords[0] 
       : await this.prisma.priceRecord.findFirst({
-          where: {
-            brand: GoldBrand.SJC,
-            goldType: GoldType.MIEN_SJC,
-            isAnomalous: false,
-          },
+          where: { brand: GoldBrand.SJC, goldType: GoldType.MIEN_SJC, isAnomalous: false },
           orderBy: { recordedAt: 'desc' },
         });
 
@@ -78,12 +74,12 @@ export class HeatIndexService {
     let spreadScore = 0;
     if (latestRecord) {
       latestSpread = Number(latestRecord.sellPrice) - Number(latestRecord.buyPrice);
-      spreadScore = Math.min(Math.max((latestSpread - 200_000) / 300_000, 0), 1) * 30;
+      // Scale: 1M VND spread = 30 pts, 200k VND spread = 0 pts
+      spreadScore = Math.min(Math.max((latestSpread - 200_000) / 800_000, 0), 1) * 30;
     }
 
-    // Component 3 — Threshold Crossings (30 pts max)
-    // Count how many times SJC price crossed a 500k boundary in last 24h
-    const since24h = new Date(Date.now() - 24 * 60 * 60_000);
+    // Component 3 — Threshold Crossings (30% weight)
+    const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const records24h = await this.prisma.priceRecord.findMany({
       where: {
         brand: GoldBrand.SJC,
@@ -96,13 +92,14 @@ export class HeatIndexService {
 
     let crossings = 0;
     for (let i = 0; i < records24h.length - 1; i++) {
-      const price1 = Number(records24h[i].buyPrice);
-      const price2 = Number(records24h[i + 1].buyPrice);
-      if (Math.floor(price1 / 500_000) !== Math.floor(price2 / 500_000)) {
+      const p1 = Number(records24h[i].buyPrice);
+      const p2 = Number(records24h[i + 1].buyPrice);
+      if (Math.floor(p1 / 500_000) !== Math.floor(p2 / 500_000)) {
         crossings++;
       }
     }
-    const crossingScore = Math.min(crossings / 10, 1) * 30;
+    // Scale: 10 crossings = 30 pts
+    const crossingScore = Math.min((crossings / 10) * 30, 30);
 
     const totalScore = Math.round(velocityScore + spreadScore + crossingScore);
     const label = totalScore <= 33 ? 'Cold' : totalScore <= 66 ? 'Warm' : 'Hot';
@@ -110,7 +107,7 @@ export class HeatIndexService {
     return {
       indexValue: totalScore,
       category: label,
-      priceVelocity: (velocityScore / 40) * 100,
+      priceVelocity: avgChangePct,
       spreadSize: BigInt(Math.round(latestSpread)),
       thresholdCrossings: crossings,
     };
@@ -142,12 +139,12 @@ export class HeatIndexService {
 
   private toDto(r: HeatIndexRecord): HeatIndexDto {
     return {
-      score: r.indexValue,
-      label: r.category as 'Cold' | 'Warm' | 'Hot',
-      velocityPct: Number(r.priceVelocity),
-      spreadVnd: Number(r.spreadSize),
-      crossings: r.thresholdCrossings,
-      computedAt: r.calculatedAt.toISOString(),
+      value: r.indexValue,
+      category: r.category,
+      priceVelocity: Number(r.priceVelocity),
+      spreadSize: Number(r.spreadSize),
+      thresholdCrossings: r.thresholdCrossings,
+      updatedAt: r.calculatedAt.toISOString(),
     };
   }
 }
