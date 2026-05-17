@@ -115,9 +115,9 @@ function HeatIndexGauge() {
 function HeatIndexStats() {
   const { data } = useHeatIndex();
   const stats = [
-    { l: 'velocity', v: data ? `${data.priceVelocity?.toFixed(1) ?? '—'}%` : '—' },
-    { l: 'spread', v: data ? `${data.spreadSize != null ? (data.spreadSize / 1_000_000).toFixed(2) : '—'}M` : '—' },
-    { l: 'crossings', v: data ? `${data.thresholdCrossings}` : '—' },
+    { l: 'Velocity', v: data ? `${data.priceVelocity?.toFixed(1) ?? '—'}%` : '—' },
+    { l: 'Spread', v: data ? `${data.spreadSize != null ? (data.spreadSize / 1_000_000).toFixed(2) : '—'}M` : '—' },
+    { l: 'Crossings', v: data ? `${data.thresholdCrossings}` : '—' },
   ];
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginTop: 18, paddingTop: 14, borderTop: '1px solid var(--hairline)' }}>
@@ -576,7 +576,7 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
         <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, padding: 24 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
             <div>
-              <h3 style={{ font: '700 18px/1 var(--font-display)', margin: 0, letterSpacing: '-0.01em' }}>price history</h3>
+              <h3 style={{ font: '700 18px/1 var(--font-display)', margin: 0, letterSpacing: '-0.01em' }}>Price history</h3>
               <div className="mono" style={{ fontSize: 11, color: 'var(--mute)', marginTop: 6 }}>
                 SJC Miếng · <span style={{ color: 'var(--chalk)' }}>{fmtVnd(hoverVal)}</span>
               </div>
@@ -599,10 +599,10 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0, marginTop: 20, paddingTop: 18, borderTop: '1px solid var(--hairline)' }}>
             {[
-              { lbl: 'high', val: fmtVnd(priceHigh), tint: null },
-              { lbl: 'low', val: fmtVnd(priceLow), tint: null },
-              { lbl: 'signal', val: 'buy bias', tint: 'var(--up)' },
-              { lbl: 'range', val: range, tint: 'var(--gold)' },
+              { lbl: 'High', val: fmtVnd(priceHigh), tint: null },
+              { lbl: 'Low', val: fmtVnd(priceLow), tint: null },
+              { lbl: 'Signal', val: 'Buy bias', tint: 'var(--up)' },
+              { lbl: 'Range', val: range, tint: 'var(--gold)' },
             ].map((s, i) => (
               <div key={s.lbl} style={{ paddingLeft: i === 0 ? 0 : 18, borderLeft: i === 0 ? 'none' : '1px solid var(--hairline)' }}>
                 <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 6 }}>{s.lbl}</div>
@@ -615,7 +615,7 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
         {/* Brand spreads table */}
         <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, padding: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 24px', borderBottom: '1px solid var(--hairline)' }}>
-            <h3 style={{ font: '700 18px/1 var(--font-display)', margin: 0, letterSpacing: '-0.01em' }}>domestic brand spreads</h3>
+            <h3 style={{ font: '700 18px/1 var(--font-display)', margin: 0, letterSpacing: '-0.01em' }}>Domestic brand spreads</h3>
             <span className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>vnd per tael · best highlighted</span>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr' + (isLoggedIn ? ' 32px' : ''), padding: '12px 24px', font: '700 10px/1 var(--font-mono)', color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase', background: 'var(--ink-3)', borderBottom: '1px solid var(--hairline)' }}>
@@ -680,7 +680,7 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
         {/* Karat strip */}
         <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, padding: 20 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
-            <h3 style={{ font: '700 16px/1 var(--font-display)', margin: 0 }}>by karat</h3>
+            <h3 style={{ font: '700 16px/1 var(--font-display)', margin: 0 }}>By karat</h3>
             <span className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>per oz · usd</span>
           </div>
           {KARATS.map((k, i) => {
@@ -707,7 +707,7 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
         {/* Market heat */}
         <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, padding: 20 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
-            <h3 style={{ font: '700 16px/1 var(--font-display)', margin: 0 }}>market heat</h3>
+            <h3 style={{ font: '700 16px/1 var(--font-display)', margin: 0 }}>Market heat</h3>
           </div>
           <HeatIndexGauge />
           <HeatIndexStats />
@@ -719,7 +719,7 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
         {/* Alerts widget */}
         <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, padding: 20 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
-            <h3 style={{ font: '700 16px/1 var(--font-display)', margin: 0 }}>your alerts</h3>
+            <h3 style={{ font: '700 16px/1 var(--font-display)', margin: 0 }}>Your alerts</h3>
             <button onClick={handleNavigateAlerts} style={{ background: 'transparent', border: 0, cursor: 'pointer', font: '700 11px/1 var(--font-mono)', color: 'var(--gold)', letterSpacing: '0.08em' }}>view all →</button>
           </div>
           {!isLoggedIn && (

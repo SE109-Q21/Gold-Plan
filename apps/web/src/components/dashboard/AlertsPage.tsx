@@ -564,10 +564,10 @@ export function AlertsPage({ onOpenAdd }: { onOpenAdd: () => void }) {
       {/* Stats bar */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
         {[
-          { lbl: 'active',    val: activeCount,                   gold: true  },
-          { lbl: 'triggered', val: triggeredCount,                 gold: false },
-          { lbl: 'slots',     val: `${alerts.length} / 10`,        gold: false },
-          { lbl: 'cooldown',  val: '30 min',                       gold: false },
+          { lbl: 'Active',    val: activeCount,                   gold: true  },
+          { lbl: 'Triggered', val: triggeredCount,                 gold: false },
+          { lbl: 'Slots',     val: `${alerts.length} / 10`,        gold: false },
+          { lbl: 'Cooldown',  val: '30 min',                       gold: false },
         ].map(s => (
           <div key={s.lbl} style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, padding: 18 }}>
             <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 8 }}>{s.lbl}</div>
@@ -578,9 +578,9 @@ export function AlertsPage({ onOpenAdd }: { onOpenAdd: () => void }) {
 
       {/* Tab switcher */}
       <div style={{ display: 'flex', gap: 6 }}>
-        <button style={tabStyle(tab === 'rules')}   onClick={() => setTab('rules')}>active rules</button>
-        <button style={tabStyle(tab === 'history')} onClick={() => setTab('history')}>trigger history</button>
-        <button style={tabStyle(tab === 'smart')}   onClick={() => setTab('smart')}>smart alerts</button>
+        <button style={tabStyle(tab === 'rules')}   onClick={() => setTab('rules')}>Active rules</button>
+        <button style={tabStyle(tab === 'history')} onClick={() => setTab('history')}>Trigger history</button>
+        <button style={tabStyle(tab === 'smart')}   onClick={() => setTab('smart')}>Smart alerts</button>
       </div>
 
       {/* ── Rules tab ── */}

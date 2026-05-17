@@ -326,10 +326,10 @@ export function MarketsPage() {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', marginTop: 22, paddingTop: 18, borderTop: '1px solid var(--hairline)' }}>
           {[
-            { l: 'high', v: fmt(Math.max(...data)), tint: null },
-            { l: 'low',  v: fmt(Math.min(...data)), tint: null },
-            { l: 'σ vol', v: vol ?? '—', tint: 'var(--gold)' },
-            { l: 'signal', v: 'buy bias', tint: 'var(--up)' },
+            { l: 'High', v: fmt(Math.max(...data)), tint: null },
+            { l: 'Low',  v: fmt(Math.min(...data)), tint: null },
+            { l: 'σ Vol', v: vol ?? '—', tint: 'var(--gold)' },
+            { l: 'Signal', v: 'Buy bias', tint: 'var(--up)' },
           ].map((s, i) => (
             <div key={s.l} style={{ paddingLeft: i === 0 ? 0 : 20, borderLeft: i === 0 ? 'none' : '1px solid var(--hairline)' }}>
               <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 6 }}>{s.l}</div>

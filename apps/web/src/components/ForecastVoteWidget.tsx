@@ -13,9 +13,9 @@ function fmtTime(iso: string) {
 type Direction = 'up' | 'flat' | 'down';
 
 const DIRECTION_CONFIG: Record<Direction, { label: string; arrow: string; color: string; bg: string }> = {
-  up:   { label: 'Tăng',  arrow: '↑', color: '#22c55e', bg: 'rgba(34,197,94,0.12)' },
-  flat: { label: 'Đi ngang', arrow: '→', color: '#D4AF37', bg: 'rgba(212,175,55,0.12)' },
-  down: { label: 'Giảm', arrow: '↓', color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
+  up:   { label: 'Up',   arrow: '↑', color: '#22c55e', bg: 'rgba(34,197,94,0.12)' },
+  flat: { label: 'Flat', arrow: '→', color: '#D4AF37', bg: 'rgba(212,175,55,0.12)' },
+  down: { label: 'Down', arrow: '↓', color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
 };
 
 const RESULT_COLOR: Record<Direction, string> = {
@@ -53,11 +53,11 @@ export function ForecastVoteWidget() {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 16 }}>
         <h3 style={{ font: '700 16px/1 var(--font-display)', margin: 0 }}>
-          Dự báo cộng đồng
+          Community forecast
         </h3>
         {session && !session.sessionClosed && (
           <span className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '0.08em' }}>
-            Đóng lúc {fmtTime(session.closesAt)}
+            Closes at {fmtTime(session.closesAt)}
           </span>
         )}
       </div>
@@ -65,14 +65,14 @@ export function ForecastVoteWidget() {
       {/* Loading */}
       {isLoading && (
         <div style={{ font: '500 13px/1 var(--font-mono)', color: 'var(--mute)', padding: '12px 0' }}>
-          đang tải…
+          Loading…
         </div>
       )}
 
       {/* No session */}
       {!isLoading && !session && (
         <div style={{ font: '500 13px/1.5 var(--font-mono)', color: 'var(--mute)', padding: '8px 0' }}>
-          Chưa có phiên dự báo hôm nay
+          No forecast session today
         </div>
       )}
 
@@ -80,7 +80,7 @@ export function ForecastVoteWidget() {
       {!isLoading && session?.sessionClosed && session.actualResult && (
         <div style={{ padding: '12px 0' }}>
           <div style={{ font: '700 11px/1 var(--font-mono)', color: 'var(--mute)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>
-            kết quả hôm nay
+            Today&apos;s result
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ font: '800 32px/1 var(--font-display)', color: RESULT_COLOR[session.actualResult] }}>
@@ -92,7 +92,7 @@ export function ForecastVoteWidget() {
           </div>
           {session.userVote && (
             <div style={{ marginTop: 10, font: '500 12px/1 var(--font-mono)', color: session.userVote === session.actualResult ? '#22c55e' : '#ef4444' }}>
-              {session.userVote === session.actualResult ? '✓ Bạn dự đoán đúng!' : '✗ Bạn dự đoán sai.'}
+              {session.userVote === session.actualResult ? '✓ You got it right!' : '✗ You got it wrong.'}
             </div>
           )}
         </div>
@@ -138,7 +138,7 @@ export function ForecastVoteWidget() {
                   onClick={() => router.push('/auth/login?from=%2F')}
                   style={{ background: 'transparent', border: 0, padding: 0, cursor: 'pointer', font: '500 11px/1.4 var(--font-mono)', color: 'var(--gold)', margin: '8px 0 0', textDecoration: 'underline' }}
                 >
-                  Đăng nhập để bỏ phiếu →
+                  Sign in to vote →
                 </button>
               )}
             </div>
@@ -180,7 +180,7 @@ export function ForecastVoteWidget() {
                 );
               })}
               <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', marginTop: 4 }}>
-                {session.totalVotes} phiếu
+                {session.totalVotes} votes
               </div>
             </div>
           )}
@@ -188,7 +188,7 @@ export function ForecastVoteWidget() {
           {/* Voted but no ratios yet */}
           {hasVoted && !ratios && (
             <div style={{ font: '500 13px/1.5 var(--font-mono)', color: 'var(--mute)', padding: '8px 0' }}>
-              Đã bỏ phiếu: <strong style={{ color: DIRECTION_CONFIG[session.userVote!].color }}>
+              Voted: <strong style={{ color: DIRECTION_CONFIG[session.userVote!].color }}>
                 {DIRECTION_CONFIG[session.userVote!].label}
               </strong>
             </div>

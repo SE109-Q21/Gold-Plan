@@ -160,7 +160,7 @@ export function AccountPage() {
             <span className="stamp" style={{ fontSize: 10 }}>GOLD MEMBER</span>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', marginTop: 22, paddingTop: 18, borderTop: '1px solid var(--hairline)' }}>
-            {[{ l: 'portfolio', v: '$14,820', tint: null }, { l: 'P&L · 30d', v: '+$1,247', tint: 'var(--up)' }, { l: 'alerts', v: '4 / 10', tint: null }, { l: 'logins · 30d', v: '23', tint: null }].map(s => (
+            {[{ l: 'Portfolio', v: '$14,820', tint: null }, { l: 'P&L · 30d', v: '+$1,247', tint: 'var(--up)' }, { l: 'Alerts', v: '4 / 10', tint: null }, { l: 'Logins · 30d', v: '23', tint: null }].map(s => (
               <div key={s.l}>
                 <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 6 }}>{s.l}</div>
                 <div style={{ font: '700 22px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums', color: s.tint ?? 'var(--chalk)' }}>{s.v}</div>
