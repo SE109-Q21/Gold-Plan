@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useActiveSession, useCastVote } from '@/lib/forecast.api';
 
 function pad2(n: number) { return String(n).padStart(2, '0'); }
@@ -25,6 +26,7 @@ const RESULT_COLOR: Record<Direction, string> = {
 
 export function ForecastVoteWidget() {
   const [token, setToken] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     setToken(localStorage.getItem('token'));
@@ -132,9 +134,12 @@ export function ForecastVoteWidget() {
                 );
               })}
               {!token && (
-                <p style={{ font: '500 11px/1.4 var(--font-mono)', color: 'var(--mute)', margin: '8px 0 0' }}>
-                  Đăng nhập để bỏ phiếu.
-                </p>
+                <button
+                  onClick={() => router.push('/auth/login?from=%2F')}
+                  style={{ background: 'transparent', border: 0, padding: 0, cursor: 'pointer', font: '500 11px/1.4 var(--font-mono)', color: 'var(--gold)', margin: '8px 0 0', textDecoration: 'underline' }}
+                >
+                  Đăng nhập để bỏ phiếu →
+                </button>
               )}
             </div>
           )}

@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { useInternationalPrice, useDomesticPrices, usePriceHistory, useComparison } from '@/lib/price.api';
 import { useExchangeRates } from '@/lib/exchange-rate.api';
 import { useHeatIndex } from '@/lib/heat-index.api';
+import { useAlerts } from '@/lib/alerts.api';
 import { LineChart, Sparkline } from '@/components/ui/ChartPrimitives';
 import { IconPlus } from '@/components/dashboard/DashboardShell';
 import type { GoldType, ComparisonBrandDto } from '@gpls/shared';
@@ -32,17 +34,11 @@ import { CSS } from '@dnd-kit/utilities';
 const RANGE_LABELS = ['1D', '1W', '1M'] as const;
 type Range = '1D' | '1W' | '1M';
 
-const KARAT_MOCK = [
-  { karat: '24K', pct: 99.9, change: '+1.21%', dir: 'up' as const, spark: [12,14,13,15,17,16,19,21,22,24,23,26] },
-  { karat: '22K', pct: 91.6, change: '+1.18%', dir: 'up' as const, spark: [10,11,13,12,14,15,14,17,18,17,19,21] },
-  { karat: '18K', pct: 75.0, change: '+0.94%', dir: 'up' as const, spark: [8,9,8,10,9,11,12,11,13,12,14,15] },
-];
-
-const ALERT_MOCK = [
-  { karat: '24K', cond: '≥', target: '$2,400.00', fired: false },
-  { karat: '24K', cond: '≤', target: '$2,280.00', fired: false },
-  { karat: '22K', cond: '≤', target: '71,500,000₫', fired: true },
-];
+const KARATS = [
+  { karat: '24K', pct: 99.9, multiplier: 1 },
+  { karat: '22K', pct: 91.6, multiplier: 0.916 },
+  { karat: '18K', pct: 75.0, multiplier: 0.75 },
+] as const;
 
 function fmtVnd(n: number) { return (n / 1_000_000).toFixed(2) + 'M₫'; }
 function fmtUsd(n: number) { return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
@@ -411,11 +407,29 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
 
   const { user } = useAuth();
   const isLoggedIn = user !== null;
+  const router = useRouter();
+
+  function handleNavigateAlerts() {
+    if (!isLoggedIn) {
+      router.push('/auth/login?from=%2F');
+      return;
+    }
+    onNavigateAlerts();
+  }
 
   const { data: intl } = useInternationalPrice();
   const { data: domestic } = useDomesticPrices();
   const { data: history } = usePriceHistory('SJC', 'MIEN_SJC', range);
+  const { data: history1D } = usePriceHistory('SJC', 'MIEN_SJC', '1D');
   const { data: comparison } = useComparison('MIEN_SJC' as GoldType);
+  const { data: alertsData } = useAlerts();
+
+  const change1D = (() => {
+    if (!history1D || history1D.length < 2) return null;
+    const first = history1D[0].buyPrice;
+    const last = history1D[history1D.length - 1].buyPrice;
+    return ((last - first) / first) * 100;
+  })();
 
   const { data: personalisationOrder } = usePersonalisationOrder();
   const recordView = useRecordView();
@@ -529,9 +543,9 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
                 </span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 12 }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, font: '700 14px/1 var(--font-mono)', color: 'var(--up)', background: 'rgba(88,200,150,0.10)', padding: '7px 10px', borderRadius: 4 }}>
-                  <svg width="11" height="11" viewBox="0 0 10 10"><path d="M5 1l4 6H1z" fill="var(--up)"/></svg>
-                  +1.21%
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, font: '700 14px/1 var(--font-mono)', color: change1D != null && change1D < 0 ? 'var(--down)' : 'var(--up)', background: change1D != null && change1D < 0 ? 'rgba(229,72,77,0.10)' : 'rgba(88,200,150,0.10)', padding: '7px 10px', borderRadius: 4 }}>
+                  <svg width="11" height="11" viewBox="0 0 10 10"><path d={change1D != null && change1D < 0 ? 'M5 9l4-6H1z' : 'M5 1l4 6H1z'} fill={change1D != null && change1D < 0 ? 'var(--down)' : 'var(--up)'}/></svg>
+                  {change1D != null ? (change1D >= 0 ? '+' : '') + change1D.toFixed(2) + '%' : '—'}
                 </span>
                 <span className="mono" style={{ fontSize: 11, color: 'var(--mute)' }}>24h</span>
               </div>
@@ -542,14 +556,14 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
                 <div style={{ font: '700 22px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>
                   {intl ? (intl.spotPriceVnd / 1_000_000).toFixed(2) : '78.92'}<span style={{ color: 'var(--mute)', fontSize: 14, marginLeft: 4 }}>M₫</span>
                 </div>
-                <div className="mono" style={{ fontSize: 10, color: 'var(--up)', marginTop: 6 }}>+0.15%</div>
+                <div className="mono" style={{ fontSize: 10, color: change1D != null && change1D < 0 ? 'var(--down)' : 'var(--up)', marginTop: 6 }}>{change1D != null ? (change1D >= 0 ? '+' : '') + change1D.toFixed(2) + '%' : '—'}</div>
               </div>
               <div style={{ padding: 14, background: 'var(--ink-3)', border: '1px solid var(--line)', borderRadius: 10 }}>
                 <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 6 }}>usd / vnd</div>
                 <div style={{ font: '700 22px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>
                   {intl ? intl.exchangeRate.toLocaleString('en-US', { maximumFractionDigits: 0 }) : '24,815'}
                 </div>
-                <div className="mono" style={{ fontSize: 10, color: 'var(--down)', marginTop: 6 }}>−0.04%</div>
+                <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', marginTop: 6 }}>—</div>
               </div>
             </div>
           </div>
@@ -669,9 +683,13 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
             <h3 style={{ font: '700 16px/1 var(--font-display)', margin: 0 }}>by karat</h3>
             <span className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>per oz · usd</span>
           </div>
-          {KARAT_MOCK.map((k, i) => {
-            const multipliers: Record<string, number> = { '24K': 1, '22K': 0.916, '18K': 0.75 };
-            const price = intl ? intl.spotPriceUsd * (multipliers[k.karat] ?? 1) : 0;
+          {KARATS.map((k, i) => {
+            const price = intl ? intl.spotPriceUsd * k.multiplier : 0;
+            const karatDir: 'up' | 'down' = change1D != null && change1D < 0 ? 'down' : 'up';
+            const karatSpark = history1D && history1D.length > 0
+              ? history1D.slice(-12).map(p => (p.buyPrice / 1_000_000) * k.multiplier)
+              : [];
+            const changeStr = change1D != null ? (change1D >= 0 ? '+' : '') + change1D.toFixed(2) + '%' : '—';
             return (
               <div key={k.karat} style={{ display: 'grid', gridTemplateColumns: '52px 1fr 80px 60px', alignItems: 'center', gap: 12, padding: '14px 0', borderTop: i === 0 ? 'none' : '1px solid var(--hairline)' }}>
                 <div style={{ font: '800 18px/1 var(--font-display)', color: 'var(--gold)', letterSpacing: '-0.02em' }}>{k.karat}</div>
@@ -679,8 +697,8 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
                   <div style={{ font: '700 20px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>{price > 0 ? fmtUsd(price) : '…'}</div>
                   <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', marginTop: 4 }}>{k.pct}% purity</div>
                 </div>
-                <Sparkline data={k.spark} w={80} h={28} dir={k.dir}/>
-                <div className="mono" style={{ fontSize: 11, color: 'var(--up)', textAlign: 'right', fontWeight: 700 }}>{k.change}</div>
+                <Sparkline data={karatSpark.length > 0 ? karatSpark : [1,1,1,1,1,1,1,1,1,1,1,1]} w={80} h={28} dir={karatDir}/>
+                <div className="mono" style={{ fontSize: 11, color: karatDir === 'up' ? 'var(--up)' : 'var(--down)', textAlign: 'right', fontWeight: 700 }}>{changeStr}</div>
               </div>
             );
           })}
@@ -702,21 +720,34 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
         <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, padding: 20 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
             <h3 style={{ font: '700 16px/1 var(--font-display)', margin: 0 }}>your alerts</h3>
-            <button onClick={onNavigateAlerts} style={{ background: 'transparent', border: 0, cursor: 'pointer', font: '700 11px/1 var(--font-mono)', color: 'var(--gold)', letterSpacing: '0.08em' }}>view all →</button>
+            <button onClick={handleNavigateAlerts} style={{ background: 'transparent', border: 0, cursor: 'pointer', font: '700 11px/1 var(--font-mono)', color: 'var(--gold)', letterSpacing: '0.08em' }}>view all →</button>
           </div>
-          {ALERT_MOCK.map((a, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderTop: i === 0 ? 'none' : '1px solid var(--hairline)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span className="mono" style={{ fontSize: 10, fontWeight: 700, color: 'var(--gold)', letterSpacing: '0.1em', padding: '3px 6px', border: '1px solid var(--gold)', borderRadius: 3 }}>{a.karat}</span>
-                <span style={{ font: '500 13px/1 var(--font-mono)', color: 'var(--bone)' }}>{a.cond}</span>
-                <span style={{ font: '700 14px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>{a.target}</span>
-              </div>
-              <span style={{ font: '700 9px/1 var(--font-mono)', letterSpacing: '0.14em', textTransform: 'uppercase', color: a.fired ? '#0B0B0F' : 'var(--mute)', background: a.fired ? 'var(--gold)' : 'transparent', border: `1px solid ${a.fired ? 'var(--gold)' : 'var(--line)'}`, padding: '4px 7px', borderRadius: 3 }}>
-                {a.fired ? 'fired' : 'waiting'}
-              </span>
+          {!isLoggedIn && (
+            <div style={{ padding: '20px 0', textAlign: 'center', color: 'var(--mute)', font: '500 12px/1 var(--font-mono)' }}>
+              sign in to see your alerts
             </div>
-          ))}
-          <button style={{ width: '100%', height: 44, marginTop: 10, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'var(--gold)', color: '#0B0B0F', border: '1px solid var(--gold)', borderRadius: 10, cursor: 'pointer', font: '700 14px/1 var(--font-mono)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+          )}
+          {isLoggedIn && alertsData?.length === 0 && (
+            <div style={{ padding: '20px 0', textAlign: 'center', color: 'var(--mute)', font: '500 12px/1 var(--font-mono)' }}>
+              no alerts yet
+            </div>
+          )}
+          {isLoggedIn && (alertsData ?? []).slice(0, 3).map((a, i) => {
+            const isFired = a.status === 'triggered';
+            return (
+              <div key={a.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderTop: i === 0 ? 'none' : '1px solid var(--hairline)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span className="mono" style={{ fontSize: 10, fontWeight: 700, color: 'var(--gold)', letterSpacing: '0.1em', padding: '3px 6px', border: '1px solid var(--gold)', borderRadius: 3 }}>{a.brand}</span>
+                  <span style={{ font: '500 13px/1 var(--font-mono)', color: 'var(--bone)' }}>{a.condition === 'gte' ? '≥' : '≤'}</span>
+                  <span style={{ font: '700 14px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>{(Number(a.thresholdPrice) / 1_000_000).toFixed(2)}M₫</span>
+                </div>
+                <span style={{ font: '700 9px/1 var(--font-mono)', letterSpacing: '0.14em', textTransform: 'uppercase', color: isFired ? '#0B0B0F' : 'var(--mute)', background: isFired ? 'var(--gold)' : 'transparent', border: `1px solid ${isFired ? 'var(--gold)' : 'var(--line)'}`, padding: '4px 7px', borderRadius: 3 }}>
+                  {isFired ? 'fired' : 'waiting'}
+                </span>
+              </div>
+            );
+          })}
+          <button onClick={handleNavigateAlerts} style={{ width: '100%', height: 44, marginTop: 10, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'var(--gold)', color: '#0B0B0F', border: '1px solid var(--gold)', borderRadius: 10, cursor: 'pointer', font: '700 14px/1 var(--font-mono)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
             <IconPlus s={15}/> new alert
           </button>
         </div>

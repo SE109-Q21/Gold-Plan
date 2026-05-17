@@ -25,14 +25,6 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 const GOLD_TYPES: GoldType[] = ['MIEN_SJC', 'NHAN_9999', 'VANG_24K', 'VANG_18K'];
 const BRANDS: GoldBrand[] = ['SJC', 'DOJI', 'PNJ', 'BAO_TIN'];
 
-const TICKS_MOCK = [
-  { t: '14:32:08', p: 2345.67, d: '+0.42', down: false },
-  { t: '14:31:55', p: 2345.25, d: '+0.18', down: false },
-  { t: '14:31:42', p: 2345.07, d: '−0.21', down: true  },
-  { t: '14:31:29', p: 2345.28, d: '+0.34', down: false },
-  { t: '14:31:16', p: 2344.94, d: '+0.12', down: false },
-  { t: '14:31:03', p: 2344.82, d: '−0.08', down: true  },
-];
 
 function SpreadRankingSection() {
   const [goldType, setGoldType] = useState<GoldType>('MIEN_SJC');
@@ -245,11 +237,39 @@ export function MarketsPage() {
   const { user } = useAuth();
 
   const { data: history } = usePriceHistory('SJC' as GoldBrand, 'MIEN_SJC' as GoldType, range);
+  const { data: history1D } = usePriceHistory('SJC' as GoldBrand, 'MIEN_SJC' as GoldType, '1D');
   const chartData = (history ?? []).map(p => p.buyPrice);
   const data = chartData.length > 1 ? chartData : [1970, 2050, 2120, 2200, 2250, 2310, 2345];
   const hoverVal = data[hoverIdx ?? data.length - 1];
   const change = data[data.length - 1] - data[0];
   const changePct = (change / data[0]) * 100;
+
+  const ticks = (() => {
+    if (!history1D || history1D.length < 2) return [];
+    const slice = history1D.slice(-6);
+    return slice.map((pt, i) => {
+      const prev = slice[Math.max(0, i - 1)];
+      const diff = pt.buyPrice - prev.buyPrice;
+      const d = new Date(pt.recordedAt);
+      const hh = String(d.getHours()).padStart(2, '0');
+      const mm = String(d.getMinutes()).padStart(2, '0');
+      const ss = String(d.getSeconds()).padStart(2, '0');
+      return {
+        t: `${hh}:${mm}:${ss}`,
+        p: pt.buyPrice / 1_000_000,
+        d: (diff >= 0 ? '+' : '') + (diff / 1_000_000).toFixed(3),
+        down: diff < 0,
+      };
+    });
+  })();
+
+  const vol = (() => {
+    if (chartData.length < 3) return null;
+    const returns = chartData.slice(1).map((p, i) => (p - chartData[i]) / chartData[i]);
+    const mean = returns.reduce((a, b) => a + b, 0) / returns.length;
+    const variance = returns.reduce((a, r) => a + (r - mean) ** 2, 0) / returns.length;
+    return (Math.sqrt(variance) * 100).toFixed(2) + '%';
+  })();
 
   function onMove(e: React.MouseEvent<HTMLDivElement>) {
     const r = e.currentTarget.getBoundingClientRect();
@@ -308,7 +328,7 @@ export function MarketsPage() {
           {[
             { l: 'high', v: fmt(Math.max(...data)), tint: null },
             { l: 'low',  v: fmt(Math.min(...data)), tint: null },
-            { l: 'σ vol', v: '1.84%', tint: 'var(--gold)' },
+            { l: 'σ vol', v: vol ?? '—', tint: 'var(--gold)' },
             { l: 'signal', v: 'buy bias', tint: 'var(--up)' },
           ].map((s, i) => (
             <div key={s.l} style={{ paddingLeft: i === 0 ? 0 : 20, borderLeft: i === 0 ? 'none' : '1px solid var(--hairline)' }}>
@@ -323,11 +343,14 @@ export function MarketsPage() {
         <SpreadRankingSection />
 
         <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, padding: 22 }}>
-          <h3 style={{ font: '700 16px/1 var(--font-display)', margin: '0 0 14px' }}>recent ticks</h3>
-          {TICKS_MOCK.map((r, i) => (
+          <h3 style={{ font: '700 16px/1 var(--font-display)', margin: '0 0 14px' }}>recent prices</h3>
+          {ticks.length === 0 && (
+            <div style={{ padding: '24px 0', textAlign: 'center', font: '500 12px/1 var(--font-mono)', color: 'var(--mute)' }}>loading…</div>
+          )}
+          {ticks.map((r, i) => (
             <div key={i} style={{ display: 'grid', gridTemplateColumns: '90px 1fr 90px', padding: '8px 0', borderTop: i === 0 ? 'none' : '1px solid var(--hairline)', font: '500 12px/1 var(--font-mono)' }}>
               <span style={{ color: 'var(--mute)' }}>{r.t}</span>
-              <span style={{ font: '500 13px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>${r.p.toFixed(2)}</span>
+              <span style={{ font: '500 13px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>{r.p.toFixed(3)}M₫</span>
               <span style={{ textAlign: 'right', color: r.down ? 'var(--down)' : 'var(--up)', fontWeight: 700 }}>{r.down ? '▼' : '▲'} {r.d}</span>
             </div>
           ))}

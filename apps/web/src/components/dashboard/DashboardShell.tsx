@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
+import { useInternationalPrice, useComparison } from '@/lib/price.api';
+import type { GoldType } from '@gpls/shared';
 
 // Icons (Lucide-style inline SVG)
 function IconHome({ s = 20 }: { s?: number }) {
@@ -60,26 +62,30 @@ function IconTrophy({ s = 20 }: { s?: number }) {
 export { IconHome, IconChart, IconBell, IconUser, IconSearch, IconPlus, IconConvert, IconPortfolio, IconTrophy };
 
 const NAV_ITEMS = [
-  { id: 'home',        label: 'overview',        Icon: IconHome,      href: null },
-  { id: 'chart',       label: 'markets',         Icon: IconChart,     href: null },
-  { id: 'alerts',      label: 'alerts',          Icon: IconBell,      href: null },
-  { id: 'profile',     label: 'account',         Icon: IconUser,      href: null },
-  { id: 'portfolio',   label: 'portfolio',       Icon: IconPortfolio, href: '/portfolio' },
-  { id: 'converter',   label: 'converter',       Icon: IconConvert,   href: '/tools/converter' },
-  { id: 'leaderboard', label: 'bảng xếp hạng',  Icon: IconTrophy,    href: '/leaderboard' },
+  { id: 'home',        label: 'overview',       Icon: IconHome,      href: null,               requiresAuth: false },
+  { id: 'chart',       label: 'markets',        Icon: IconChart,     href: null,               requiresAuth: false },
+  { id: 'alerts',      label: 'alerts',         Icon: IconBell,      href: null,               requiresAuth: true  },
+  { id: 'profile',     label: 'account',        Icon: IconUser,      href: null,               requiresAuth: true  },
+  { id: 'portfolio',   label: 'portfolio',      Icon: IconPortfolio, href: '/portfolio',       requiresAuth: true  },
+  { id: 'converter',   label: 'converter',      Icon: IconConvert,   href: '/tools/converter', requiresAuth: true  },
+  { id: 'leaderboard', label: 'bảng xếp hạng', Icon: IconTrophy,    href: '/leaderboard',     requiresAuth: true  },
 ] as const;
 
 type Tab = 'home' | 'chart' | 'alerts' | 'profile';
 
-const WATCHLIST = [
-  { code: 'XAU/USD', val: '$2,345.67', pct: '+1.21%', dir: 'up' },
-  { code: 'XAU/VND', val: '78.92M₫',  pct: '+0.15%', dir: 'up' },
-  { code: 'SJC',     val: '79.20M₫',  pct: '+0.18%', dir: 'up' },
-  { code: 'DOJI',    val: '79.05M₫',  pct: '−0.04%', dir: 'down' },
-];
-
 function Sidebar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
   const { user } = useAuth();
+  const { data: intl } = useInternationalPrice();
+  const { data: comparison } = useComparison('MIEN_SJC' as GoldType);
+  const compBrands = comparison?.[0]?.brands ?? [];
+  const sjc = compBrands.find(b => b.brand === 'SJC');
+  const doji = compBrands.find(b => b.brand === 'DOJI');
+  const watchlist = [
+    { code: 'XAU/USD', val: intl ? '$' + intl.spotPriceUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—' },
+    { code: 'XAU/VND', val: intl ? (intl.spotPriceVnd / 1_000_000).toFixed(2) + 'M₫' : '—' },
+    { code: 'SJC',     val: sjc  ? (sjc.buyPrice  / 1_000_000).toFixed(2) + 'M₫' : '—' },
+    { code: 'DOJI',    val: doji ? (doji.buyPrice / 1_000_000).toFixed(2) + 'M₫' : '—' },
+  ];
   const router = useRouter();
   const initials = user
     ? (user.displayName ?? user.email)
@@ -115,7 +121,7 @@ function Sidebar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
       {/* Nav */}
       <nav style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '16px 12px', flex: 1 }}>
         <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.16em', textTransform: 'uppercase', padding: '4px 12px 8px' }}>workspace</div>
-        {NAV_ITEMS.filter(it => !it.href).map(it => {
+        {NAV_ITEMS.filter(it => !it.href && (!it.requiresAuth || !!user)).map(it => {
           const active = tab === it.id;
           const handleClick = () => onChange(it.id as Tab);
           return (
@@ -137,36 +143,37 @@ function Sidebar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
             </button>
           );
         })}
-        <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.16em', textTransform: 'uppercase', padding: '20px 12px 8px' }}>tools</div>
-        {NAV_ITEMS.filter(it => !!it.href).map(it => {
-          const handleClick = () => router.push(it.href as string);
-          return (
-            <button key={it.id} onClick={handleClick} style={{
-              display: 'flex', alignItems: 'center', gap: 12,
-              padding: '10px 12px', border: 0,
-              background: 'transparent',
-              color: 'var(--bone)',
-              borderRadius: 6, cursor: 'pointer',
-              font: '500 13px/1 var(--font-display)',
-              position: 'relative',
-              transition: 'background 140ms var(--ease), color 140ms var(--ease)',
-            }}>
-              <span style={{ color: 'var(--mute)' }}>
-                <it.Icon s={16}/>
-              </span>
-              <span>{it.label}</span>
-            </button>
-          );
-        })}
+        {!!user && (
+          <>
+            <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.16em', textTransform: 'uppercase', padding: '20px 12px 8px' }}>tools</div>
+            {NAV_ITEMS.filter(it => !!it.href && (!it.requiresAuth || !!user)).map(it => {
+              const handleClick = () => router.push(it.href as string);
+              return (
+                <button key={it.id} onClick={handleClick} style={{
+                  display: 'flex', alignItems: 'center', gap: 12,
+                  padding: '10px 12px', border: 0,
+                  background: 'transparent',
+                  color: 'var(--bone)',
+                  borderRadius: 6, cursor: 'pointer',
+                  font: '500 13px/1 var(--font-display)',
+                  position: 'relative',
+                  transition: 'background 140ms var(--ease), color 140ms var(--ease)',
+                }}>
+                  <span style={{ color: 'var(--mute)' }}>
+                    <it.Icon s={16}/>
+                  </span>
+                  <span>{it.label}</span>
+                </button>
+              );
+            })}
+          </>
+        )}
 
         <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.16em', textTransform: 'uppercase', padding: '20px 12px 8px' }}>watchlist</div>
-        {WATCHLIST.map(w => (
+        {watchlist.map(w => (
           <div key={w.code} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderRadius: 6 }}>
             <span className="mono" style={{ fontSize: 11, fontWeight: 700, color: 'var(--bone)' }}>{w.code}</span>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ font: '600 11px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>{w.val}</div>
-              <div className="mono" style={{ fontSize: 9, color: w.dir === 'up' ? 'var(--up)' : 'var(--down)', marginTop: 3 }}>{w.pct}</div>
-            </div>
+            <div style={{ font: '600 11px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>{w.val}</div>
           </div>
         ))}
       </nav>
