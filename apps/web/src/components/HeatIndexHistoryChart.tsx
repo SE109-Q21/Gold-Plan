@@ -12,12 +12,12 @@ import { useHeatIndexHistory } from '@/lib/heat-index.api';
 
 // Runtime shape returned by the API (service-local DTO)
 interface HeatIndexHistoryItem {
-  score: number;
-  label: string;
-  velocityPct: number;
-  spreadVnd: number;
-  crossings: number;
-  computedAt: string;
+  value: number;
+  category: string;
+  priceVelocity: number;
+  spreadSize: number;
+  thresholdCrossings: number;
+  updatedAt: string;
 }
 
 function formatVi(iso: string): string {
@@ -117,8 +117,8 @@ export function HeatIndexHistoryChart() {
   }
 
   const chartData = items.map(item => ({
-    label: formatVi(item.computedAt),
-    score: item.score,
+    label: formatVi(item.updatedAt),
+    score: item.value,
   }));
 
   return (
