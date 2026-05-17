@@ -62,13 +62,13 @@ function IconTrophy({ s = 20 }: { s?: number }) {
 export { IconHome, IconChart, IconBell, IconUser, IconSearch, IconPlus, IconConvert, IconPortfolio, IconTrophy };
 
 const NAV_ITEMS = [
-  { id: 'home',        label: 'overview',       Icon: IconHome,      href: null,               requiresAuth: false },
-  { id: 'chart',       label: 'markets',        Icon: IconChart,     href: null,               requiresAuth: false },
-  { id: 'alerts',      label: 'alerts',         Icon: IconBell,      href: null,               requiresAuth: true  },
-  { id: 'profile',     label: 'account',        Icon: IconUser,      href: null,               requiresAuth: true  },
-  { id: 'portfolio',   label: 'portfolio',      Icon: IconPortfolio, href: '/portfolio',       requiresAuth: true  },
-  { id: 'converter',   label: 'converter',      Icon: IconConvert,   href: '/tools/converter', requiresAuth: true  },
-  { id: 'leaderboard', label: 'bảng xếp hạng', Icon: IconTrophy,    href: '/leaderboard',     requiresAuth: true  },
+  { id: 'home',        label: 'Overview',       Icon: IconHome,      href: null,               requiresAuth: false },
+  { id: 'chart',       label: 'Markets',        Icon: IconChart,     href: null,               requiresAuth: false },
+  { id: 'alerts',      label: 'Alerts',         Icon: IconBell,      href: null,               requiresAuth: true  },
+  { id: 'profile',     label: 'Account',        Icon: IconUser,      href: null,               requiresAuth: true  },
+  { id: 'portfolio',   label: 'Portfolio',      Icon: IconPortfolio, href: '/portfolio',       requiresAuth: true  },
+  { id: 'converter',   label: 'Converter',      Icon: IconConvert,   href: '/tools/converter', requiresAuth: true  },
+  { id: 'leaderboard', label: 'Bảng xếp hạng', Icon: IconTrophy,    href: '/leaderboard',     requiresAuth: true  },
 ] as const;
 
 type Tab = 'home' | 'chart' | 'alerts' | 'profile';
@@ -120,7 +120,7 @@ function Sidebar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
 
       {/* Nav */}
       <nav style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '16px 12px', flex: 1 }}>
-        <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.16em', textTransform: 'uppercase', padding: '4px 12px 8px' }}>workspace</div>
+        <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.16em', textTransform: 'uppercase', padding: '4px 12px 8px' }}>Workspace</div>
         {NAV_ITEMS.filter(it => !it.href && (!it.requiresAuth || !!user)).map(it => {
           const active = tab === it.id;
           const handleClick = () => onChange(it.id as Tab);
@@ -145,7 +145,7 @@ function Sidebar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
         })}
         {!!user && (
           <>
-            <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.16em', textTransform: 'uppercase', padding: '20px 12px 8px' }}>tools</div>
+            <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.16em', textTransform: 'uppercase', padding: '20px 12px 8px' }}>Tools</div>
             {NAV_ITEMS.filter(it => !!it.href && (!it.requiresAuth || !!user)).map(it => {
               const handleClick = () => router.push(it.href as string);
               return (
@@ -169,7 +169,7 @@ function Sidebar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
           </>
         )}
 
-        <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.16em', textTransform: 'uppercase', padding: '20px 12px 8px' }}>watchlist</div>
+        <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.16em', textTransform: 'uppercase', padding: '20px 12px 8px' }}>Watchlist</div>
         {watchlist.map(w => (
           <div key={w.code} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderRadius: 6 }}>
             <span className="mono" style={{ fontSize: 11, fontWeight: 700, color: 'var(--bone)' }}>{w.code}</span>
@@ -218,22 +218,92 @@ function Sidebar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
   );
 }
 
-function TopBar({ currency, onCurrency }: { currency: string; onCurrency: (c: string) => void }) {
+function TopBar({ currency, onCurrency, onTab }: { currency: string; onCurrency: (c: string) => void; onTab: (t: Tab) => void }) {
+  const { user, logout } = useAuth();
+  const router = useRouter();
+
   const [bellOpen, setBellOpen] = useState(false);
   const [hasUnread, setHasUnread] = useState(true);
   const bellRef = useRef<HTMLDivElement>(null);
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const [avatarOpen, setAvatarOpen] = useState(false);
+  const avatarRef = useRef<HTMLDivElement>(null);
+
+  const initials = user
+    ? (user.displayName ?? user.email)
+        .split(/[\s@]/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((p: string) => p[0].toUpperCase())
+        .join('')
+    : '';
+
+  const SEARCH_ITEMS = [
+    { label: 'Overview',    type: 'page',  action: () => { onTab('home');    setSearchOpen(false); setSearchQuery(''); } },
+    { label: 'Markets',     type: 'page',  action: () => { onTab('chart');   setSearchOpen(false); setSearchQuery(''); } },
+    { label: 'Alerts',      type: 'page',  action: () => { onTab('alerts');  setSearchOpen(false); setSearchQuery(''); } },
+    { label: 'Account',     type: 'page',  action: () => { onTab('profile'); setSearchOpen(false); setSearchQuery(''); } },
+    { label: 'Portfolio',   type: 'tool',  action: () => { router.push('/portfolio');       setSearchOpen(false); setSearchQuery(''); } },
+    { label: 'Converter',   type: 'tool',  action: () => { router.push('/tools/converter'); setSearchOpen(false); setSearchQuery(''); } },
+    { label: 'Leaderboard', type: 'tool',  action: () => { router.push('/leaderboard');     setSearchOpen(false); setSearchQuery(''); } },
+    { label: 'SJC',         type: 'brand', action: () => { onTab('chart');   setSearchOpen(false); setSearchQuery(''); } },
+    { label: 'DOJI',        type: 'brand', action: () => { onTab('chart');   setSearchOpen(false); setSearchQuery(''); } },
+    { label: 'PNJ',         type: 'brand', action: () => { onTab('chart');   setSearchOpen(false); setSearchQuery(''); } },
+    { label: 'BTMC',        type: 'brand', action: () => { onTab('chart');   setSearchOpen(false); setSearchQuery(''); } },
+  ];
+
+  const filteredItems = searchQuery.trim().length > 0
+    ? SEARCH_ITEMS.filter(item => item.label.toLowerCase().includes(searchQuery.toLowerCase()))
+    : SEARCH_ITEMS.slice(0, 6);
+
   useEffect(() => {
     function handleOutside(e: MouseEvent) {
-      if (bellRef.current && !bellRef.current.contains(e.target as Node)) {
-        setBellOpen(false);
-      }
+      if (bellRef.current && !bellRef.current.contains(e.target as Node)) setBellOpen(false);
     }
-    if (bellOpen) {
-      document.addEventListener('mousedown', handleOutside);
-    }
+    if (bellOpen) document.addEventListener('mousedown', handleOutside);
     return () => document.removeEventListener('mousedown', handleOutside);
   }, [bellOpen]);
+
+  useEffect(() => {
+    function handleOutside(e: MouseEvent) {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setSearchOpen(false);
+        setSearchQuery('');
+      }
+    }
+    if (searchOpen) document.addEventListener('mousedown', handleOutside);
+    return () => document.removeEventListener('mousedown', handleOutside);
+  }, [searchOpen]);
+
+  useEffect(() => {
+    function handleOutside(e: MouseEvent) {
+      if (avatarRef.current && !avatarRef.current.contains(e.target as Node)) setAvatarOpen(false);
+    }
+    if (avatarOpen) document.addEventListener('mousedown', handleOutside);
+    return () => document.removeEventListener('mousedown', handleOutside);
+  }, [avatarOpen]);
+
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setSearchOpen(true);
+        setTimeout(() => searchInputRef.current?.focus(), 0);
+      }
+      if (e.key === 'Escape') {
+        setSearchOpen(false);
+        setSearchQuery('');
+        setAvatarOpen(false);
+      }
+    }
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, []);
 
   function handleBellClick() {
     const next = !bellOpen;
@@ -247,10 +317,46 @@ function TopBar({ currency, onCurrency }: { currency: string; onCurrency: (c: st
       background: 'var(--ink-2)', borderBottom: '1px solid var(--line)',
       display: 'flex', alignItems: 'center', gap: 16, padding: '0 20px 0 28px',
     }}>
-      <div style={{ flex: 1, maxWidth: 420, height: 34, display: 'flex', alignItems: 'center', gap: 10, background: 'var(--ink-3)', border: '1px solid var(--line)', borderRadius: 6, padding: '0 12px' }}>
-        <span style={{ color: 'var(--mute)' }}><IconSearch s={14}/></span>
-        <span className="mono" style={{ flex: 1, fontSize: 12, color: 'var(--mute)' }}>search assets, brands, alerts…</span>
-        <span className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.1em', border: '1px solid var(--line)', borderRadius: 3, padding: '2px 6px' }}>⌘ K</span>
+      {/* Search bar */}
+      <div ref={searchRef} style={{ flex: 1, maxWidth: 420, position: 'relative' }}>
+        <div
+          onClick={() => { setSearchOpen(true); setTimeout(() => searchInputRef.current?.focus(), 0); }}
+          style={{ height: 34, display: 'flex', alignItems: 'center', gap: 10, background: 'var(--ink-3)', border: `1px solid ${searchOpen ? 'var(--gold)' : 'var(--line)'}`, borderRadius: 6, padding: '0 12px', cursor: 'text' }}
+        >
+          <span style={{ color: 'var(--mute)', flexShrink: 0 }}><IconSearch s={14}/></span>
+          <input
+            ref={searchInputRef}
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            onFocus={() => setSearchOpen(true)}
+            placeholder="search assets, brands, alerts…"
+            style={{ flex: 1, background: 'transparent', border: 0, outline: 'none', font: '400 12px/1 var(--font-mono)', color: 'var(--chalk)', '::placeholder': { color: 'var(--mute)' } } as React.CSSProperties}
+          />
+          {!searchOpen && (
+            <span className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.1em', border: '1px solid var(--line)', borderRadius: 3, padding: '2px 6px', flexShrink: 0 }}>⌘ K</span>
+          )}
+        </div>
+        {searchOpen && filteredItems.length > 0 && (
+          <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 10, zIndex: 300, overflow: 'hidden', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
+            {filteredItems.map((item, i) => (
+              <button
+                key={i}
+                onClick={item.action}
+                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'transparent', border: 0, cursor: 'pointer', color: 'var(--chalk)', font: '500 13px/1 var(--font-display)', textAlign: 'left', transition: 'background 100ms' }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--ink-3)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+              >
+                <span>{item.label}</span>
+                <span className="mono" style={{ fontSize: 9, color: 'var(--mute)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{item.type}</span>
+              </button>
+            ))}
+          </div>
+        )}
+        {searchOpen && filteredItems.length === 0 && (
+          <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 10, zIndex: 300, padding: '20px 14px', textAlign: 'center', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
+            <span className="mono" style={{ fontSize: 11, color: 'var(--mute)' }}>no results for &quot;{searchQuery}&quot;</span>
+          </div>
+        )}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, font: '700 10px/1 var(--font-mono)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--live)', border: '1px solid rgba(157,204,110,0.4)', padding: '6px 10px', borderRadius: 4 }}>
@@ -294,7 +400,65 @@ function TopBar({ currency, onCurrency }: { currency: string; onCurrency: (c: st
             </div>
           )}
         </div>
-        <div style={{ width: 32, height: 32, borderRadius: 99, background: 'linear-gradient(135deg, #D4AF37, #8E7321)', display: 'flex', alignItems: 'center', justifyContent: 'center', font: '800 11px/1 var(--font-display)', color: '#0B0B0F' }}>GT</div>
+        {/* Avatar / auth */}
+        <div ref={avatarRef} style={{ position: 'relative' }}>
+          {user ? (
+            <button
+              onClick={() => setAvatarOpen(v => !v)}
+              style={{ width: 32, height: 32, borderRadius: 99, background: 'linear-gradient(135deg, #D4AF37, #8E7321)', display: 'flex', alignItems: 'center', justifyContent: 'center', font: '800 11px/1 var(--font-display)', color: '#0B0B0F', border: 0, cursor: 'pointer' }}
+            >
+              {initials || 'GT'}
+            </button>
+          ) : (
+            <button
+              onClick={() => router.push('/auth/login')}
+              style={{ height: 32, padding: '0 14px', background: 'var(--gold)', border: 0, borderRadius: 99, cursor: 'pointer', font: '700 11px/1 var(--font-display)', color: '#0B0B0F', letterSpacing: '0.04em' }}
+            >
+              Log in
+            </button>
+          )}
+          {avatarOpen && user && (
+            <div style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, width: 220, background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 12, zIndex: 200, overflow: 'hidden', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
+              {/* User info */}
+              <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--line)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 30, height: 30, borderRadius: 8, background: 'linear-gradient(135deg,#D4AF37,#8E7321)', display: 'flex', alignItems: 'center', justifyContent: 'center', font: '800 11px/1 var(--font-display)', color: '#0B0B0F', flexShrink: 0 }}>
+                    {initials || 'GT'}
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <div className="mono" style={{ fontSize: 11, color: 'var(--chalk)', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {user.displayName ?? user.email}
+                    </div>
+                    <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: 2 }}>
+                      {user.role}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {/* Actions */}
+              <div style={{ padding: '6px 0' }}>
+                <button
+                  onClick={() => { onTab('profile'); setAvatarOpen(false); }}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'transparent', border: 0, cursor: 'pointer', color: 'var(--chalk)', font: '500 13px/1 var(--font-display)', textAlign: 'left' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--ink-3)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                >
+                  <IconUser s={14}/>
+                  Profile & settings
+                </button>
+                <div style={{ height: 1, background: 'var(--line)', margin: '4px 0' }}/>
+                <button
+                  onClick={() => { logout(); setAvatarOpen(false); }}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'transparent', border: 0, cursor: 'pointer', color: 'var(--red, #e05252)', font: '500 13px/1 var(--font-display)', textAlign: 'left' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--ink-3)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                >
+                  Log out
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );
@@ -313,7 +477,7 @@ export function DashboardShell({ children, tab, onTab, currency, onCurrency }: D
     <div style={{ position: 'fixed', inset: 0, display: 'flex', overflow: 'hidden', background: 'var(--ink)' }}>
       <Sidebar tab={tab} onChange={onTab}/>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-        <TopBar currency={currency} onCurrency={onCurrency}/>
+        <TopBar currency={currency} onCurrency={onCurrency} onTab={onTab}/>
         <main style={{ flex: 1, overflow: 'auto', background: '#0a0a0d' }}>
           {children}
         </main>
