@@ -63,12 +63,15 @@ export class ExchangeRateService {
         return { ...this.cache.data, source: 'stale', updatedAt: new Date().toISOString() };
       }
       this.logger.error('Exchange rate fetch failed and no cache available — using fallback defaults');
-      return {
+      const fallback: ExchangeRateDto = {
         usdVnd: DEFAULT_USD_VND,
         eurVnd: DEFAULT_EUR_VND,
         updatedAt: new Date().toISOString(),
         source: 'fallback',
       };
+      // Cache fallback for 2 minutes so we don't spam the API on every request
+      this.cache = { data: fallback, expiresAt: Date.now() + 2 * 60_000 };
+      return fallback;
     }
   }
 }
