@@ -6,10 +6,10 @@ import { PrismaService } from '../database/prisma.service';
 export interface HeatIndexDto {
   value: number;
   category: string;
-  priceVelocity: number;
-  spreadSize: number;
+  priceVelocity: number;   // normalised 0-100
+  spreadSize: number;      // VND
   thresholdCrossings: number;
-  updatedAt: string;
+  calculatedAt: string;    // ISO — matches shared HeatIndexDto
 }
 
 @Injectable()
@@ -58,7 +58,7 @@ export class HeatIndexService {
         }
       }
       avgChangePct = count > 0 ? totalChangePct / count : 0;
-      // Scale: 0.5% avg change = 40 pts
+      // Scale: 0.5% avg change = 40 pts (cap)
       velocityScore = Math.min((avgChangePct / 0.5) * 40, 40);
     }
 
@@ -74,8 +74,8 @@ export class HeatIndexService {
     let spreadScore = 0;
     if (latestRecord) {
       latestSpread = Number(latestRecord.sellPrice) - Number(latestRecord.buyPrice);
-      // Scale: 1M VND spread = 30 pts, 200k VND spread = 0 pts
-      spreadScore = Math.min(Math.max((latestSpread - 200_000) / 800_000, 0), 1) * 30;
+      // Scale: ≥500k VND spread = 30 pts (max), 200k VND spread = 0 pts
+      spreadScore = Math.min(Math.max((latestSpread - 200_000) / 300_000, 0), 1) * 30;
     }
 
     // Component 3 — Threshold Crossings (30% weight)
@@ -104,10 +104,13 @@ export class HeatIndexService {
     const totalScore = Math.round(velocityScore + spreadScore + crossingScore);
     const label = totalScore <= 33 ? 'Cold' : totalScore <= 66 ? 'Warm' : 'Hot';
 
+    // Normalise priceVelocity to 0–100 so the DTO matches the shared type spec
+    const priceVelocityNorm = Math.min((avgChangePct / 0.5) * 100, 100);
+
     return {
       indexValue: totalScore,
       category: label,
-      priceVelocity: avgChangePct,
+      priceVelocity: priceVelocityNorm,
       spreadSize: BigInt(Math.round(latestSpread)),
       thresholdCrossings: crossings,
     };
@@ -144,7 +147,7 @@ export class HeatIndexService {
       priceVelocity: Number(r.priceVelocity),
       spreadSize: Number(r.spreadSize),
       thresholdCrossings: r.thresholdCrossings,
-      updatedAt: r.calculatedAt.toISOString(),
+      calculatedAt: r.calculatedAt.toISOString(),
     };
   }
 }

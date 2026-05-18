@@ -17,7 +17,8 @@ interface HeatIndexHistoryItem {
   priceVelocity: number;
   spreadSize: number;
   thresholdCrossings: number;
-  updatedAt: string;
+  updatedAt?: string;       // legacy fallback
+  calculatedAt?: string;    // canonical field (matches shared HeatIndexDto)
 }
 
 function formatVi(iso: string): string {
@@ -117,7 +118,7 @@ export function HeatIndexHistoryChart() {
   }
 
   const chartData = items.map(item => ({
-    label: formatVi(item.updatedAt),
+    label: formatVi(item.calculatedAt ?? item.updatedAt ?? ''),
     score: item.value,
   }));
 

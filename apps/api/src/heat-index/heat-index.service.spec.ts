@@ -230,11 +230,11 @@ describe('HeatIndexService.compute()', () => {
     it('score 66 → label Warm', async () => {
       // crossingScore=30 (11+ crossings), spreadScore=30 (spread>=500k), velocityScore=6
       // 30+30+6 = 66
-      // velocityScore=6: 6 = min(avgPct/2, 1)*40 → avgPct/2=0.15 → avgPct=0.3%
-      // Build 2 records: price1=80_000_000, price2=79_760_000 (0.3% change)
-      // |80M - 79.76M| / 79.76M = 240k/79.76M ≈ 0.301%, velocityScore = 0.301/2*40 = 6.02 → round gives 66
+      // velocityScore=6: 6 = (avgPct / 0.5) * 40 → avgPct = 6 * 0.5 / 40 = 0.075%
+      // Build 2 records: price1=80_000_000, price2=79_940_045 (0.075% change)
+      // |80M - 79.94M| / 79.94M ≈ 0.075%, velocityScore = (0.075/0.5)*40 = 6 → round gives 66
       const price1 = 80_000_000;
-      const price2 = Math.round(price1 / 1.003); // price2 * 1.003 = price1 → change = 0.3%
+      const price2 = Math.round(price1 / 1.00075); // price2 * 1.00075 = price1 → change = 0.075%
       const spread = 500_000;
       const todayRecords = [
         makeRecord(price1, price1 + spread),
@@ -253,9 +253,9 @@ describe('HeatIndexService.compute()', () => {
 
     it('score 67 → label Hot', async () => {
       // Same as above but velocity slightly higher to push to 67
-      // velocityScore=7: avgPct=0.35% → price2 = price1/1.0035
+      // velocityScore=7: avgPct=0.0875% → price2 = price1/1.000875
       const price1 = 80_000_000;
-      const price2 = Math.round(price1 / 1.0035);
+      const price2 = Math.round(price1 / 1.000875);
       const spread = 500_000;
       const todayRecords = [
         makeRecord(price1, price1 + spread),
