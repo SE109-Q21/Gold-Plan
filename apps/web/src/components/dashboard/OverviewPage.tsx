@@ -238,6 +238,7 @@ interface PriceRowProps {
   onClick: () => void;
   rowIndex: number;
   dragHandleProps?: React.HTMLAttributes<HTMLDivElement>;
+  fmt: (vnd: number) => string;
 }
 
 function DragHandle({ dragHandleProps }: { dragHandleProps?: React.HTMLAttributes<HTMLDivElement> }) {
@@ -295,7 +296,7 @@ function BrowsingBadge({ brand, goldType }: { brand: string; goldType: string })
 
 function PriceRow({
   brand, goldType, buyPrice, sellPrice, isBestBuy, isBestSell,
-  isLoggedIn, isPinned, onPin, onUnpin, onClick, rowIndex, dragHandleProps,
+  isLoggedIn, isPinned, onPin, onUnpin, onClick, rowIndex, dragHandleProps, fmt,
 }: PriceRowProps) {
   return (
     <div
@@ -327,7 +328,7 @@ function PriceRow({
       <div style={{ textAlign: 'right' }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           <div style={{ font: '700 15px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>
-            {fmtVnd(buyPrice)}
+            {fmt(buyPrice)}
           </div>
           {isLoggedIn && <BrowsingBadge brand={brand} goldType={goldType} />}
         </div>
@@ -343,7 +344,7 @@ function PriceRow({
           fontVariantNumeric: 'tabular-nums',
           color: isBestSell ? 'var(--gold)' : 'var(--chalk)',
         }}>
-          {fmtVnd(sellPrice)}
+          {fmt(sellPrice)}
         </div>
         {isBestSell && (
           <div className="mono" style={{ fontSize: 9, color: 'var(--gold)', letterSpacing: '0.14em', textTransform: 'uppercase', marginTop: 4 }}>
@@ -353,7 +354,7 @@ function PriceRow({
       </div>
       <div style={{ textAlign: 'right' }}>
         <div className="mono" style={{ fontSize: 13, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
-          {((sellPrice - buyPrice) / 1_000_000).toFixed(2)}M
+          {fmt(sellPrice - buyPrice)}
         </div>
       </div>
       {isLoggedIn && (
@@ -424,6 +425,13 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
   const { data: history1D } = usePriceHistory('SJC', 'MIEN_SJC', '1D');
   const { data: comparison } = useComparison('MIEN_SJC' as GoldType);
   const { data: alertsData } = useAlerts();
+  const { data: rates } = useExchangeRates();
+
+  const fmt = (vnd: number): string => {
+    if (currency === 'USD' && rates) return '$' + (vnd / rates.usdVnd).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    if (currency === 'EUR' && rates) return '€' + (vnd / rates.eurVnd).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return (vnd / 1_000_000).toFixed(2) + 'M₫';
+  };
 
   const change1D = (() => {
     if (!history1D || history1D.length < 2) return null;
@@ -569,7 +577,7 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
             <div>
               <h3 style={{ font: '700 18px/1 var(--font-display)', margin: 0, letterSpacing: '-0.01em' }}>Price history</h3>
               <div className="mono" style={{ fontSize: 11, color: 'var(--mute)', marginTop: 6 }}>
-                SJC Miếng · <span style={{ color: 'var(--chalk)' }}>{fmtVnd(hoverVal)}</span>
+                SJC Miếng · <span style={{ color: 'var(--chalk)' }}>{fmt(hoverVal)}</span>
               </div>
             </div>
             <div style={{ display: 'flex', gap: 4 }}>
@@ -624,6 +632,7 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
                       onUnpin={() => removePin.mutate({ brand: b.brand, goldType: compGoldType })}
                       onClick={() => handleRowClick(b.brand, compGoldType, b.buyPrice)}
                       rowIndex={i}
+                      fmt={fmt}
                     />
                   );
                 }
@@ -642,6 +651,7 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
                     onUnpin={() => removePin.mutate({ brand: b.brand, goldType: compGoldType })}
                     onClick={() => handleRowClick(b.brand, compGoldType, b.buyPrice)}
                     rowIndex={i}
+                    fmt={fmt}
                   />
                 );
               })}

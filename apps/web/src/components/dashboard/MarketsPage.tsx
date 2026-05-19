@@ -1,6 +1,6 @@
-﻿'use client';
+'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { PriceChart } from '@/components/ui/PriceChart';
 import {
   LineChart as ReLineChart,
@@ -13,6 +13,7 @@ import {
 } from 'recharts';
 import { usePriceHistory, type HistoryRange } from '@/lib/price.api';
 import { useSpreadRanking, useSpreadHistory } from '@/lib/spread.api';
+import { useExchangeRates } from '@/lib/exchange-rate.api';
 import type { GoldBrand, GoldType } from '@gpls/shared';
 import { useAuth } from '@/contexts/auth-context';
 
@@ -31,7 +32,7 @@ function SpreadRankingSection() {
   const [showTip, setShowTip] = useState(false);
   const { data, isLoading } = useSpreadRanking(goldType);
 
-  const fmtSpread = (n: number) => (n / 1_000_000).toFixed(2) + 'Mâ‚«';
+  const fmtSpread = (n: number) => (n / 1_000_000).toFixed(2) + 'M₫';
   const maxSpread = data && data.length > 0 ? Math.max(...data.map(d => d.spreadVnd)) : 1;
 
   const barColor = (index: number, isMostEfficient: boolean): string => {
@@ -145,10 +146,7 @@ function SpreadHistoryChart() {
   return (
     <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, padding: 22 }}>
       <div style={{ marginBottom: 14 }}>
-        <h3 style={{ font: '700 16px/1 var(--font-display)', margin: '0 0 4px' }}>xu hÆ°á»›ng chÃªnh lá»‡ch 7 ngÃ y</h3>
-        <div style={{ font: '500 10px/1 var(--font-mono)', color: 'var(--mute)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
-          7-day spread trend
-        </div>
+        <h3 style={{ font: '700 16px/1 var(--font-display)', margin: '0 0 4px' }}>7-day spread trend</h3>
       </div>
 
       <div style={{ display: 'flex', gap: 4, marginBottom: 8, flexWrap: 'wrap' }}>
@@ -188,7 +186,7 @@ function SpreadHistoryChart() {
 
       {!isLoading && (!chartData || chartData.length === 0) && (
         <div style={{ padding: '32px 0', textAlign: 'center', font: '500 13px/1 var(--font-mono)', color: 'var(--mute)' }}>
-          ChÆ°a cÃ³ dá»¯ liá»‡u
+          No data available
         </div>
       )}
 
@@ -208,11 +206,11 @@ function SpreadHistoryChart() {
               axisLine={false}
               tickLine={false}
               width={52}
-              label={{ value: 'ChÃªnh lá»‡ch (â‚«)', angle: -90, position: 'insideLeft', offset: 12, style: { fill: '#5a5b65', fontSize: 9, fontFamily: 'var(--font-mono)' } }}
+              label={{ value: 'Spread (₫)', angle: -90, position: 'insideLeft', offset: 12, style: { fill: '#5a5b65', fontSize: 9, fontFamily: 'var(--font-mono)' } }}
             />
             <Tooltip
               contentStyle={{ background: '#14141A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, font: '500 11px/1.5 var(--font-mono)', color: '#e8e6df' }}
-              formatter={(value) => [typeof value === 'number' ? (value / 1_000_000).toFixed(3) + 'Mâ‚«' : '-', 'spread']}
+              formatter={(value) => [typeof value === 'number' ? (value / 1_000_000).toFixed(3) + 'M₫' : '-', 'spread']}
               labelStyle={{ color: '#5a5b65', marginBottom: 4 }}
             />
             <Line
@@ -230,12 +228,32 @@ function SpreadHistoryChart() {
   );
 }
 
-// â”€â”€ Enhanced price chart â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-export function MarketsPage() {
+export function MarketsPage({ currency = 'VND' }: { currency?: string }) {
   const [range, setRange] = useState<Range>('1M');
   const [asset, setAsset] = useState('SJC');
   const [hoverPrice, setHoverPrice] = useState<number | null>(null);
-  const { user } = useAuth();
+  const [csvLoading, setCsvLoading] = useState(false);
+  const { user, getAccessToken } = useAuth();
+  const { data: rates } = useExchangeRates();
+
+  const handleExportCsv = useCallback(async () => {
+    setCsvLoading(true);
+    try {
+      const token = getAccessToken();
+      const url = `${API_BASE}/api/prices/history/export?brand=SJC&goldType=MIEN_SJC&range=${range}`;
+      const res = await fetch(url, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      const blob = await res.blob();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `gold-history-SJC-${range}.csv`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch {
+      // silently ignore
+    } finally {
+      setCsvLoading(false);
+    }
+  }, [range, getAccessToken]);
 
   const { data: history } = usePriceHistory('SJC' as GoldBrand, 'MIEN_SJC' as GoldType, range);
   const { data: history1D } = usePriceHistory('SJC' as GoldBrand, 'MIEN_SJC' as GoldType, '1D');
@@ -257,8 +275,8 @@ export function MarketsPage() {
       const ss = String(d.getSeconds()).padStart(2, '0');
       return {
         t: `${hh}:${mm}:${ss}`,
-        p: pt.buyPrice / 1_000_000,
-        d: (diff >= 0 ? '+' : '') + (diff / 1_000_000).toFixed(3),
+        p: pt.buyPrice,
+        diff,
         down: diff < 0,
       };
     });
@@ -272,14 +290,18 @@ export function MarketsPage() {
     return (Math.sqrt(variance) * 100).toFixed(2) + '%';
   })();
 
-  const fmt = (n: number) => (n / 1_000_000).toFixed(2) + 'Mâ‚«';
+  const fmt = (vnd: number): string => {
+    if (currency === 'USD' && rates) return '$' + (vnd / rates.usdVnd).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    if (currency === 'EUR' && rates) return '€' + (vnd / rates.eurVnd).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return (vnd / 1_000_000).toFixed(2) + 'M₫';
+  };
 
   return (
     <div style={{ padding: '24px 28px 40px', display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h1 style={{ font: '800 36px/1 var(--font-display)', margin: 0, letterSpacing: '-0.025em' }}>markets</h1>
-          <div className="mono" style={{ fontSize: 11, color: 'var(--mute)', marginTop: 8 }}>interactive chart Â· hover to inspect Â· auto-refresh 5 min during trading hours</div>
+          <div className="mono" style={{ fontSize: 11, color: 'var(--mute)', marginTop: 8 }}>interactive chart · hover to inspect · auto-refresh 5 min during trading hours</div>
         </div>
       </div>
 
@@ -292,11 +314,11 @@ export function MarketsPage() {
       <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, padding: 28 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
           <div>
-            <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 8 }}>{asset} Â· 24K Â· spot</div>
+            <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 8 }}>{asset} · 24K · spot</div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
               <span style={{ font: '800 56px/0.95 var(--font-display)', letterSpacing: '-0.03em', fontVariantNumeric: 'tabular-nums' }}>{fmt(hoverVal)}</span>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, font: '700 14px/1 var(--font-mono)', color: change >= 0 ? 'var(--up)' : 'var(--down)', background: change >= 0 ? 'rgba(88,200,150,0.10)' : 'rgba(229,72,77,0.10)', padding: '7px 10px', borderRadius: 4 }}>
-                {change >= 0 ? 'â–²' : 'â–¼'} {Math.abs(changePct).toFixed(2)}% Â· {range}
+                {change >= 0 ? '▲' : '▼'} {Math.abs(changePct).toFixed(2)}% · {range}
               </span>
             </div>
           </div>
@@ -306,10 +328,12 @@ export function MarketsPage() {
             ))}
             {user && (
               <button
-                onClick={() => window.open(`${API_BASE}/prices/history/export?brand=SJC&goldType=MIEN_SJC&range=${range}`)}
-                style={{ display: 'inline-flex', alignItems: 'center', height: 32, padding: '0 10px', border: '1px solid var(--line)', borderRadius: 0, background: 'transparent', color: 'var(--mute)', font: '700 11px/1 var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer', marginLeft: 8 }}
+                onClick={handleExportCsv}
+                disabled={csvLoading}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, height: 32, padding: '0 10px', border: '1px solid var(--line)', borderRadius: 0, background: 'transparent', color: csvLoading ? 'var(--mute)' : 'var(--bone)', font: '700 11px/1 var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: csvLoading ? 'not-allowed' : 'pointer', marginLeft: 8, opacity: csvLoading ? 0.6 : 1 }}
               >
-                export csv
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                {csvLoading ? '…' : 'csv'}
               </button>
             )}
           </div>
@@ -319,7 +343,7 @@ export function MarketsPage() {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', marginTop: 22, paddingTop: 18, borderTop: '1px solid var(--hairline)' }}>
           {[
-            { l: 'Ïƒ Vol',  v: vol ?? 'â€”',   tint: 'var(--gold)' },
+            { l: 'σ Vol',  v: vol ?? '—',   tint: 'var(--gold)' },
             { l: 'Signal', v: 'Buy bias', tint: 'var(--up)'   },
           ].map((s, i) => (
             <div key={s.l} style={{ paddingLeft: i === 0 ? 0 : 20, borderLeft: i === 0 ? 'none' : '1px solid var(--hairline)' }}>
@@ -336,13 +360,13 @@ export function MarketsPage() {
         <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, padding: 22 }}>
           <h3 style={{ font: '700 16px/1 var(--font-display)', margin: '0 0 14px' }}>recent prices</h3>
           {ticks.length === 0 && (
-            <div style={{ padding: '24px 0', textAlign: 'center', font: '500 12px/1 var(--font-mono)', color: 'var(--mute)' }}>loadingâ€¦</div>
+            <div style={{ padding: '24px 0', textAlign: 'center', font: '500 12px/1 var(--font-mono)', color: 'var(--mute)' }}>loading…</div>
           )}
           {ticks.map((r, i) => (
             <div key={i} style={{ display: 'grid', gridTemplateColumns: '90px 1fr 90px', padding: '8px 0', borderTop: i === 0 ? 'none' : '1px solid var(--hairline)', font: '500 12px/1 var(--font-mono)' }}>
               <span style={{ color: 'var(--mute)' }}>{r.t}</span>
-              <span style={{ font: '500 13px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>{r.p.toFixed(3)}Mâ‚«</span>
-              <span style={{ textAlign: 'right', color: r.down ? 'var(--down)' : 'var(--up)', fontWeight: 700 }}>{r.down ? 'â–¼' : 'â–²'} {r.d}</span>
+              <span style={{ font: '500 13px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>{fmt(r.p)}</span>
+              <span style={{ textAlign: 'right', color: r.down ? 'var(--down)' : 'var(--up)', fontWeight: 700 }}>{r.down ? '▼' : '▲'} {(r.diff >= 0 ? '+' : '') + fmt(Math.abs(r.diff))}</span>
             </div>
           ))}
         </div>

@@ -58,17 +58,46 @@ function IconTrophy({ s = 20 }: { s?: number }) {
     </svg>
   );
 }
+function IconNewspaper({ s = 20 }: { s?: number }) {
+  return (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 4h16v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/>
+      <path d="M4 8h16"/>
+      <path d="M8 12h4"/>
+      <path d="M8 16h8"/>
+    </svg>
+  );
+}
+function IconClock({ s = 20 }: { s?: number }) {
+  return (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="9"/>
+      <path d="M12 7v5l3 3"/>
+    </svg>
+  );
+}
+function IconShield({ s = 20 }: { s?: number }) {
+  return (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    </svg>
+  );
+}
 
-export { IconHome, IconChart, IconBell, IconUser, IconSearch, IconPlus, IconConvert, IconPortfolio, IconTrophy };
+export { IconHome, IconChart, IconBell, IconUser, IconSearch, IconPlus, IconConvert, IconPortfolio, IconTrophy, IconNewspaper, IconClock, IconShield };
 
 const NAV_ITEMS = [
-  { id: 'home',        label: 'Overview',       Icon: IconHome,      href: null,               requiresAuth: false },
-  { id: 'chart',       label: 'Markets',        Icon: IconChart,     href: null,               requiresAuth: false },
-  { id: 'alerts',      label: 'Alerts',         Icon: IconBell,      href: null,               requiresAuth: true  },
-  { id: 'profile',     label: 'Account',        Icon: IconUser,      href: null,               requiresAuth: true  },
-  { id: 'portfolio',   label: 'Portfolio',      Icon: IconPortfolio, href: '/portfolio',       requiresAuth: true  },
-  { id: 'converter',   label: 'Converter',      Icon: IconConvert,   href: '/tools/converter', requiresAuth: true  },
-  { id: 'leaderboard', label: 'Bảng xếp hạng', Icon: IconTrophy,    href: '/leaderboard',     requiresAuth: true  },
+  { id: 'home',        label: 'Overview',       Icon: IconHome,      href: null,                requiresAuth: false, adminOnly: false },
+  { id: 'chart',       label: 'Markets',        Icon: IconChart,     href: null,                requiresAuth: false, adminOnly: false },
+  { id: 'alerts',      label: 'Alerts',         Icon: IconBell,      href: null,                requiresAuth: true,  adminOnly: false },
+  { id: 'profile',     label: 'Account',        Icon: IconUser,      href: null,                requiresAuth: true,  adminOnly: false },
+  { id: 'portfolio',   label: 'Portfolio',      Icon: IconPortfolio, href: '/portfolio',        requiresAuth: true,  adminOnly: false },
+  { id: 'converter',   label: 'Converter',      Icon: IconConvert,   href: '/tools/converter',  requiresAuth: false, adminOnly: false },
+  { id: 'leaderboard', label: 'Leaderboard',    Icon: IconTrophy,    href: '/leaderboard',      requiresAuth: false, adminOnly: false },
+  { id: 'spread',      label: 'Spread Ranking', Icon: IconChart,     href: '/tools/spread',     requiresAuth: false, adminOnly: false },
+  { id: 'digest',      label: 'Digest Archive', Icon: IconNewspaper, href: '/digest/archive',   requiresAuth: false, adminOnly: false },
+  { id: 'history',     label: 'Price History',  Icon: IconClock,     href: '/profile/history',  requiresAuth: true,  adminOnly: false },
+  { id: 'admin',       label: 'Admin',          Icon: IconShield,    href: '/admin',            requiresAuth: true,  adminOnly: true  },
 ] as const;
 
 type Tab = 'home' | 'chart' | 'alerts' | 'profile';
@@ -121,7 +150,7 @@ function Sidebar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
       {/* Nav */}
       <nav style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '16px 12px', flex: 1 }}>
         <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.16em', textTransform: 'uppercase', padding: '4px 12px 8px' }}>Workspace</div>
-        {NAV_ITEMS.filter(it => !it.href && (!it.requiresAuth || !!user)).map(it => {
+        {NAV_ITEMS.filter(it => !it.href && !it.adminOnly && (!it.requiresAuth || !!user)).map(it => {
           const active = tab === it.id;
           const handleClick = () => onChange(it.id as Tab);
           return (
@@ -143,10 +172,33 @@ function Sidebar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
             </button>
           );
         })}
-        {!!user && (
+        <>
+          <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.16em', textTransform: 'uppercase', padding: '20px 12px 8px' }}>Tools</div>
+          {NAV_ITEMS.filter(it => !!it.href && !it.adminOnly && (!it.requiresAuth || !!user)).map(it => {
+            const handleClick = () => router.push(it.href as string);
+            return (
+              <button key={it.id} onClick={handleClick} style={{
+                display: 'flex', alignItems: 'center', gap: 12,
+                padding: '10px 12px', border: 0,
+                background: 'transparent',
+                color: 'var(--bone)',
+                borderRadius: 6, cursor: 'pointer',
+                font: '500 13px/1 var(--font-display)',
+                position: 'relative',
+                transition: 'background 140ms var(--ease), color 140ms var(--ease)',
+              }}>
+                <span style={{ color: 'var(--mute)' }}>
+                  <it.Icon s={16}/>
+                </span>
+                <span>{it.label}</span>
+              </button>
+            );
+          })}
+        </>
+        {user?.role === 'admin' && (
           <>
-            <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.16em', textTransform: 'uppercase', padding: '20px 12px 8px' }}>Tools</div>
-            {NAV_ITEMS.filter(it => !!it.href && (!it.requiresAuth || !!user)).map(it => {
+            <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.16em', textTransform: 'uppercase', padding: '20px 12px 8px' }}>Admin</div>
+            {NAV_ITEMS.filter(it => it.adminOnly).map(it => {
               const handleClick = () => router.push(it.href as string);
               return (
                 <button key={it.id} onClick={handleClick} style={{
@@ -156,7 +208,6 @@ function Sidebar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
                   color: 'var(--bone)',
                   borderRadius: 6, cursor: 'pointer',
                   font: '500 13px/1 var(--font-display)',
-                  position: 'relative',
                   transition: 'background 140ms var(--ease), color 140ms var(--ease)',
                 }}>
                   <span style={{ color: 'var(--mute)' }}>
@@ -244,17 +295,20 @@ function TopBar({ currency, onCurrency, onTab }: { currency: string; onCurrency:
     : '';
 
   const SEARCH_ITEMS = [
-    { label: 'Overview',    type: 'page',  action: () => { onTab('home');    setSearchOpen(false); setSearchQuery(''); } },
-    { label: 'Markets',     type: 'page',  action: () => { onTab('chart');   setSearchOpen(false); setSearchQuery(''); } },
-    { label: 'Alerts',      type: 'page',  action: () => { onTab('alerts');  setSearchOpen(false); setSearchQuery(''); } },
-    { label: 'Account',     type: 'page',  action: () => { onTab('profile'); setSearchOpen(false); setSearchQuery(''); } },
-    { label: 'Portfolio',   type: 'tool',  action: () => { router.push('/portfolio');       setSearchOpen(false); setSearchQuery(''); } },
-    { label: 'Converter',   type: 'tool',  action: () => { router.push('/tools/converter'); setSearchOpen(false); setSearchQuery(''); } },
-    { label: 'Leaderboard', type: 'tool',  action: () => { router.push('/leaderboard');     setSearchOpen(false); setSearchQuery(''); } },
-    { label: 'SJC',         type: 'brand', action: () => { onTab('chart');   setSearchOpen(false); setSearchQuery(''); } },
-    { label: 'DOJI',        type: 'brand', action: () => { onTab('chart');   setSearchOpen(false); setSearchQuery(''); } },
-    { label: 'PNJ',         type: 'brand', action: () => { onTab('chart');   setSearchOpen(false); setSearchQuery(''); } },
-    { label: 'BTMC',        type: 'brand', action: () => { onTab('chart');   setSearchOpen(false); setSearchQuery(''); } },
+    { label: 'Overview',       type: 'page',  action: () => { onTab('home');    setSearchOpen(false); setSearchQuery(''); } },
+    { label: 'Markets',        type: 'page',  action: () => { onTab('chart');   setSearchOpen(false); setSearchQuery(''); } },
+    { label: 'Alerts',         type: 'page',  action: () => { onTab('alerts');  setSearchOpen(false); setSearchQuery(''); } },
+    { label: 'Account',        type: 'page',  action: () => { onTab('profile'); setSearchOpen(false); setSearchQuery(''); } },
+    { label: 'Portfolio',      type: 'tool',  action: () => { router.push('/portfolio');       setSearchOpen(false); setSearchQuery(''); } },
+    { label: 'Converter',      type: 'tool',  action: () => { router.push('/tools/converter'); setSearchOpen(false); setSearchQuery(''); } },
+    { label: 'Leaderboard',    type: 'tool',  action: () => { router.push('/leaderboard');     setSearchOpen(false); setSearchQuery(''); } },
+    { label: 'Spread Ranking', type: 'tool',  action: () => { router.push('/tools/spread');    setSearchOpen(false); setSearchQuery(''); } },
+    { label: 'Digest Archive', type: 'tool',  action: () => { router.push('/digest/archive');  setSearchOpen(false); setSearchQuery(''); } },
+    { label: 'Price History',  type: 'tool',  action: () => { router.push('/profile/history'); setSearchOpen(false); setSearchQuery(''); } },
+    { label: 'SJC',            type: 'brand', action: () => { onTab('chart');   setSearchOpen(false); setSearchQuery(''); } },
+    { label: 'DOJI',           type: 'brand', action: () => { onTab('chart');   setSearchOpen(false); setSearchQuery(''); } },
+    { label: 'PNJ',            type: 'brand', action: () => { onTab('chart');   setSearchOpen(false); setSearchQuery(''); } },
+    { label: 'BTMC',           type: 'brand', action: () => { onTab('chart');   setSearchOpen(false); setSearchQuery(''); } },
   ];
 
   const filteredItems = searchQuery.trim().length > 0

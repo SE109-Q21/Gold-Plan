@@ -31,7 +31,7 @@ export default function Page() {
     <>
       <DashboardShell tab={safeTab} onTab={setTab} currency={currency} onCurrency={setCurrency}>
         {safeTab === 'home'    && <OverviewPage currency={currency} onNavigateAlerts={() => setTab('alerts')}/>}
-        {safeTab === 'chart'   && <MarketsPage/>}
+        {safeTab === 'chart'   && <MarketsPage currency={currency}/>}
         {safeTab === 'alerts'  && <AlertsPage onOpenAdd={() => setAlertOpen(true)}/>}
         {safeTab === 'profile' && <AccountPage/>}
       </DashboardShell>
