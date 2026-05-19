@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { PriceChart } from '@/components/ui/PriceChart';
+import { PriceChart, type AlertLine, type CompareSeries } from '@/components/ui/PriceChart';
 import {
   LineChart as ReLineChart,
   Line,
@@ -14,6 +14,7 @@ import {
 import { usePriceHistory, type HistoryRange } from '@/lib/price.api';
 import { useSpreadRanking, useSpreadHistory } from '@/lib/spread.api';
 import { useExchangeRates } from '@/lib/exchange-rate.api';
+import { useAlerts, useCreateAlert } from '@/lib/alerts.api';
 import type { GoldBrand, GoldType } from '@gpls/shared';
 import { useAuth } from '@/contexts/auth-context';
 
@@ -26,6 +27,71 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 const GOLD_TYPES: GoldType[] = ['MIEN_SJC', 'NHAN_9999', 'VANG_24K', 'VANG_18K'];
 const BRANDS: GoldBrand[] = ['SJC', 'DOJI', 'PNJ', 'BAO_TIN'];
 
+
+const COMPARE_COLORS: Record<string, string> = {
+  DOJI:    '#60a5fa',
+  BAO_TIN: '#a78bfa',
+};
+
+function QuickAlertPanel({
+  price, lastPrice, onClose,
+}: { price: number; lastPrice: number; onClose: () => void }) {
+  const [condition, setCondition] = useState<'gte' | 'lte'>(price >= lastPrice ? 'gte' : 'lte');
+  const createAlert = useCreateAlert();
+
+  function handleCreate() {
+    createAlert.mutate(
+      { brand: 'SJC', goldType: 'MIEN_SJC', condition, thresholdPrice: price },
+      { onSuccess: onClose },
+    );
+  }
+
+  const fmtP = (v: number) => (v / 1_000_000).toFixed(2) + 'M₫';
+
+  return (
+    <div style={{ background: 'var(--ink-2)', border: '1px solid rgba(212,175,55,0.35)', borderRadius: 12, padding: '18px 22px', display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 160 }}>
+        <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase' }}>New alert · SJC MIEN_SJC</div>
+        <div style={{ font: '800 26px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums', color: 'var(--chalk)' }}>{fmtP(price)}</div>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 2 }}>Condition</div>
+        <div style={{ display: 'flex', gap: 6 }}>
+          {(['gte', 'lte'] as const).map(c => {
+            const active = condition === c;
+            const color  = c === 'gte' ? '#22c55e' : '#ef4444';
+            return (
+              <button
+                key={c}
+                onClick={() => setCondition(c)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 34, padding: '0 14px', border: `1px solid ${active ? color : 'var(--line)'}`, borderRadius: 6, background: active ? (c === 'gte' ? 'rgba(34,197,94,0.10)' : 'rgba(239,68,68,0.10)') : 'transparent', color: active ? color : 'var(--mute)', font: '700 11px/1 var(--font-mono)', cursor: 'pointer', transition: 'all 140ms' }}
+              >
+                {c === 'gte' ? '≥ rises above' : '≤ drops below'}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
+        <button
+          onClick={handleCreate}
+          disabled={createAlert.isPending}
+          style={{ display: 'inline-flex', alignItems: 'center', height: 36, padding: '0 18px', border: '1px solid rgba(212,175,55,0.6)', borderRadius: 6, background: 'rgba(212,175,55,0.12)', color: 'var(--gold)', font: '700 11px/1 var(--font-mono)', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: createAlert.isPending ? 'wait' : 'pointer', opacity: createAlert.isPending ? 0.6 : 1 }}
+        >
+          {createAlert.isPending ? 'Creating…' : 'Create Alert'}
+        </button>
+        <button
+          onClick={onClose}
+          style={{ display: 'inline-flex', alignItems: 'center', height: 36, padding: '0 14px', border: '1px solid var(--line)', borderRadius: 6, background: 'transparent', color: 'var(--mute)', font: '700 11px/1 var(--font-mono)', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer' }}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function SpreadRankingSection() {
   const [goldType, setGoldType] = useState<GoldType>('MIEN_SJC');
@@ -233,8 +299,11 @@ export function MarketsPage({ currency = 'VND' }: { currency?: string }) {
   const [asset, setAsset] = useState('SJC');
   const [hoverPrice, setHoverPrice] = useState<number | null>(null);
   const [csvLoading, setCsvLoading] = useState(false);
+  const [pendingAlertPrice, setPendingAlertPrice] = useState<number | null>(null);
+  const [showCompare, setShowCompare] = useState(false);
   const { user, getAccessToken } = useAuth();
   const { data: rates } = useExchangeRates();
+  const { data: alertsData } = useAlerts();
 
   const handleExportCsv = useCallback(async () => {
     setCsvLoading(true);
@@ -257,6 +326,8 @@ export function MarketsPage({ currency = 'VND' }: { currency?: string }) {
 
   const { data: history } = usePriceHistory('SJC' as GoldBrand, 'MIEN_SJC' as GoldType, range);
   const { data: history1D } = usePriceHistory('SJC' as GoldBrand, 'MIEN_SJC' as GoldType, '1D');
+  const { data: dojiHistory } = usePriceHistory('DOJI' as GoldBrand, 'MIEN_SJC' as GoldType, range);
+  const { data: baoTinHistory } = usePriceHistory('BAO_TIN' as GoldBrand, 'MIEN_SJC' as GoldType, range);
   const chartData = (history ?? []).map(p => p.buyPrice);
   const data = chartData.length > 1 ? chartData : [1970, 2050, 2120, 2200, 2250, 2310, 2345];
   const hoverVal = hoverPrice ?? data[data.length - 1];
@@ -289,6 +360,20 @@ export function MarketsPage({ currency = 'VND' }: { currency?: string }) {
     const variance = returns.reduce((a, r) => a + (r - mean) ** 2, 0) / returns.length;
     return (Math.sqrt(variance) * 100).toFixed(2) + '%';
   })();
+
+  const sjcAlerts: AlertLine[] = (alertsData ?? [])
+    .filter(a => a.brand === 'SJC' && a.goldType === 'MIEN_SJC')
+    .map(a => ({
+      id: a.id,
+      condition: a.condition,
+      thresholdPrice: Number(a.thresholdPrice),
+      status: a.status,
+    }));
+
+  const compareData: CompareSeries[] = showCompare ? [
+    ...(dojiHistory?.length ? [{ brand: 'DOJI', history: dojiHistory, color: COMPARE_COLORS.DOJI }] : []),
+    ...(baoTinHistory?.length ? [{ brand: 'BAO_TIN', history: baoTinHistory, color: COMPARE_COLORS.BAO_TIN }] : []),
+  ] : [];
 
   const fmt = (vnd: number): string => {
     if (currency === 'USD' && rates) return '$' + (vnd / rates.usdVnd).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -326,11 +411,18 @@ export function MarketsPage({ currency = 'VND' }: { currency?: string }) {
             {RANGES.map(r => (
               <button key={r} onClick={() => setRange(r)} style={{ display: 'inline-flex', alignItems: 'center', height: 32, padding: '0 10px', border: `1px solid ${range === r ? 'var(--gold)' : 'var(--line)'}`, borderRadius: 0, background: range === r ? 'var(--gold)' : 'transparent', color: range === r ? '#0B0B0F' : 'var(--bone)', font: '700 11px/1 var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}>{r}</button>
             ))}
+            <button
+              onClick={() => { setShowCompare(v => !v); setPendingAlertPrice(null); }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 5, height: 32, padding: '0 10px', border: `1px solid ${showCompare ? 'rgba(147,197,253,0.5)' : 'var(--line)'}`, borderRadius: 0, background: showCompare ? 'rgba(147,197,253,0.08)' : 'transparent', color: showCompare ? '#93c5fd' : 'var(--bone)', font: '700 11px/1 var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer', marginLeft: 4 }}
+            >
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M3 3v18h18"/><path d="M7 16l4-4 4 4 5-5"/></svg>
+              compare
+            </button>
             {user && (
               <button
                 onClick={handleExportCsv}
                 disabled={csvLoading}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, height: 32, padding: '0 10px', border: '1px solid var(--line)', borderRadius: 0, background: 'transparent', color: csvLoading ? 'var(--mute)' : 'var(--bone)', font: '700 11px/1 var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: csvLoading ? 'not-allowed' : 'pointer', marginLeft: 8, opacity: csvLoading ? 0.6 : 1 }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, height: 32, padding: '0 10px', border: '1px solid var(--line)', borderRadius: 0, background: 'transparent', color: csvLoading ? 'var(--mute)' : 'var(--bone)', font: '700 11px/1 var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: csvLoading ? 'not-allowed' : 'pointer', marginLeft: 4, opacity: csvLoading ? 0.6 : 1 }}
               >
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 {csvLoading ? '…' : 'csv'}
@@ -339,7 +431,14 @@ export function MarketsPage({ currency = 'VND' }: { currency?: string }) {
           </div>
         </div>
 
-        <PriceChart history={history ?? []} range={range} onHoverPrice={setHoverPrice}/>
+        <PriceChart
+          history={history ?? []}
+          range={range}
+          onHoverPrice={setHoverPrice}
+          alerts={sjcAlerts}
+          onAddAlertAtPrice={user && !showCompare ? (p) => { setPendingAlertPrice(p); } : undefined}
+          compareData={compareData}
+        />
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', marginTop: 22, paddingTop: 18, borderTop: '1px solid var(--hairline)' }}>
           {[
@@ -353,6 +452,14 @@ export function MarketsPage({ currency = 'VND' }: { currency?: string }) {
           ))}
         </div>
       </div>
+
+      {pendingAlertPrice !== null && (
+        <QuickAlertPanel
+          price={pendingAlertPrice}
+          lastPrice={data[data.length - 1]}
+          onClose={() => setPendingAlertPrice(null)}
+        />
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
         <SpreadRankingSection />
