@@ -7,6 +7,82 @@ import type { PriceAlertDto, SmartAlertDto, CreateSmartAlertDto, SmartAlertCondi
 
 type TabId = 'rules' | 'history' | 'smart';
 
+// ─── Confirm delete modal ──────────────────────────────────────────────────────
+
+function ConfirmDeleteModal({ message, onConfirm, onClose }: {
+  message: string;
+  onConfirm: () => void;
+  onClose: () => void;
+}) {
+  return (
+    <div
+      style={{
+        position: 'fixed', inset: 0, zIndex: 1100,
+        background: 'rgba(11,11,15,0.80)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: 20,
+      }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div style={{
+        width: 380,
+        background: 'var(--ink-2)', border: '1px solid var(--line)',
+        borderRadius: 14, padding: '28px 28px 24px',
+        display: 'flex', flexDirection: 'column', gap: 20,
+      }}>
+        {/* Icon + title */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: 8, flexShrink: 0,
+            background: 'rgba(229,72,77,0.12)', border: '1px solid rgba(229,72,77,0.25)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--down)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14"/>
+            </svg>
+          </div>
+          <div>
+            <div style={{ font: '700 16px/1 var(--font-display)', color: 'var(--chalk)', marginBottom: 6 }}>
+              Xóa alert
+            </div>
+            <div style={{ font: '400 13px/1.5 var(--font-display)', color: 'var(--mute)' }}>
+              {message}
+            </div>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+          <button
+            onClick={onClose}
+            style={{
+              height: 36, padding: '0 16px',
+              background: 'var(--ink-3)', border: '1px solid var(--line)',
+              borderRadius: 8, cursor: 'pointer',
+              font: '700 12px/1 var(--font-mono)', letterSpacing: '0.04em',
+              color: 'var(--bone)',
+            }}
+          >
+            Hủy
+          </button>
+          <button
+            onClick={() => { onConfirm(); onClose(); }}
+            style={{
+              height: 36, padding: '0 16px',
+              background: 'rgba(229,72,77,0.15)', border: '1px solid rgba(229,72,77,0.4)',
+              borderRadius: 8, cursor: 'pointer',
+              font: '700 12px/1 var(--font-mono)', letterSpacing: '0.04em',
+              color: 'var(--down)',
+            }}
+          >
+            Xóa
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Shared helpers ────────────────────────────────────────────────────────────
 
 function Toggle({ on, onChange, disabled }: { on: boolean; onChange: () => void; disabled?: boolean }) {
@@ -384,12 +460,10 @@ function SmartAlertsPanel() {
   const toggleAlert = useToggleSmartAlert();
   const deleteAlert = useDeleteSmartAlert();
   const [showModal, setShowModal] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const handleToggle = (id: string) => toggleAlert.mutate(id);
-  const handleDelete = (id: string) => {
-    if (!window.confirm('Delete this smart alert?')) return;
-    deleteAlert.mutate(id);
-  };
+  const handleDelete = (id: string) => setPendingDeleteId(id);
 
   const statusChip = (status: SmartAlertDto['status']): React.CSSProperties => {
     if (status === 'active') return {
@@ -409,6 +483,13 @@ function SmartAlertsPanel() {
   return (
     <>
       {showModal && <BuilderModal onClose={() => setShowModal(false)} />}
+      {pendingDeleteId && (
+        <ConfirmDeleteModal
+          message="Bạn có chắc muốn xóa smart alert này không? Hành động này không thể hoàn tác."
+          onConfirm={() => deleteAlert.mutate(pendingDeleteId)}
+          onClose={() => setPendingDeleteId(null)}
+        />
+      )}
 
       <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, padding: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 22px', borderBottom: '1px solid var(--hairline)' }}>
@@ -517,15 +598,10 @@ export function AlertsPage({ onOpenAdd }: { onOpenAdd: () => void }) {
   const { data: history = [], isLoading: histLoading } = useAlertHistory();
   const toggleAlert = useToggleAlert();
   const deleteAlert = useDeleteAlert();
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
-  const handleToggle = (id: string) => {
-    toggleAlert.mutate(id);
-  };
-
-  const handleDelete = (id: string) => {
-    if (!window.confirm('Delete this alert?')) return;
-    deleteAlert.mutate(id);
-  };
+  const handleToggle = (id: string) => toggleAlert.mutate(id);
+  const handleDelete = (id: string) => setPendingDeleteId(id);
 
   const activeCount = alerts.filter(a => a.status === 'active').length;
   const triggeredCount = history.length;
@@ -540,6 +616,14 @@ export function AlertsPage({ onOpenAdd }: { onOpenAdd: () => void }) {
   });
 
   return (
+    <>
+    {pendingDeleteId && (
+      <ConfirmDeleteModal
+        message="Bạn có chắc muốn xóa alert này không? Hành động này không thể hoàn tác."
+        onConfirm={() => deleteAlert.mutate(pendingDeleteId)}
+        onClose={() => setPendingDeleteId(null)}
+      />
+    )}
     <div style={{ padding: '24px 28px 40px', display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
@@ -767,5 +851,6 @@ export function AlertsPage({ onOpenAdd }: { onOpenAdd: () => void }) {
       {/* ── Smart Alerts tab ── */}
       {tab === 'smart' && <SmartAlertsPanel />}
     </div>
+    </>
   );
 }
