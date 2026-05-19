@@ -300,9 +300,17 @@ export class ForecastService {
     };
   }
 
-  async getLeaderboard(month: string): Promise<
-    { rank: number; displayName: string; points: number; streak: number }[]
-  > {
+  async getLeaderboard(month: string): Promise<{
+    month: string;
+    entries: {
+      rank: number;
+      userId: string;
+      displayName: string | null;
+      totalPoints: number;
+      correctCount: number;
+      streak: number;
+    }[];
+  }> {
     const scores = await this.prisma.userForecastScore.findMany({
       where: { month },
       orderBy: { totalPoints: 'desc' },
@@ -314,12 +322,17 @@ export class ForecastService {
       },
     });
 
-    return scores.map((s, index) => ({
-      rank: index + 1,
-      displayName: s.user.displayName || 'Ẩn danh',
-      points: s.totalPoints,
-      streak: s.streak,
-    }));
+    return {
+      month,
+      entries: scores.map((s, index) => ({
+        rank: index + 1,
+        userId: s.userId,
+        displayName: s.user.displayName ?? null,
+        totalPoints: s.totalPoints,
+        correctCount: s.correctCount,
+        streak: s.streak,
+      })),
+    };
   }
 
   async getUserHistory(

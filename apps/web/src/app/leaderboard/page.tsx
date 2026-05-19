@@ -78,11 +78,23 @@ function EntryRow({ entry, index }: { entry: LeaderboardEntryDto; index: number 
   );
 }
 
+function buildMonthOptions(): { value: string; label: string }[] {
+  const now = new Date();
+  const options: { value: string; label: string }[] = [];
+  for (let i = 0; i < 24; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    options.push({ value, label: fmtMonth(value) });
+  }
+  return options;
+}
+
 function LeaderboardContent() {
   const [month, setMonth] = useState<string>(() => new Date().toISOString().slice(0, 7));
   const { data, isLoading, isError } = useLeaderboard(month);
 
   const canGoForward = nextMonth(month) <= new Date().toISOString().slice(0, 7);
+  const monthOptions = buildMonthOptions();
 
   return (
     <div style={{ padding: '32px 28px 60px', maxWidth: 760, margin: '0 auto' }}>
@@ -97,7 +109,7 @@ function LeaderboardContent() {
       </div>
 
       {/* Month selector */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24 }}>
         <button
           onClick={() => setMonth(prev => prevMonth(prev))}
           style={{
@@ -109,9 +121,24 @@ function LeaderboardContent() {
         >
           ‹
         </button>
-        <span style={{ font: '700 15px/1 var(--font-display)', minWidth: 140, textAlign: 'center', color: 'var(--chalk)' }}>
-          {fmtMonth(month)}
-        </span>
+        <select
+          value={month}
+          onChange={e => setMonth(e.target.value)}
+          style={{
+            height: 34, padding: '0 28px 0 12px',
+            background: 'var(--ink-2)', border: '1px solid var(--line)',
+            borderRadius: 6, color: 'var(--chalk)',
+            font: '700 13px/1 var(--font-display)', cursor: 'pointer',
+            outline: 'none', appearance: 'none',
+            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")`,
+            backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'right 8px center',
+          }}
+        >
+          {monthOptions.map(o => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
         <button
           onClick={() => setMonth(prev => nextMonth(prev))}
           disabled={!canGoForward}

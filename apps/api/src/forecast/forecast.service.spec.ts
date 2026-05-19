@@ -242,9 +242,10 @@ describe('ForecastService', () => {
       }),
     );
 
-    expect(result).toHaveLength(3);
-    expect(result[0]).toEqual({ rank: 1, displayName: 'Alice', points: 100, streak: 5 });
-    expect(result[1]).toEqual({ rank: 2, displayName: 'Ẩn danh', points: 80, streak: 3 });
-    expect(result[2]).toEqual({ rank: 3, displayName: 'Charlie', points: 60, streak: 1 });
+    expect(result.entries).toHaveLength(3);
+    expect(result.month).toBe('2026-05');
+    expect(result.entries[0]).toEqual({ rank: 1, userId: 'user-1', displayName: 'Alice', totalPoints: 100, correctCount: 10, streak: 5 });
+    expect(result.entries[1]).toEqual({ rank: 2, userId: 'user-2', displayName: null, totalPoints: 80, correctCount: 8, streak: 3 });
+    expect(result.entries[2]).toEqual({ rank: 3, userId: 'user-3', displayName: 'Charlie', totalPoints: 60, correctCount: 6, streak: 1 });
   });
 });

@@ -1,25 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ForecastSessionDto, LeaderboardDto, VoteHistoryDto } from '@gpls/shared';
-
-const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
-
-function getToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem('token');
-}
-
-async function fetchSession(token: string | null): Promise<ForecastSessionDto | null> {
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (token) headers['Authorization'] = `Bearer ${token}`;
-  const res = await fetch(`${API}/forecast/session`, { headers });
-  if (!res.ok) return null;
-  return res.json();
-}
+import { apiClient } from './api-client';
 
 export function useActiveSession(token: string | null) {
   return useQuery({
     queryKey: ['forecast', 'session', !!token],
-    queryFn: () => fetchSession(token),
+    queryFn: async () => {
+      const res = await apiClient.get<ForecastSessionDto>('/forecast/session');
+      return res.data ?? null;
+    },
     refetchInterval: 60_000,
   });
 }
@@ -27,14 +16,9 @@ export function useActiveSession(token: string | null) {
 export function useCastVote() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ sessionId, direction, token }: { sessionId: string; direction: 'up' | 'down' | 'flat'; token: string }) => {
-      const res = await fetch(`${API}/forecast/vote`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ sessionId, direction }),
-      });
-      if (!res.ok) throw new Error('Vote failed');
-      return res.json();
+    mutationFn: async ({ sessionId, direction }: { sessionId: string; direction: 'up' | 'down' | 'flat'; token?: string }) => {
+      const res = await apiClient.post('/forecast/vote', { sessionId, direction });
+      return res.data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['forecast'] }),
   });
@@ -44,9 +28,8 @@ export function useLeaderboard(month: string) {
   return useQuery<LeaderboardDto>({
     queryKey: ['forecast', 'leaderboard', month],
     queryFn: async () => {
-      const res = await fetch(`${API}/forecast/leaderboard?month=${month}`);
-      if (!res.ok) throw new Error('Failed');
-      return res.json();
+      const res = await apiClient.get<LeaderboardDto>(`/forecast/leaderboard?month=${month}`);
+      return res.data;
     },
   });
 }
@@ -55,11 +38,8 @@ export function useVoteHistory(token: string | null, page = 1) {
   return useQuery<VoteHistoryDto>({
     queryKey: ['forecast', 'history', page],
     queryFn: async () => {
-      const res = await fetch(`${API}/forecast/history?page=${page}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error('Failed');
-      return res.json();
+      const res = await apiClient.get<VoteHistoryDto>(`/forecast/history?page=${page}`);
+      return res.data;
     },
     enabled: !!token,
   });
