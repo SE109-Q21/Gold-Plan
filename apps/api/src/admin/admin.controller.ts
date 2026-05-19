@@ -15,6 +15,7 @@ import { CreateDataSourceDto, UpdateDataSourceDto, ReviewAnomalyDto } from './dt
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { CrawlSchedulerService } from '../crawler/crawl-scheduler.service';
 
 // ─── AdminController ──────────────────────────────────────────────────────────
 
@@ -22,7 +23,16 @@ import { Roles } from '../auth/decorators/roles.decorator';
 @Roles('admin')
 @Controller('admin')
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(
+    private readonly adminService: AdminService,
+    private readonly crawlScheduler: CrawlSchedulerService,
+  ) {}
+
+  // POST /admin/crawl/trigger — force a crawl cycle regardless of trading hours
+  @Post('crawl/trigger')
+  triggerCrawl() {
+    return this.crawlScheduler.runNow();
+  }
 
   // GET /admin/stats
   @Get('stats')
