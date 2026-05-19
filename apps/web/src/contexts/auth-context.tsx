@@ -8,6 +8,7 @@ import {
   apiRefreshToken,
   apiRegister,
 } from '@/lib/auth.api';
+import { setApiAccessToken } from '@/lib/api-client';
 
 interface AuthUser {
   id: string;
@@ -39,6 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const setAccessToken = useCallback((token: string | null) => {
     tokenRef.current = token;
+    setApiAccessToken(token);
   }, []);
 
   const refreshToken = useCallback(async (): Promise<string | null> => {
@@ -47,10 +49,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshPromiseRef.current = (async () => {
       try {
         const { accessToken } = await apiRefreshToken();
-        tokenRef.current = accessToken;
+        setAccessToken(accessToken);
         return accessToken;
       } catch {
-        tokenRef.current = null;
+        setAccessToken(null);
         setUser(null);
         return null;
       } finally {
@@ -59,7 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })();
 
     return refreshPromiseRef.current;
-  }, []);
+  }, [setAccessToken]);
 
   // On mount: attempt silent refresh → if success, fetch user profile
   useEffect(() => {
