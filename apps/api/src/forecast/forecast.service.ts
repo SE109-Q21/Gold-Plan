@@ -262,8 +262,10 @@ export class ForecastService {
     opensAt: Date;
     closesAt: Date;
     sessionClosed: boolean;
-    voteCounts: { up: number; down: number; flat: number; total: number } | null;
+    actualResult: ForecastDirection | null;
     userVote: string | null;
+    ratios: { up: number; down: number; flat: number } | null;
+    totalVotes: number;
   } | null> {
     const session = await this.prisma.forecastSession.findFirst({
       where: { sessionClosed: false },
@@ -274,18 +276,17 @@ export class ForecastService {
     if (!session) return null;
 
     const userVote = userId
-      ? session.votes.find((v) => v.userId === userId)?.direction ?? null
+      ? (session.votes.find((v) => v.userId === userId)?.direction ?? null)
       : null;
 
-    const hasVoted = userVote !== null;
-    const showRatios = hasVoted || session.sessionClosed;
+    const showRatios = userVote !== null || session.sessionClosed;
+    const total = session.votes.length;
 
-    const voteCounts = showRatios
+    const ratios = showRatios && total > 0
       ? {
-          up: session.votes.filter((v) => v.direction === ForecastDirection.up).length,
-          down: session.votes.filter((v) => v.direction === ForecastDirection.down).length,
-          flat: session.votes.filter((v) => v.direction === ForecastDirection.flat).length,
-          total: session.votes.length,
+          up:   session.votes.filter((v) => v.direction === ForecastDirection.up).length   / total,
+          down: session.votes.filter((v) => v.direction === ForecastDirection.down).length / total,
+          flat: session.votes.filter((v) => v.direction === ForecastDirection.flat).length / total,
         }
       : null;
 
@@ -295,8 +296,10 @@ export class ForecastService {
       opensAt: session.opensAt,
       closesAt: session.closesAt,
       sessionClosed: session.sessionClosed,
-      voteCounts,
+      actualResult: session.actualResult,
       userVote: userVote as string | null,
+      ratios,
+      totalVotes: total,
     };
   }
 

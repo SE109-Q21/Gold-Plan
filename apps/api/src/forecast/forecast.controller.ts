@@ -10,6 +10,7 @@ import {
 import { ForecastService } from './forecast.service';
 import { VoteDto } from './dto/vote.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 interface JwtPayload {
@@ -24,9 +25,10 @@ export class ForecastController {
 
   /**
    * GET /forecast/session
-   * Public — userId optional for personalised response (ratio visibility, userVote).
+   * Public but optionally authenticated — userId extracted when token present.
    */
   @Get('session')
+  @UseGuards(OptionalJwtAuthGuard)
   getSession(@Req() req: any) {
     const userId: string | undefined = req.user?.sub;
     return this.forecastService.getActiveSession(userId);
