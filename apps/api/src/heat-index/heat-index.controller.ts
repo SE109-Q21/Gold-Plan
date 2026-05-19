@@ -1,5 +1,6 @@
 import { Controller, Get, Query } from '@nestjs/common';
-import { HeatIndexDto, HeatIndexService } from './heat-index.service';
+import type { HeatIndexDto } from '@gpls/shared';
+import { HeatIndexService } from './heat-index.service';
 
 @Controller('heat-index')
 export class HeatIndexController {

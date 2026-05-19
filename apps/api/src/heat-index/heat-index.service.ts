@@ -2,15 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { GoldBrand, GoldType, HeatIndexRecord } from '@prisma/client';
 import { PrismaService } from '../database/prisma.service';
-
-export interface HeatIndexDto {
-  score: number;
-  label: 'Cold' | 'Warm' | 'Hot';
-  velocityPct: number;
-  spreadVnd: number;
-  crossings: number;
-  computedAt: string;
-}
+import type { HeatIndexDto } from '@gpls/shared';
 
 @Injectable()
 export class HeatIndexService {
@@ -142,12 +134,12 @@ export class HeatIndexService {
 
   private toDto(r: HeatIndexRecord): HeatIndexDto {
     return {
-      score: r.indexValue,
-      label: r.category as 'Cold' | 'Warm' | 'Hot',
-      velocityPct: Number(r.priceVelocity),
-      spreadVnd: Number(r.spreadSize),
-      crossings: r.thresholdCrossings,
-      computedAt: r.calculatedAt.toISOString(),
+      value: r.indexValue,
+      category: r.category as 'cold' | 'warm' | 'hot',
+      priceVelocity: Number(r.priceVelocity),
+      spreadSize: Number(r.spreadSize),
+      thresholdCrossings: r.thresholdCrossings,
+      calculatedAt: r.calculatedAt.toISOString(),
     };
   }
 }
