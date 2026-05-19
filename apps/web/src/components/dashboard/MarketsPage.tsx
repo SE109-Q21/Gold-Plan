@@ -326,8 +326,8 @@ export function MarketsPage({ currency = 'VND' }: { currency?: string }) {
 
   const { data: history } = usePriceHistory('SJC' as GoldBrand, 'MIEN_SJC' as GoldType, range);
   const { data: history1D } = usePriceHistory('SJC' as GoldBrand, 'MIEN_SJC' as GoldType, '1D');
-  const { data: dojiHistory } = usePriceHistory('DOJI' as GoldBrand, 'MIEN_SJC' as GoldType, range);
-  const { data: baoTinHistory } = usePriceHistory('BAO_TIN' as GoldBrand, 'MIEN_SJC' as GoldType, range);
+  const { data: dojiHistory } = usePriceHistory('DOJI' as GoldBrand, 'NHAN_9999' as GoldType, range);
+  const { data: baoTinHistory } = usePriceHistory('BAO_TIN' as GoldBrand, 'NHAN_9999' as GoldType, range);
   const chartData = (history ?? []).map(p => p.buyPrice);
   const data = chartData.length > 1 ? chartData : [1970, 2050, 2120, 2200, 2250, 2310, 2345];
   const hoverVal = hoverPrice ?? data[data.length - 1];
