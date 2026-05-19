@@ -8,6 +8,8 @@ const NAV_LINKS = [
   { href: '/admin/data-sources', label: 'Data Sources' },
   { href: '/admin/users',        label: 'Users' },
   { href: '/admin/anomalies',    label: 'Anomalies' },
+  { href: '/admin/forecast',    label: 'Forecast' },
+  { href: '/admin/audit',       label: 'Audit Log' },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

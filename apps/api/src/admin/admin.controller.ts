@@ -40,6 +40,12 @@ export class AdminController {
     return this.adminService.getStats();
   }
 
+  // GET /admin/stats/timeseries?days=30
+  @Get('stats/timeseries')
+  getTimeSeries(@Query('days') days?: string) {
+    return this.adminService.getTimeSeries(days ? Math.min(parseInt(days, 10), 90) : 30);
+  }
+
   // GET /admin/stats/period?period=day|week|month
   @Get('stats/period')
   getStatsByPeriod(@Query('period') period: 'day' | 'week' | 'month' = 'day') {
@@ -48,17 +54,19 @@ export class AdminController {
     return this.adminService.getStatsByPeriod(p);
   }
 
-  // GET /admin/users?page=1&limit=20&status=active&role=user
+  // GET /admin/users?page=1&limit=20&status=active&role=user&search=email
   @Get('users')
   listUsers(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('status') status?: string,
     @Query('role') role?: string,
+    @Query('search') search?: string,
   ) {
-    const filter: { status?: string; role?: string } = {};
+    const filter: { status?: string; role?: string; search?: string } = {};
     if (status) filter.status = status;
     if (role) filter.role = role;
+    if (search) filter.search = search;
 
     return this.adminService.listUsers(
       page ? parseInt(page, 10) : 1,
@@ -77,6 +85,12 @@ export class AdminController {
   @Patch('users/:id/unlock')
   unlockUser(@Param('id') id: string) {
     return this.adminService.unlockUser(id);
+  }
+
+  // PATCH /admin/users/:id/role
+  @Patch('users/:id/role')
+  changeUserRole(@Param('id') id: string, @Body() body: { role: 'user' | 'admin' }) {
+    return this.adminService.changeUserRole(id, body.role);
   }
 
   // GET /admin/data-sources
@@ -101,6 +115,58 @@ export class AdminController {
   @Delete('data-sources/:id')
   disableDataSource(@Param('id') id: string) {
     return this.adminService.disableDataSource(id);
+  }
+
+  // PATCH /admin/data-sources/:id/enable
+  @Patch('data-sources/:id/enable')
+  enableDataSource(@Param('id') id: string) {
+    return this.adminService.enableDataSource(id);
+  }
+
+  // GET /admin/forecast/sessions?limit=30
+  @Get('forecast/sessions')
+  listForecastSessions(@Query('limit') limit?: string) {
+    return this.adminService.listForecastSessions(limit ? parseInt(limit, 10) : 30);
+  }
+
+  // POST /admin/forecast/sessions  body: { date: "YYYY-MM-DD", closesAt: ISO }
+  @Post('forecast/sessions')
+  openForecastSession(@Body() body: { date: string; closesAt: string }) {
+    return this.adminService.openForecastSession(body.date, body.closesAt);
+  }
+
+  // PATCH /admin/forecast/sessions/:id/close
+  @Patch('forecast/sessions/:id/close')
+  closeForecastSession(@Param('id') id: string) {
+    return this.adminService.closeForecastSession(id);
+  }
+
+  // PATCH /admin/forecast/sessions/:id/result  body: { actualResult: "up"|"down"|"flat" }
+  @Patch('forecast/sessions/:id/result')
+  setForecastResult(
+    @Param('id') id: string,
+    @Body() body: { actualResult: 'up' | 'down' | 'flat' },
+    @Req() req: { user: { sub: string } },
+  ) {
+    return this.adminService.setForecastResult(id, body.actualResult as any, req.user.sub);
+  }
+
+  // GET /admin/forecast/sessions/:id/votes
+  @Get('forecast/sessions/:id/votes')
+  getForecastSessionVotes(@Param('id') id: string) {
+    return this.adminService.getForecastSessionVotes(id);
+  }
+
+  // GET /admin/audit?page=1&limit=30
+  @Get('audit')
+  listAuditLog(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.adminService.listAuditLog(
+      page ? parseInt(page, 10) : 1,
+      limit ? parseInt(limit, 10) : 30,
+    );
   }
 
   // GET /admin/anomalies

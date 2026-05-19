@@ -56,7 +56,7 @@ export default function AdminAnomaliesPage() {
   const { mutate: review, isPending: isReviewing } = useReviewAnomaly();
 
   return (
-    <div style={{ padding: '32px 36px', maxWidth: 1300 }}>
+    <div style={{ padding: '32px 36px' }}>
       {/* Header */}
       <div style={{ marginBottom: 32 }}>
         <h1 style={{

@@ -251,9 +251,15 @@ function Sidebar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
               <div className="mono" style={{ fontSize: 10, color: 'var(--bone)', letterSpacing: '0.04em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {user.displayName ?? user.email}
               </div>
-              <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: 2 }}>
-                {user.role}
-              </div>
+              {user.role === 'admin' ? (
+                <span style={{ display: 'inline-block', background: 'var(--gold)', color: '#0B0B0F', font: '800 8px/1 var(--font-mono)', letterSpacing: '0.14em', padding: '3px 6px', borderRadius: 3, textTransform: 'uppercase', marginTop: 3 }}>
+                  ADMIN
+                </span>
+              ) : (
+                <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: 2 }}>
+                  {user.role}
+                </div>
+              )}
             </div>
           </div>
         ) : (
@@ -483,9 +489,15 @@ function TopBar({ currency, onCurrency, onTab }: { currency: string; onCurrency:
                     <div className="mono" style={{ fontSize: 11, color: 'var(--chalk)', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {user.displayName ?? user.email}
                     </div>
-                    <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: 2 }}>
-                      {user.role}
-                    </div>
+                    {user.role === 'admin' ? (
+                      <span style={{ display: 'inline-block', background: 'var(--gold)', color: '#0B0B0F', font: '800 8px/1 var(--font-mono)', letterSpacing: '0.14em', padding: '3px 6px', borderRadius: 3, textTransform: 'uppercase', marginTop: 3 }}>
+                        ADMIN
+                      </span>
+                    ) : (
+                      <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: 2 }}>
+                        {user.role}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
