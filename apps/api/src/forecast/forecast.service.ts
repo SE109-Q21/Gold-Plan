@@ -101,32 +101,29 @@ export class ForecastService {
         return;
       }
 
-      // Get SJC current prices to compare
-      const allPrices = await this.priceService.getCurrentPrices();
-      const sjcPrices = allPrices.filter((p) => p.brand === 'SJC');
-
-      // Determine actual direction based on SJC MIEN_SJC or first SJC price
-      const sjcPrice =
-        sjcPrices.find((p) => p.goldType === 'MIEN_SJC') ?? sjcPrices[0];
-
-      if (!sjcPrice) {
-        this.logger.warn('ForecastService: no SJC price available for scoring');
-        return;
-      }
-
-      // Derive direction from changePercent
-      let actualResult: ForecastDirection;
-      if (sjcPrice.changePercent === null) {
-        actualResult = ForecastDirection.flat;
-      } else if (sjcPrice.changePercent > 0) {
-        actualResult = ForecastDirection.up;
-      } else if (sjcPrice.changePercent < 0) {
-        actualResult = ForecastDirection.down;
-      } else {
-        actualResult = ForecastDirection.flat;
-      }
-
       for (const session of unscoredSessions) {
+        // Compare SJC price at session open vs session close to derive actual direction
+        const [openRecord, closeRecord] = await Promise.all([
+          this.prisma.priceRecord.findFirst({
+            where: { brand: 'SJC', goldType: 'MIEN_SJC', isAnomalous: false, recordedAt: { gte: session.opensAt } },
+            orderBy: { recordedAt: 'asc' },
+            select: { buyPrice: true },
+          }),
+          this.prisma.priceRecord.findFirst({
+            where: { brand: 'SJC', goldType: 'MIEN_SJC', isAnomalous: false, recordedAt: { lte: session.closesAt } },
+            orderBy: { recordedAt: 'desc' },
+            select: { buyPrice: true },
+          }),
+        ]);
+
+        let actualResult: ForecastDirection;
+        if (!openRecord || !closeRecord) {
+          this.logger.warn(`ForecastService: no price bracket for session ${session.id} (${session.date}), skipping`);
+          continue;
+        }
+        const diff = Number(closeRecord.buyPrice) - Number(openRecord.buyPrice);
+        actualResult = diff > 0 ? ForecastDirection.up : diff < 0 ? ForecastDirection.down : ForecastDirection.flat;
+
         await this.scoreOneSession(session, actualResult);
       }
     } catch (err) {
@@ -136,13 +133,10 @@ export class ForecastService {
 
   /** Score a single session — updates votes and UserForecastScore records */
   async scoreOneSession(
-    session: { id: string; votes: { id: string; userId: string; direction: ForecastDirection }[] },
+    session: { id: string; date: string; votes: { id: string; userId: string; direction: ForecastDirection }[] },
     actualResult: ForecastDirection,
   ): Promise<void> {
-    const month = session.id
-      ? (await this.prisma.forecastSession.findUnique({ where: { id: session.id }, select: { date: true } }))
-          ?.date?.slice(0, 7) ?? new Date().toISOString().slice(0, 7)
-      : new Date().toISOString().slice(0, 7);
+    const month = session.date.slice(0, 7);
 
     for (const vote of session.votes) {
       const isCorrect = vote.direction === actualResult;

@@ -123,7 +123,7 @@ export class PriceService {
       goldType: r.goldType,
     }));
 
-    const Papa = await import('papaparse');
+    const Papa = (await import('papaparse')).default;
     return Papa.unparse(rows);
   }
 

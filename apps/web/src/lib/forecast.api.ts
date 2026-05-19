@@ -2,9 +2,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ForecastSessionDto, LeaderboardDto, VoteHistoryDto } from '@gpls/shared';
 import { apiClient } from './api-client';
 
-export function useActiveSession(token: string | null) {
+export function useActiveSession(userId: string | null) {
   return useQuery({
-    queryKey: ['forecast', 'session', !!token],
+    queryKey: ['forecast', 'session', userId],
     queryFn: async () => {
       const res = await apiClient.get<ForecastSessionDto>('/forecast/session');
       return res.data ?? null;

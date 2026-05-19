@@ -185,8 +185,8 @@ export function ForecastVoteWidget() {
           {/* Voted but no ratios yet */}
           {hasVoted && !ratios && (
             <div style={{ font: '500 13px/1.5 var(--font-mono)', color: 'var(--mute)', padding: '8px 0' }}>
-              Voted: <strong style={{ color: DIRECTION_CONFIG[session.userVote!].color }}>
-                {DIRECTION_CONFIG[session.userVote!].label}
+              Voted: <strong style={{ color: (DIRECTION_CONFIG[session.userVote as Direction] ?? DIRECTION_CONFIG['flat']).color }}>
+                {(DIRECTION_CONFIG[session.userVote as Direction] ?? DIRECTION_CONFIG['flat']).label}
               </strong>
             </div>
           )}

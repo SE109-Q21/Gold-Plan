@@ -22,7 +22,7 @@ const ASSETS = ['XAU/USD', 'XAU/VND', 'SJC', 'DOJI', 'PNJ'] as const;
 type Range = HistoryRange;
 const RANGES: Range[] = ['1D', '1W', '1M', '3M', '1Y'];
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
 
 const GOLD_TYPES: GoldType[] = ['MIEN_SJC', 'NHAN_9999', 'VANG_24K', 'VANG_18K'];
 const BRANDS: GoldBrand[] = ['SJC', 'DOJI', 'PNJ', 'BAO_TIN'];
@@ -309,7 +309,7 @@ export function MarketsPage({ currency = 'VND' }: { currency?: string }) {
     setCsvLoading(true);
     try {
       const token = getAccessToken();
-      const url = `${API_BASE}/api/prices/history/export?brand=SJC&goldType=MIEN_SJC&range=${range}`;
+      const url = `${API_BASE}/prices/history/export?brand=SJC&goldType=MIEN_SJC&range=${range}`;
       const res = await fetch(url, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
       const blob = await res.blob();
       const a = document.createElement('a');
@@ -470,7 +470,7 @@ export function MarketsPage({ currency = 'VND' }: { currency?: string }) {
             <div style={{ padding: '24px 0', textAlign: 'center', font: '500 12px/1 var(--font-mono)', color: 'var(--mute)' }}>loading…</div>
           )}
           {ticks.map((r, i) => (
-            <div key={i} style={{ display: 'grid', gridTemplateColumns: '90px 1fr 90px', padding: '8px 0', borderTop: i === 0 ? 'none' : '1px solid var(--hairline)', font: '500 12px/1 var(--font-mono)' }}>
+            <div key={r.t} style={{ display: 'grid', gridTemplateColumns: '90px 1fr 90px', padding: '8px 0', borderTop: i === 0 ? 'none' : '1px solid var(--hairline)', font: '500 12px/1 var(--font-mono)' }}>
               <span style={{ color: 'var(--mute)' }}>{r.t}</span>
               <span style={{ font: '500 13px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>{fmt(r.p)}</span>
               <span style={{ textAlign: 'right', color: r.down ? 'var(--down)' : 'var(--up)', fontWeight: 700 }}>{r.down ? '▼' : '▲'} {(r.diff >= 0 ? '+' : '') + fmt(Math.abs(r.diff))}</span>

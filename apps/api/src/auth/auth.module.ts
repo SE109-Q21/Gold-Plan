@@ -6,12 +6,13 @@ import { AuthController } from './auth.controller';
 import { JwtService } from './jwt.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
+import { OptionalJwtAuthGuard } from './guards/optional-jwt-auth.guard';
 import { GoogleStrategy } from './strategies/google.strategy';
 
 @Module({
   imports: [DatabaseModule, PassportModule],
   controllers: [AuthController],
-  providers: [AuthService, JwtService, JwtAuthGuard, RolesGuard, GoogleStrategy],
-  exports: [AuthService, JwtService, JwtAuthGuard, RolesGuard],
+  providers: [AuthService, JwtService, JwtAuthGuard, RolesGuard, OptionalJwtAuthGuard, GoogleStrategy],
+  exports: [AuthService, JwtService, JwtAuthGuard, RolesGuard, OptionalJwtAuthGuard],
 })
 export class AuthModule {}

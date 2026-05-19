@@ -106,7 +106,7 @@ function VoteDetailPanel({ sessionId }: { sessionId: string }) {
     );
   }
 
-  const votes: Array<{ email: string; displayName: string | null; direction: string; votedAt: string; isCorrect: boolean | null }> = data?.votes ?? [];
+  const votes: Array<{ id: string; email: string; displayName: string | null; direction: string; votedAt: string; isCorrect: boolean | null }> = data?.votes ?? [];
 
   return (
     <tr>
@@ -138,7 +138,7 @@ function VoteDetailPanel({ sessionId }: { sessionId: string }) {
               </thead>
               <tbody>
                 {votes.map((v, i) => (
-                  <tr key={i} style={{ borderTop: i > 0 ? '1px solid var(--hairline)' : undefined }}>
+                  <tr key={v.id} style={{ borderTop: i > 0 ? '1px solid var(--hairline)' : undefined }}>
                     <td style={{ padding: '7px 12px', font: '400 11px/1 var(--font-mono)', color: 'var(--bone)' }}>
                       {v.email}
                     </td>

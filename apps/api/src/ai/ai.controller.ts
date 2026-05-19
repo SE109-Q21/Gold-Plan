@@ -5,10 +5,12 @@ import {
   Req,
   Res,
   HttpCode,
+  UseGuards,
 } from '@nestjs/common';
 import { IsArray, IsIn, IsString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { AiService } from './ai.service';
+import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 
 class ChatMessageDto {
   @IsIn(['user', 'assistant'])
@@ -31,16 +33,18 @@ export class AiController {
 
   @Post('chat')
   @HttpCode(200)
+  @UseGuards(OptionalJwtAuthGuard)
   async chat(
     @Body() dto: ChatRequestDto,
     @Req() req: any,
     @Res() res: any,
   ): Promise<void> {
-    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim()
-      ?? req.socket.remoteAddress
-      ?? 'unknown';
-
-    this.aiService.checkGuestLimit(ip);
+    if (!req.user) {
+      const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim()
+        ?? req.socket.remoteAddress
+        ?? 'unknown';
+      this.aiService.checkGuestLimit(ip);
+    }
 
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');

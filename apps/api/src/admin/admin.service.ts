@@ -80,7 +80,7 @@ export class AdminService {
     const now = new Date();
     let since: Date;
     if (period === 'day') {
-      since = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      since = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
     } else if (period === 'week') {
       since = new Date(now);
       since.setDate(now.getDate() - 7);

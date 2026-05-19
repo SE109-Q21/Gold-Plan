@@ -1,5 +1,4 @@
 'use client';
-import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 import { useState } from 'react';
 import { useLeaderboard } from '@/lib/forecast.api';
@@ -213,5 +212,5 @@ function LeaderboardContent() {
 }
 
 export default function LeaderboardPage() {
-  return <ProtectedRoute><LeaderboardContent /></ProtectedRoute>;
+  return <LeaderboardContent />;
 }
