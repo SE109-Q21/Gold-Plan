@@ -5,6 +5,7 @@ const TRADING_START_HOUR = 7;
 const TRADING_END_HOUR = 17;
 
 function isTradingHours(): boolean {
+  if (process.env.SKIP_TRADING_HOURS === 'true') return true;
   const vietnamHour = parseInt(
     new Date().toLocaleString('en-US', {
       timeZone: 'Asia/Ho_Chi_Minh',
@@ -31,9 +32,11 @@ export class CrawlSchedulerService {
       this.logger.debug('Outside trading hours — skipping crawl cycle');
       return;
     }
+    await this.runNow();
+  }
 
-    this.logger.log(`Starting crawl cycle (${this.crawlers.size} sources)`);
-
+  async runNow(): Promise<{ triggered: number }> {
+    this.logger.log(`Manual crawl trigger (${this.crawlers.size} sources)`);
     for (const [brand, crawlFn] of this.crawlers.entries()) {
       try {
         await crawlFn();
@@ -41,5 +44,6 @@ export class CrawlSchedulerService {
         this.logger.error(`Crawl failed for ${brand}: ${(err as Error).message}`);
       }
     }
+    return { triggered: this.crawlers.size };
   }
 }

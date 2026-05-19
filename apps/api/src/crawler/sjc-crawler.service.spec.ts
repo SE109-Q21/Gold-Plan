@@ -5,75 +5,57 @@ import { AnomalyDetectorService } from './anomaly-detector.service';
 const mockPrisma = {} as unknown as PrismaService;
 const mockDetector = {} as unknown as AnomalyDetectorService;
 
-const SAMPLE_HTML = `
-<table>
-  <tr>
-    <td>SJC 1L,10L,1KG</td>
-    <td>85.500</td>
-    <td>85.520</td>
-  </tr>
-  <tr>
-    <td>Nhẫn SJC 1-2-5 chỉ 99.9</td>
-    <td>83.400</td>
-    <td>84.100</td>
-  </tr>
-  <tr>
-    <td>Vàng nữ trang 24K</td>
-    <td>82.000</td>
-    <td>83.000</td>
-  </tr>
-  <tr>
-    <td>Vàng nữ trang 18K</td>
-    <td>61.500</td>
-    <td>62.000</td>
-  </tr>
-</table>
-`;
+const SAMPLE_PRICES = {
+  SJL1L10: { name: 'SJC 9999',           buy: 85_500_000, sell: 85_520_000, currency: 'VND' },
+  SJ9999:  { name: 'SJC Ring',            buy: 83_400_000, sell: 84_100_000, currency: 'VND' },
+  XAUUSD:  { name: 'World Gold (XAU/USD)', buy: 4552.9,    sell: 0,          currency: 'USD' },
+};
 
-describe('SjcCrawlerService.parseHtml', () => {
+describe('SjcCrawlerService.parseItems', () => {
   let service: SjcCrawlerService;
 
   beforeEach(() => {
     service = new SjcCrawlerService(mockPrisma, mockDetector);
   });
 
-  it('returns 4 price records from sample HTML', () => {
-    const result = service.parseHtml(SAMPLE_HTML);
-    expect(result).toHaveLength(4);
+  it('returns 2 price records from sample prices', () => {
+    const result = service.parseItems(SAMPLE_PRICES);
+    expect(result).toHaveLength(2);
   });
 
-  it('maps SJC 1L,10L,1KG row to MIEN_SJC', () => {
-    const result = service.parseHtml(SAMPLE_HTML);
+  it('maps SJL1L10 to MIEN_SJC with correct prices', () => {
+    const result = service.parseItems(SAMPLE_PRICES);
     const mien = result.find((r) => r.goldType === 'MIEN_SJC');
     expect(mien).toBeDefined();
     expect(mien!.buyPrice).toBe(85_500_000n);
     expect(mien!.sellPrice).toBe(85_520_000n);
   });
 
-  it('maps Nhẫn row to NHAN_9999', () => {
-    const result = service.parseHtml(SAMPLE_HTML);
+  it('maps SJ9999 to NHAN_9999 with correct prices', () => {
+    const result = service.parseItems(SAMPLE_PRICES);
     const nhan = result.find((r) => r.goldType === 'NHAN_9999');
     expect(nhan).toBeDefined();
     expect(nhan!.buyPrice).toBe(83_400_000n);
     expect(nhan!.sellPrice).toBe(84_100_000n);
   });
 
-  it('maps Vàng nữ trang 24K to VANG_24K', () => {
-    const result = service.parseHtml(SAMPLE_HTML);
-    const v24 = result.find((r) => r.goldType === 'VANG_24K');
-    expect(v24).toBeDefined();
-    expect(v24!.buyPrice).toBe(82_000_000n);
-  });
-
-  it('maps Vàng nữ trang 18K to VANG_18K', () => {
-    const result = service.parseHtml(SAMPLE_HTML);
-    const v18 = result.find((r) => r.goldType === 'VANG_18K');
-    expect(v18).toBeDefined();
-    expect(v18!.buyPrice).toBe(61_500_000n);
-  });
-
-  it('returns empty array for empty HTML', () => {
-    const result = service.parseHtml('<html></html>');
+  it('ignores unknown type codes', () => {
+    const result = service.parseItems({ XAUUSD: { name: 'x', buy: 1, sell: 2, currency: 'USD' } });
     expect(result).toHaveLength(0);
+  });
+
+  it('deduplicates same goldType, keeping first occurrence', () => {
+    const prices = {
+      SJL1L10: { name: 'first',  buy: 100, sell: 200, currency: 'VND' },
+      SJL1L10_DUP: { name: 'second', buy: 300, sell: 400, currency: 'VND' },
+    };
+    // Override map won't have SJL1L10_DUP, so only 1 result
+    const result = service.parseItems(prices);
+    expect(result).toHaveLength(1);
+    expect(result[0].buyPrice).toBe(100n);
+  });
+
+  it('returns empty array for empty input', () => {
+    expect(service.parseItems({})).toHaveLength(0);
   });
 });

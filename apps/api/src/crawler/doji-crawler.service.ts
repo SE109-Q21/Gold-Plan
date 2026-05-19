@@ -6,32 +6,26 @@ import { AnomalyDetectorService } from './anomaly-detector.service';
 import { CrawlSchedulerService } from './crawl-scheduler.service';
 import { BaseCrawlerService, RawPriceData } from './base-crawler.service';
 
-const DOJI_URL = 'https://www.dojigroup.com.vn/api/gold-price';
+const VANG_TODAY_URL = 'https://www.vang.today/api/prices';
 const DOJI_DATA_SOURCE_NAME = 'DOJI Official';
 
-const GOLD_TYPE_MAP: Array<{ keywords: string[]; type: GoldType }> = [
-  { keywords: ['miếng', 'mien', '9999 (v', 'sjc'], type: 'MIEN_SJC' },
-  { keywords: ['nhẫn', 'nhan', 'ring'], type: 'NHAN_9999' },
-  { keywords: ['24k', '24 k', 'nữ trang 24', 'nu trang 24'], type: 'VANG_24K' },
-  { keywords: ['18k', '18 k', 'nữ trang 18', 'nu trang 18'], type: 'VANG_18K' },
-];
+// Type codes from vang.today API (keys of the `prices` object)
+const DOJI_TYPE_MAP: Record<string, GoldType> = {
+  DOHNL:    'MIEN_SJC',
+  DOHCML:   'MIEN_SJC',
+  DOJINHTV: 'NHAN_9999',
+};
 
-interface DojiApiRow {
+interface VangTodayPriceItem {
   name: string;
-  buy: string;
-  sell: string;
+  buy: number;
+  sell: number;
+  currency: string;
 }
 
-interface DojiApiResponse {
-  data: DojiApiRow[];
-}
-
-function detectGoldType(label: string): GoldType | null {
-  const lower = label.toLowerCase();
-  for (const { keywords, type } of GOLD_TYPE_MAP) {
-    if (keywords.some((kw) => lower.includes(kw))) return type;
-  }
-  return null;
+interface VangTodayResponse {
+  success: boolean;
+  prices: Record<string, VangTodayPriceItem>;
 }
 
 @Injectable()
@@ -48,35 +42,28 @@ export class DojiCrawlerService extends BaseCrawlerService implements OnModuleIn
 
   onModuleInit() {
     if (this.scheduler) {
-      this.scheduler.registerCrawler('DOJI', () =>
-        this.crawl(DOJI_DATA_SOURCE_NAME),
-      );
+      this.scheduler.registerCrawler('DOJI', () => this.crawl(DOJI_DATA_SOURCE_NAME));
     }
   }
 
   async fetchPrices(): Promise<RawPriceData[]> {
-    const { data } = await axios.get<DojiApiResponse>(DOJI_URL, { timeout: 10_000 });
-    return this.parseResponse(data);
+    const { data } = await axios.get<VangTodayResponse>(VANG_TODAY_URL, { timeout: 10_000 });
+    return this.parseItems(data.prices);
   }
 
-  parseResponse(response: DojiApiResponse): RawPriceData[] {
+  parseItems(prices: Record<string, VangTodayPriceItem>): RawPriceData[] {
     const results: RawPriceData[] = [];
-
-    for (const row of response.data) {
-      const goldType = detectGoldType(row.name);
-      if (!goldType) continue;
-
-      try {
-        results.push({
-          goldType,
-          buyPrice: BigInt(row.buy),
-          sellPrice: BigInt(row.sell),
-        });
-      } catch {
-        this.logger.warn(`DOJI: failed to parse row "${row.name}"`);
-      }
+    const seen = new Set<GoldType>();
+    for (const [typeCode, item] of Object.entries(prices)) {
+      const goldType = DOJI_TYPE_MAP[typeCode];
+      if (!goldType || seen.has(goldType)) continue;
+      seen.add(goldType);
+      results.push({
+        goldType,
+        buyPrice: BigInt(item.buy),
+        sellPrice: BigInt(item.sell),
+      });
     }
-
     return results;
   }
 }

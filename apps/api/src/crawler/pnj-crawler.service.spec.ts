@@ -1,38 +1,50 @@
 import { PnjCrawlerService } from './pnj-crawler.service';
+import { PrismaService } from '../database/prisma.service';
+import { AnomalyDetectorService } from './anomaly-detector.service';
 
-describe('PnjCrawlerService.parseHtml', () => {
+const mockPrisma = {} as unknown as PrismaService;
+const mockDetector = {} as unknown as AnomalyDetectorService;
+
+const SAMPLE_PRICES = {
+  PQHNVM:    { name: 'PNJ Hanoi', buy: 7_950_000, sell: 8_100_000, currency: 'VND' },
+  PQHN24NTT: { name: 'PNJ 24K',   buy: 8_200_000, sell: 8_350_000, currency: 'VND' },
+  XAUUSD:    { name: 'World Gold', buy: 4552.9,   sell: 0,          currency: 'USD' },
+};
+
+describe('PnjCrawlerService.parseItems', () => {
   let service: PnjCrawlerService;
 
   beforeEach(() => {
-    service = new PnjCrawlerService(null as any, null as any, null as any);
+    service = new PnjCrawlerService(mockPrisma, mockDetector);
   });
 
-  const FIXTURE_HTML = `
-    <table>
-      <tr><th>Loại vàng</th><th>Mua vào</th><th>Bán ra</th></tr>
-      <tr><td>Vàng nhẫn 9999</td><td>7.950.000</td><td>8.100.000</td></tr>
-      <tr><td>Vàng 24K</td><td>8.200.000</td><td>8.350.000</td></tr>
-    </table>
-  `;
-
-  it('parses NHAN_9999 price row', () => {
-    const results = service.parseHtml(FIXTURE_HTML);
-    const row = results.find((r) => r.goldType === 'NHAN_9999');
-    expect(row).toBeDefined();
-    expect(row!.buyPrice).toBe(BigInt(7_950_000));
-    expect(row!.sellPrice).toBe(BigInt(8_100_000));
+  it('returns 2 price records from sample prices', () => {
+    const result = service.parseItems(SAMPLE_PRICES);
+    expect(result).toHaveLength(2);
   });
 
-  it('parses VANG_24K price row', () => {
-    const results = service.parseHtml(FIXTURE_HTML);
-    const row = results.find((r) => r.goldType === 'VANG_24K');
-    expect(row).toBeDefined();
-    expect(row!.buyPrice).toBe(BigInt(8_200_000));
-    expect(row!.sellPrice).toBe(BigInt(8_350_000));
+  it('maps PQHNVM to NHAN_9999 with correct prices', () => {
+    const result = service.parseItems(SAMPLE_PRICES);
+    const nhan = result.find((r) => r.goldType === 'NHAN_9999');
+    expect(nhan).toBeDefined();
+    expect(nhan!.buyPrice).toBe(BigInt(7_950_000));
+    expect(nhan!.sellPrice).toBe(BigInt(8_100_000));
   });
 
-  it('returns empty array for empty HTML', () => {
-    const results = service.parseHtml('<html></html>');
-    expect(results).toEqual([]);
+  it('maps PQHN24NTT to VANG_24K with correct prices', () => {
+    const result = service.parseItems(SAMPLE_PRICES);
+    const v24 = result.find((r) => r.goldType === 'VANG_24K');
+    expect(v24).toBeDefined();
+    expect(v24!.buyPrice).toBe(BigInt(8_200_000));
+    expect(v24!.sellPrice).toBe(BigInt(8_350_000));
+  });
+
+  it('ignores unknown type codes', () => {
+    const result = service.parseItems({ XAUUSD: { name: 'x', buy: 1, sell: 2, currency: 'USD' } });
+    expect(result).toHaveLength(0);
+  });
+
+  it('returns empty array for empty input', () => {
+    expect(service.parseItems({})).toHaveLength(0);
   });
 });
