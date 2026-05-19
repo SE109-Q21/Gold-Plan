@@ -3,6 +3,11 @@ import { ValidationPipe } from '@nestjs/common';
 import cookieParser = require('cookie-parser');
 import { AppModule } from './app.module';
 
+// BigInt is not JSON-serializable by default; serialize as string to match DTO contracts
+(BigInt.prototype as unknown as { toJSON: () => string }).toJSON = function () {
+  return this.toString();
+};
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
