@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useActiveSession, useCastVote } from '@/lib/forecast.api';
+import { useAuth } from '@/contexts/auth-context';
 
 function pad2(n: number) { return String(n).padStart(2, '0'); }
 function fmtTime(iso: string) {
@@ -25,19 +26,15 @@ const RESULT_COLOR: Record<Direction, string> = {
 };
 
 export function ForecastVoteWidget() {
-  const [token, setToken] = useState<string | null>(null);
+  const { user } = useAuth();
   const router = useRouter();
 
-  useEffect(() => {
-    setToken(localStorage.getItem('token'));
-  }, []);
-
-  const { data: session, isLoading } = useActiveSession(token);
+  const { data: session, isLoading } = useActiveSession(user ? user.id : null);
   const castVote = useCastVote();
 
   function handleVote(direction: Direction) {
-    if (!session || !token) return;
-    castVote.mutate({ sessionId: session.id, direction, token });
+    if (!session || !user) return;
+    castVote.mutate({ sessionId: session.id, direction });
   }
 
   const hasVoted = session?.userVote !== null && session?.userVote !== undefined;
@@ -110,7 +107,7 @@ export function ForecastVoteWidget() {
                   <button
                     key={dir}
                     onClick={() => handleVote(dir)}
-                    disabled={castVote.isPending || !token}
+                    disabled={castVote.isPending || !user}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -119,7 +116,7 @@ export function ForecastVoteWidget() {
                       background: cfg.bg,
                       border: `1px solid ${cfg.color}40`,
                       borderRadius: 8,
-                      cursor: castVote.isPending || !token ? 'not-allowed' : 'pointer',
+                      cursor: castVote.isPending || !user ? 'not-allowed' : 'pointer',
                       opacity: castVote.isPending ? 0.6 : 1,
                       transition: 'opacity 140ms ease, border-color 140ms ease',
                     }}
@@ -133,7 +130,7 @@ export function ForecastVoteWidget() {
                   </button>
                 );
               })}
-              {!token && (
+              {!user && (
                 <button
                   onClick={() => router.push('/auth/login?from=%2F')}
                   style={{ background: 'transparent', border: 0, padding: 0, cursor: 'pointer', font: '500 11px/1.4 var(--font-mono)', color: 'var(--gold)', margin: '8px 0 0', textDecoration: 'underline' }}
