@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/database/prisma.service';
+import { JwtService } from '../src/auth/jwt.service';
 
 type PriceRecord = {
   id: string;
@@ -44,6 +45,13 @@ const mockPrismaService = {
   },
 } as unknown as PrismaService;
 
+const jwtMock = {
+  signAccess: jest.fn(),
+  signRefresh: jest.fn(),
+  verifyAccess: jest.fn(),
+  verifyRefresh: jest.fn(),
+};
+
 describe('Price endpoints (e2e)', () => {
   let app: INestApplication;
 
@@ -53,6 +61,8 @@ describe('Price endpoints (e2e)', () => {
     })
       .overrideProvider(PrismaService)
       .useValue(mockPrismaService)
+      .overrideProvider(JwtService)
+      .useValue(jwtMock)
       .compile();
 
     app = moduleFixture.createNestApplication();
@@ -146,5 +156,35 @@ describe('Price endpoints (e2e)', () => {
     expect(dojiRow.isBestBuy).toBe(false);
     expect(dojiRow.isBestSell).toBe(true);
     expect(sjcRow.isBestSell).toBe(false);
+  });
+
+  it('GET /api/prices/history/export returns 401 without auth', async () => {
+    await request(app.getHttpServer())
+      .get('/api/prices/history/export')
+      .query({ brand: 'SJC', goldType: 'MIEN_SJC', range: '1D' })
+      .expect(401);
+  });
+
+  it('GET /api/prices/history/export returns CSV with auth', async () => {
+    jwtMock.verifyAccess.mockReturnValue({
+      sub: 'user-1',
+      email: 'user@example.com',
+      role: 'user',
+    });
+
+    const records = [
+      makeRecord({ recordedAt: new Date('2026-05-12T08:00:00Z') }),
+    ];
+    (mockPrismaService.priceRecord.findMany as jest.Mock).mockResolvedValue(records);
+
+    const response = await request(app.getHttpServer())
+      .get('/api/prices/history/export')
+      .set('Authorization', 'Bearer valid-token')
+      .query({ brand: 'SJC', goldType: 'MIEN_SJC', range: '1D' })
+      .expect(200);
+
+    expect(response.headers['content-type']).toContain('text/csv');
+    expect(response.text).toContain('timestamp');
+    expect(response.text).toContain('SJC');
   });
 });
