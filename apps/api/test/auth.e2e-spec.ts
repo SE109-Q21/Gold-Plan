@@ -88,6 +88,22 @@ describe('Auth (e2e)', () => {
       .expect(400);
   });
 
+  it('POST /api/auth/register returns 409 when email exists', async () => {
+    prismaMock.user.findUnique.mockResolvedValue({ id: 'user-1' });
+
+    await request(app.getHttpServer())
+      .post('/api/auth/register')
+      .send({ email: 'user@example.com', password: 'Password1' })
+      .expect(409);
+  });
+
+  it('POST /api/auth/verify-email returns 400 when token missing', async () => {
+    await request(app.getHttpServer())
+      .post('/api/auth/verify-email')
+      .send({})
+      .expect(400);
+  });
+
   it('POST /api/auth/login returns access token and sets refresh cookie', async () => {
     prismaMock.user.findFirst.mockResolvedValue({
       id: 'user-1',
@@ -110,6 +126,53 @@ describe('Auth (e2e)', () => {
     expect(res.headers['set-cookie']).toEqual(
       expect.arrayContaining([expect.stringContaining('refreshToken=')]),
     );
+  });
+
+  it('POST /api/auth/login returns 401 for pending user', async () => {
+    prismaMock.user.findFirst.mockResolvedValue({
+      id: 'user-1',
+      email: 'user@example.com',
+      passwordHash: 'hash',
+      status: 'pending',
+      role: 'user',
+    });
+
+    await request(app.getHttpServer())
+      .post('/api/auth/login')
+      .send({ email: 'user@example.com', password: 'Password1' })
+      .expect(401);
+  });
+
+  it('POST /api/auth/login returns 401 for social login without password', async () => {
+    prismaMock.user.findFirst.mockResolvedValue({
+      id: 'user-1',
+      email: 'user@example.com',
+      passwordHash: null,
+      status: 'active',
+      role: 'user',
+    });
+    prismaMock.loginAttempt.count.mockResolvedValue(0);
+
+    await request(app.getHttpServer())
+      .post('/api/auth/login')
+      .send({ email: 'user@example.com', password: 'Password1' })
+      .expect(401);
+  });
+
+  it('POST /api/auth/login returns 429 when rate limit exceeded', async () => {
+    prismaMock.user.findFirst.mockResolvedValue({
+      id: 'user-1',
+      email: 'user@example.com',
+      passwordHash: 'hash',
+      status: 'active',
+      role: 'user',
+    });
+    prismaMock.loginAttempt.count.mockResolvedValue(5);
+
+    await request(app.getHttpServer())
+      .post('/api/auth/login')
+      .send({ email: 'user@example.com', password: 'Password1' })
+      .expect(429);
   });
 
   it('POST /api/auth/refresh returns 401 when cookie missing', async () => {
@@ -135,6 +198,27 @@ describe('Auth (e2e)', () => {
     expect(res.body).toEqual({ accessToken: 'access-token' });
   });
 
+  it('POST /api/auth/refresh returns 401 for invalid refresh token', async () => {
+    jwtMock.verifyRefresh.mockImplementation(() => {
+      throw new Error('invalid');
+    });
+
+    await request(app.getHttpServer())
+      .post('/api/auth/refresh')
+      .set('Cookie', ['refreshToken=bad-token'])
+      .expect(401);
+  });
+
+  it('POST /api/auth/logout clears refresh cookie', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/api/auth/logout')
+      .expect(200);
+
+    expect(res.headers['set-cookie']).toEqual(
+      expect.arrayContaining([expect.stringContaining('refreshToken=')]),
+    );
+  });
+
   it('POST /api/auth/forgot-password returns safe response for unknown email', async () => {
     prismaMock.user.findFirst.mockResolvedValue(null);
 
@@ -148,6 +232,13 @@ describe('Auth (e2e)', () => {
     });
     expect(prismaMock.passwordReset.create).not.toHaveBeenCalled();
     expect(mailMock.sendPasswordResetEmail).not.toHaveBeenCalled();
+  });
+
+  it('POST /api/auth/forgot-password returns 400 for invalid email', async () => {
+    await request(app.getHttpServer())
+      .post('/api/auth/forgot-password')
+      .send({ email: 'bad' })
+      .expect(400);
   });
 
   it('POST /api/auth/reset-password returns 400 for invalid token', async () => {

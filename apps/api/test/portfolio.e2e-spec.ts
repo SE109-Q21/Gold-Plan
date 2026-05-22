@@ -66,6 +66,17 @@ describe('Portfolio endpoints (e2e)', () => {
       .expect(401);
   });
 
+  it('GET /api/portfolio returns 401 for invalid token', async () => {
+    jwtMock.verifyAccess.mockImplementation(() => {
+      throw new Error('invalid');
+    });
+
+    await request(app.getHttpServer())
+      .get('/api/portfolio')
+      .set('Authorization', 'Bearer bad-token')
+      .expect(401);
+  });
+
   it('GET /api/portfolio returns summary with auth', async () => {
     jwtMock.verifyAccess.mockReturnValue({
       sub: 'user-1',
@@ -95,6 +106,43 @@ describe('Portfolio endpoints (e2e)', () => {
     });
   });
 
+  it('GET /api/portfolio/chart returns empty array when no data', async () => {
+    jwtMock.verifyAccess.mockReturnValue({
+      sub: 'user-1',
+      email: 'user@example.com',
+      role: 'user',
+    });
+    portfolioMock.getValueChart.mockResolvedValue([]);
+
+    const res = await request(app.getHttpServer())
+      .get('/api/portfolio/chart')
+      .set('Authorization', 'Bearer valid-token')
+      .expect(200);
+
+    expect(portfolioMock.getValueChart).toHaveBeenCalledWith('user-1');
+    expect(res.body).toEqual([]);
+  });
+
+  it('GET /api/portfolio/allocation returns empty breakdown', async () => {
+    jwtMock.verifyAccess.mockReturnValue({
+      sub: 'user-1',
+      email: 'user@example.com',
+      role: 'user',
+    });
+    portfolioMock.getAllocationBreakdown.mockResolvedValue({
+      byBrand: [],
+      byGoldType: [],
+    });
+
+    const res = await request(app.getHttpServer())
+      .get('/api/portfolio/allocation')
+      .set('Authorization', 'Bearer valid-token')
+      .expect(200);
+
+    expect(portfolioMock.getAllocationBreakdown).toHaveBeenCalledWith('user-1');
+    expect(res.body).toEqual({ byBrand: [], byGoldType: [] });
+  });
+
   it('GET /api/portfolio/transactions returns paged results', async () => {
     jwtMock.verifyAccess.mockReturnValue({
       sub: 'user-1',
@@ -119,6 +167,29 @@ describe('Portfolio endpoints (e2e)', () => {
     expect(res.body.page).toBe(2);
   });
 
+  it('GET /api/portfolio/transactions defaults page to 1', async () => {
+    jwtMock.verifyAccess.mockReturnValue({
+      sub: 'user-1',
+      email: 'user@example.com',
+      role: 'user',
+    });
+    portfolioMock.listTransactions.mockResolvedValue({
+      items: [],
+      total: 0,
+      page: 1,
+      limit: 20,
+      totalPages: 0,
+    });
+
+    const res = await request(app.getHttpServer())
+      .get('/api/portfolio/transactions')
+      .set('Authorization', 'Bearer valid-token')
+      .expect(200);
+
+    expect(portfolioMock.listTransactions).toHaveBeenCalledWith('user-1', 1);
+    expect(res.body.page).toBe(1);
+  });
+
   it('POST /api/portfolio/transactions returns 400 for invalid quantity', async () => {
     jwtMock.verifyAccess.mockReturnValue({
       sub: 'user-1',
@@ -134,6 +205,52 @@ describe('Portfolio endpoints (e2e)', () => {
         brand: 'SJC',
         goldType: 'MIEN_SJC',
         quantity: 0,
+        pricePerTael: 80_000_000,
+        transactedAt: '2026-05-01',
+      })
+      .expect(400);
+
+    expect(portfolioMock.addTransaction).not.toHaveBeenCalled();
+  });
+
+  it('POST /api/portfolio/transactions returns 400 for invalid date', async () => {
+    jwtMock.verifyAccess.mockReturnValue({
+      sub: 'user-1',
+      email: 'user@example.com',
+      role: 'user',
+    });
+
+    await request(app.getHttpServer())
+      .post('/api/portfolio/transactions')
+      .set('Authorization', 'Bearer valid-token')
+      .send({
+        type: 'BUY',
+        brand: 'SJC',
+        goldType: 'MIEN_SJC',
+        quantity: 1,
+        pricePerTael: 80_000_000,
+        transactedAt: 'not-a-date',
+      })
+      .expect(400);
+
+    expect(portfolioMock.addTransaction).not.toHaveBeenCalled();
+  });
+
+  it('POST /api/portfolio/transactions returns 400 for invalid goldType', async () => {
+    jwtMock.verifyAccess.mockReturnValue({
+      sub: 'user-1',
+      email: 'user@example.com',
+      role: 'user',
+    });
+
+    await request(app.getHttpServer())
+      .post('/api/portfolio/transactions')
+      .set('Authorization', 'Bearer valid-token')
+      .send({
+        type: 'BUY',
+        brand: 'SJC',
+        goldType: 'BAD_TYPE',
+        quantity: 1,
         pricePerTael: 80_000_000,
         transactedAt: '2026-05-01',
       })
@@ -193,6 +310,22 @@ describe('Portfolio endpoints (e2e)', () => {
       .patch('/api/portfolio/transactions/tx-1')
       .set('Authorization', 'Bearer valid-token')
       .send({ quantity: -1 })
+      .expect(400);
+
+    expect(portfolioMock.editTransaction).not.toHaveBeenCalled();
+  });
+
+  it('PATCH /api/portfolio/transactions/:id returns 400 for invalid date', async () => {
+    jwtMock.verifyAccess.mockReturnValue({
+      sub: 'user-1',
+      email: 'user@example.com',
+      role: 'user',
+    });
+
+    await request(app.getHttpServer())
+      .patch('/api/portfolio/transactions/tx-1')
+      .set('Authorization', 'Bearer valid-token')
+      .send({ transactedAt: 'bad-date' })
       .expect(400);
 
     expect(portfolioMock.editTransaction).not.toHaveBeenCalled();

@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication, ValidationPipe, UnauthorizedException } from '@nestjs/common';
 import request from 'supertest';
 import cookieParser = require('cookie-parser');
 import { AppModule } from '../src/app.module';
@@ -65,6 +65,17 @@ describe('Users (e2e)', () => {
       .expect(401);
   });
 
+  it('GET /api/users/me returns 401 for invalid token', async () => {
+    jwtMock.verifyAccess.mockImplementation(() => {
+      throw new Error('invalid');
+    });
+
+    await request(app.getHttpServer())
+      .get('/api/users/me')
+      .set('Authorization', 'Bearer bad-token')
+      .expect(401);
+  });
+
   it('GET /api/users/me returns profile with auth', async () => {
     jwtMock.verifyAccess.mockReturnValue({
       sub: 'user-1',
@@ -108,6 +119,20 @@ describe('Users (e2e)', () => {
       .patch('/api/users/me')
       .set('Authorization', 'Bearer valid-token')
       .send({ displayName: 'x'.repeat(101) })
+      .expect(400);
+  });
+
+  it('PATCH /api/users/me returns 400 for unknown field', async () => {
+    jwtMock.verifyAccess.mockReturnValue({
+      sub: 'user-1',
+      email: 'user@example.com',
+      role: 'user',
+    });
+
+    await request(app.getHttpServer())
+      .patch('/api/users/me')
+      .set('Authorization', 'Bearer valid-token')
+      .send({ displayName: 'New Name', extra: 'nope' })
       .expect(400);
   });
 
@@ -160,6 +185,21 @@ describe('Users (e2e)', () => {
       .expect(400);
   });
 
+  it('POST /api/users/me/change-password returns 401 when service rejects', async () => {
+    jwtMock.verifyAccess.mockReturnValue({
+      sub: 'user-1',
+      email: 'user@example.com',
+      role: 'user',
+    });
+    authMock.changePassword.mockRejectedValue(new UnauthorizedException('bad password'));
+
+    await request(app.getHttpServer())
+      .post('/api/users/me/change-password')
+      .set('Authorization', 'Bearer valid-token')
+      .send({ oldPassword: 'OldPass1', newPassword: 'NewPass1' })
+      .expect(401);
+  });
+
   it('POST /api/users/me/change-password returns success with auth', async () => {
     jwtMock.verifyAccess.mockReturnValue({
       sub: 'user-1',
@@ -193,5 +233,16 @@ describe('Users (e2e)', () => {
       .expect(200);
 
     expect(res.body).toEqual({ message: 'Account deleted' });
+  });
+
+  it('DELETE /api/users/me returns 401 for invalid token', async () => {
+    jwtMock.verifyAccess.mockImplementation(() => {
+      throw new Error('invalid');
+    });
+
+    await request(app.getHttpServer())
+      .delete('/api/users/me')
+      .set('Authorization', 'Bearer bad-token')
+      .expect(401);
   });
 });
