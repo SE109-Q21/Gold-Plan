@@ -113,6 +113,33 @@ describe('Price endpoints (e2e)', () => {
     jest.useRealTimers();
   });
 
+  it('GET /api/prices/domestic returns empty array when no data', async () => {
+    (mockPrismaService.priceRecord.findMany as jest.Mock).mockResolvedValue([]);
+
+    const response = await request(app.getHttpServer())
+      .get('/api/prices/domestic')
+      .expect(200);
+
+    expect(response.body).toEqual([]);
+  });
+
+  it('GET /api/prices/domestic marks outdated and null changePercent with single record', async () => {
+    const now = new Date('2026-05-12T10:00:00Z');
+    jest.useFakeTimers().setSystemTime(now);
+
+    const oldRec = makeRecord({ recordedAt: new Date(now.getTime() - 40 * 60_000) });
+    (mockPrismaService.priceRecord.findMany as jest.Mock).mockResolvedValue([oldRec]);
+
+    const response = await request(app.getHttpServer())
+      .get('/api/prices/domestic')
+      .expect(200);
+
+    expect(response.body[0].status).toBe('outdated');
+    expect(response.body[0].changePercent).toBeNull();
+
+    jest.useRealTimers();
+  });
+
   it('GET /api/prices/history returns chart points for range', async () => {
     const records = [
       makeRecord({ recordedAt: new Date('2026-05-12T08:00:00Z'), buyPrice: 85_000_000n, sellPrice: 85_020_000n }),
@@ -139,6 +166,31 @@ describe('Price endpoints (e2e)', () => {
     ]);
   });
 
+  it('GET /api/prices/history returns 400 for missing params', async () => {
+    await request(app.getHttpServer())
+      .get('/api/prices/history')
+      .query({ brand: 'SJC' })
+      .expect(400);
+  });
+
+  it('GET /api/prices/history returns 400 for invalid range', async () => {
+    await request(app.getHttpServer())
+      .get('/api/prices/history')
+      .query({ brand: 'SJC', goldType: 'MIEN_SJC', range: '10Y' })
+      .expect(400);
+  });
+
+  it('GET /api/prices/history returns empty array when no records', async () => {
+    (mockPrismaService.priceRecord.findMany as jest.Mock).mockResolvedValue([]);
+
+    const response = await request(app.getHttpServer())
+      .get('/api/prices/history')
+      .query({ brand: 'SJC', goldType: 'MIEN_SJC', range: '1D' })
+      .expect(200);
+
+    expect(response.body).toEqual([]);
+  });
+
   it('GET /api/prices/comparison returns per-brand best buy/sell flags', async () => {
     const sjcRec = makeRecord({ brand: 'SJC', buyPrice: 85_500_000n, sellPrice: 85_520_000n });
     const dojiRec = makeRecord({ id: 'rec-2', brand: 'DOJI', buyPrice: 85_200_000n, sellPrice: 85_380_000n });
@@ -156,6 +208,24 @@ describe('Price endpoints (e2e)', () => {
     expect(dojiRow.isBestBuy).toBe(false);
     expect(dojiRow.isBestSell).toBe(true);
     expect(sjcRow.isBestSell).toBe(false);
+  });
+
+  it('GET /api/prices/comparison returns 400 for invalid goldType', async () => {
+    await request(app.getHttpServer())
+      .get('/api/prices/comparison')
+      .query({ goldType: 'BAD_TYPE' })
+      .expect(400);
+  });
+
+  it('GET /api/prices/comparison returns empty brands when no records', async () => {
+    (mockPrismaService.priceRecord.findMany as jest.Mock).mockResolvedValue([]);
+
+    const response = await request(app.getHttpServer())
+      .get('/api/prices/comparison')
+      .query({ goldType: 'MIEN_SJC' })
+      .expect(200);
+
+    expect(response.body[0].brands).toEqual([]);
   });
 
   it('GET /api/prices/history/export returns 401 without auth', async () => {

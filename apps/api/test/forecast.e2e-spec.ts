@@ -102,6 +102,33 @@ describe('Forecast endpoints (e2e)', () => {
     expect(forecastMock.getActiveSession).toHaveBeenCalledWith(undefined);
   });
 
+  it('GET /api/forecast/session passes userId with valid token', async () => {
+    jwtMock.verifyAccess.mockReturnValue({
+      sub: 'user-1',
+      email: 'user@example.com',
+      role: 'user',
+    });
+    forecastMock.getActiveSession.mockResolvedValue({
+      id: 'session-1',
+      date: '2026-05-20',
+      opensAt: '2026-05-20T00:00:00.000Z',
+      closesAt: '2026-05-20T07:00:00.000Z',
+      sessionClosed: false,
+      actualResult: null,
+      userVote: 'up',
+      ratios: { up: 1, down: 0, flat: 0 },
+      totalVotes: 1,
+    });
+
+    const res = await request(app.getHttpServer())
+      .get('/api/forecast/session')
+      .set('Authorization', 'Bearer valid-token')
+      .expect(200);
+
+    expect(forecastMock.getActiveSession).toHaveBeenCalledWith('user-1');
+    expect(res.body.userVote).toBe('up');
+  });
+
   it('POST /api/forecast/vote returns 401 without auth', async () => {
     await request(app.getHttpServer())
       .post('/api/forecast/vote')
@@ -120,6 +147,38 @@ describe('Forecast endpoints (e2e)', () => {
       .post('/api/forecast/vote')
       .set('Authorization', 'Bearer valid-token')
       .send({ sessionId: 'session-1', direction: 'sideways' })
+      .expect(400);
+
+    expect(forecastMock.vote).not.toHaveBeenCalled();
+  });
+
+  it('POST /api/forecast/vote returns 400 when sessionId missing', async () => {
+    jwtMock.verifyAccess.mockReturnValue({
+      sub: 'user-1',
+      email: 'user@example.com',
+      role: 'user',
+    });
+
+    await request(app.getHttpServer())
+      .post('/api/forecast/vote')
+      .set('Authorization', 'Bearer valid-token')
+      .send({ direction: 'up' })
+      .expect(400);
+
+    expect(forecastMock.vote).not.toHaveBeenCalled();
+  });
+
+  it('POST /api/forecast/vote returns 400 when direction missing', async () => {
+    jwtMock.verifyAccess.mockReturnValue({
+      sub: 'user-1',
+      email: 'user@example.com',
+      role: 'user',
+    });
+
+    await request(app.getHttpServer())
+      .post('/api/forecast/vote')
+      .set('Authorization', 'Bearer valid-token')
+      .send({ sessionId: 'session-1' })
       .expect(400);
 
     expect(forecastMock.vote).not.toHaveBeenCalled();
@@ -162,6 +221,21 @@ describe('Forecast endpoints (e2e)', () => {
     expect(res.body.month).toBe('2026-05');
   });
 
+  it('GET /api/forecast/leaderboard passes month query', async () => {
+    forecastMock.getLeaderboard.mockResolvedValue({
+      month: '2026-04',
+      entries: [],
+    });
+
+    const res = await request(app.getHttpServer())
+      .get('/api/forecast/leaderboard')
+      .query({ month: '2026-04' })
+      .expect(200);
+
+    expect(forecastMock.getLeaderboard).toHaveBeenCalledWith('2026-04');
+    expect(res.body.month).toBe('2026-04');
+  });
+
   it('GET /api/forecast/history returns 401 without auth', async () => {
     await request(app.getHttpServer())
       .get('/api/forecast/history')
@@ -197,5 +271,28 @@ describe('Forecast endpoints (e2e)', () => {
 
     expect(forecastMock.getUserHistory).toHaveBeenCalledWith('user-1', 1);
     expect(res.body.total).toBe(1);
+  });
+
+  it('GET /api/forecast/history passes page query', async () => {
+    jwtMock.verifyAccess.mockReturnValue({
+      sub: 'user-1',
+      email: 'user@example.com',
+      role: 'user',
+    });
+    forecastMock.getUserHistory.mockResolvedValue({
+      items: [],
+      total: 0,
+      page: 2,
+      totalPages: 0,
+    });
+
+    const res = await request(app.getHttpServer())
+      .get('/api/forecast/history')
+      .set('Authorization', 'Bearer valid-token')
+      .query({ page: '2' })
+      .expect(200);
+
+    expect(forecastMock.getUserHistory).toHaveBeenCalledWith('user-1', 2);
+    expect(res.body.page).toBe(2);
   });
 });

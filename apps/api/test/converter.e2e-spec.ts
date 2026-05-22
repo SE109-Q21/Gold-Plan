@@ -57,6 +57,36 @@ describe('Converter endpoints (e2e)', () => {
     expect(converterMock.calculate).not.toHaveBeenCalled();
   });
 
+  it('GET /api/converter/calculate returns 400 for invalid unit', async () => {
+    await request(app.getHttpServer())
+      .get('/api/converter/calculate')
+      .query({
+        unit: 'POUND',
+        qty: 1,
+        purity: '24K',
+        brand: 'SJC',
+        goldType: 'MIEN_SJC',
+      })
+      .expect(400);
+
+    expect(converterMock.calculate).not.toHaveBeenCalled();
+  });
+
+  it('GET /api/converter/calculate returns 400 for invalid brand', async () => {
+    await request(app.getHttpServer())
+      .get('/api/converter/calculate')
+      .query({
+        unit: 'TAEL',
+        qty: 1,
+        purity: '24K',
+        brand: 'BAD',
+        goldType: 'MIEN_SJC',
+      })
+      .expect(400);
+
+    expect(converterMock.calculate).not.toHaveBeenCalled();
+  });
+
   it('GET /api/converter/calculate returns conversion result', async () => {
     converterMock.calculate.mockResolvedValue({
       weightInGrams: 37.5,
@@ -79,5 +109,30 @@ describe('Converter endpoints (e2e)', () => {
 
     expect(converterMock.calculate).toHaveBeenCalled();
     expect(res.body.priceUsed).toBe(79000000);
+  });
+
+  it('GET /api/converter/calculate transforms qty to number', async () => {
+    converterMock.calculate.mockResolvedValue({
+      weightInGrams: 56.25,
+      weightInTael: 1.5,
+      valuations: { VND: 118500000, USD: 4600, EUR: 4200 },
+      priceUsed: 79000000,
+      priceUpdatedAt: '2026-05-20T00:00:00.000Z',
+    });
+
+    await request(app.getHttpServer())
+      .get('/api/converter/calculate')
+      .query({
+        unit: 'TAEL',
+        qty: '1.5',
+        purity: '24K',
+        brand: 'SJC',
+        goldType: 'MIEN_SJC',
+      })
+      .expect(200);
+
+    expect(converterMock.calculate).toHaveBeenCalledWith(
+      expect.objectContaining({ qty: 1.5 }),
+    );
   });
 });

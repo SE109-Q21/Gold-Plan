@@ -57,4 +57,12 @@ describe('Exchange rate endpoints (e2e)', () => {
     expect(res.body.usdVnd).toBe(25480);
     expect(res.body.source).toBe('fallback');
   });
+
+  it('GET /api/exchange-rate/rates returns 500 when service throws', async () => {
+    exchangeRateMock.getRates.mockRejectedValue(new Error('boom'));
+
+    await request(app.getHttpServer())
+      .get('/api/exchange-rate/rates')
+      .expect(500);
+  });
 });
