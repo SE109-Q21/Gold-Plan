@@ -87,6 +87,51 @@ describe('Converter endpoints (e2e)', () => {
     expect(converterMock.calculate).not.toHaveBeenCalled();
   });
 
+  it('GET /api/converter/calculate returns 400 for invalid purity', async () => {
+    await request(app.getHttpServer())
+      .get('/api/converter/calculate')
+      .query({
+        unit: 'TAEL',
+        qty: 1,
+        purity: '12K',
+        brand: 'SJC',
+        goldType: 'MIEN_SJC',
+      })
+      .expect(400);
+
+    expect(converterMock.calculate).not.toHaveBeenCalled();
+  });
+
+  it('GET /api/converter/calculate returns 400 for invalid goldType', async () => {
+    await request(app.getHttpServer())
+      .get('/api/converter/calculate')
+      .query({
+        unit: 'TAEL',
+        qty: 1,
+        purity: '24K',
+        brand: 'SJC',
+        goldType: 'BAD_TYPE',
+      })
+      .expect(400);
+
+    expect(converterMock.calculate).not.toHaveBeenCalled();
+  });
+
+  it('GET /api/converter/calculate returns 400 for non-numeric qty', async () => {
+    await request(app.getHttpServer())
+      .get('/api/converter/calculate')
+      .query({
+        unit: 'TAEL',
+        qty: 'abc',
+        purity: '24K',
+        brand: 'SJC',
+        goldType: 'MIEN_SJC',
+      })
+      .expect(400);
+
+    expect(converterMock.calculate).not.toHaveBeenCalled();
+  });
+
   it('GET /api/converter/calculate returns conversion result', async () => {
     converterMock.calculate.mockResolvedValue({
       weightInGrams: 37.5,

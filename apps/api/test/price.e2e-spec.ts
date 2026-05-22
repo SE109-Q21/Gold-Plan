@@ -36,6 +36,17 @@ function makeRecord(overrides: Partial<PriceRecord> = {}): PriceRecord {
   };
 }
 
+function makeRecords(count: number, start: Date, stepMs = 60_000): PriceRecord[] {
+  return Array.from({ length: count }, (_, i) =>
+    makeRecord({
+      id: `rec-${i}`,
+      recordedAt: new Date(start.getTime() + i * stepMs),
+      buyPrice: BigInt(85_000_000 + i),
+      sellPrice: BigInt(85_020_000 + i),
+    }),
+  );
+}
+
 const mockPrismaService = {
   $connect: jest.fn().mockResolvedValue(undefined),
   $disconnect: jest.fn().mockResolvedValue(undefined),
@@ -191,6 +202,32 @@ describe('Price endpoints (e2e)', () => {
     expect(response.body).toEqual([]);
   });
 
+  it('GET /api/prices/history thins 1Y range to max points', async () => {
+    const records = makeRecords(1200, new Date('2026-01-01T00:00:00Z'));
+    (mockPrismaService.priceRecord.findMany as jest.Mock).mockResolvedValue(records);
+
+    const response = await request(app.getHttpServer())
+      .get('/api/prices/history')
+      .query({ brand: 'SJC', goldType: 'MIEN_SJC', range: '1Y' })
+      .expect(200);
+
+    expect(response.body.length).toBeGreaterThan(0);
+    expect(response.body.length).toBeLessThanOrEqual(365);
+  });
+
+  it('GET /api/prices/history thins 3M range to max points', async () => {
+    const records = makeRecords(800, new Date('2026-03-01T00:00:00Z'));
+    (mockPrismaService.priceRecord.findMany as jest.Mock).mockResolvedValue(records);
+
+    const response = await request(app.getHttpServer())
+      .get('/api/prices/history')
+      .query({ brand: 'SJC', goldType: 'MIEN_SJC', range: '3M' })
+      .expect(200);
+
+    expect(response.body.length).toBeGreaterThan(0);
+    expect(response.body.length).toBeLessThanOrEqual(500);
+  });
+
   it('GET /api/prices/comparison returns per-brand best buy/sell flags', async () => {
     const sjcRec = makeRecord({ brand: 'SJC', buyPrice: 85_500_000n, sellPrice: 85_520_000n });
     const dojiRec = makeRecord({ id: 'rec-2', brand: 'DOJI', buyPrice: 85_200_000n, sellPrice: 85_380_000n });
@@ -256,5 +293,28 @@ describe('Price endpoints (e2e)', () => {
     expect(response.headers['content-type']).toContain('text/csv');
     expect(response.text).toContain('timestamp');
     expect(response.text).toContain('SJC');
+  });
+
+  it('GET /api/prices/history/export uses large take and returns all rows', async () => {
+    jwtMock.verifyAccess.mockReturnValue({
+      sub: 'user-1',
+      email: 'user@example.com',
+      role: 'user',
+    });
+
+    const records = makeRecords(25, new Date('2026-05-01T00:00:00Z'));
+    (mockPrismaService.priceRecord.findMany as jest.Mock).mockResolvedValue(records);
+
+    const response = await request(app.getHttpServer())
+      .get('/api/prices/history/export')
+      .set('Authorization', 'Bearer valid-token')
+      .query({ brand: 'SJC', goldType: 'MIEN_SJC', range: '1Y' })
+      .expect(200);
+
+    expect(mockPrismaService.priceRecord.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ take: 10000 }),
+    );
+    const lines = response.text.trim().split('\n');
+    expect(lines.length).toBe(26);
   });
 });

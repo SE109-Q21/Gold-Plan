@@ -78,6 +78,17 @@ describe('Forecast endpoints (e2e)', () => {
     expect(res.body.id).toBe('session-1');
   });
 
+  it('GET /api/forecast/session returns null when no active session', async () => {
+    forecastMock.getActiveSession.mockResolvedValue(null);
+
+    const res = await request(app.getHttpServer())
+      .get('/api/forecast/session')
+      .expect(200);
+
+    expect(forecastMock.getActiveSession).toHaveBeenCalledWith(undefined);
+    expect(res.body).toBeNull();
+  });
+
   it('GET /api/forecast/session ignores invalid token', async () => {
     jwtMock.verifyAccess.mockImplementation(() => {
       throw new Error('invalid');
@@ -134,6 +145,20 @@ describe('Forecast endpoints (e2e)', () => {
       .post('/api/forecast/vote')
       .send({ sessionId: 'session-1', direction: 'up' })
       .expect(401);
+  });
+
+  it('POST /api/forecast/vote returns 401 for invalid token', async () => {
+    jwtMock.verifyAccess.mockImplementation(() => {
+      throw new Error('invalid');
+    });
+
+    await request(app.getHttpServer())
+      .post('/api/forecast/vote')
+      .set('Authorization', 'Bearer bad-token')
+      .send({ sessionId: 'session-1', direction: 'up' })
+      .expect(401);
+
+    expect(forecastMock.vote).not.toHaveBeenCalled();
   });
 
   it('POST /api/forecast/vote returns 400 for invalid direction', async () => {
@@ -234,6 +259,24 @@ describe('Forecast endpoints (e2e)', () => {
 
     expect(forecastMock.getLeaderboard).toHaveBeenCalledWith('2026-04');
     expect(res.body.month).toBe('2026-04');
+  });
+
+  it('GET /api/forecast/leaderboard defaults month when missing', async () => {
+    const now = new Date('2026-05-20T00:00:00Z');
+    jest.useFakeTimers().setSystemTime(now);
+    forecastMock.getLeaderboard.mockResolvedValue({
+      month: '2026-05',
+      entries: [],
+    });
+
+    const res = await request(app.getHttpServer())
+      .get('/api/forecast/leaderboard')
+      .expect(200);
+
+    expect(forecastMock.getLeaderboard).toHaveBeenCalledWith('2026-05');
+    expect(res.body.month).toBe('2026-05');
+
+    jest.useRealTimers();
   });
 
   it('GET /api/forecast/history returns 401 without auth', async () => {
