@@ -211,17 +211,17 @@ async function main() {
 
   const adminUser = await prisma.user.upsert({
     where: { email: 'admin@gpls.vn' },
-    update: {},
+    update: { passwordHash, status: UserStatus.active, role: UserRole.admin, displayName: 'Admin GPLS', digestOptIn: true },
     create: { email: 'admin@gpls.vn', passwordHash, status: UserStatus.active, role: UserRole.admin, displayName: 'Admin GPLS', digestOptIn: true },
   });
   const testUser = await prisma.user.upsert({
     where: { email: 'user@gpls.vn' },
-    update: {},
+    update: { passwordHash, status: UserStatus.active, role: UserRole.user, displayName: 'Nguyễn Văn A', digestOptIn: true },
     create: { email: 'user@gpls.vn', passwordHash, status: UserStatus.active, role: UserRole.user, displayName: 'Nguyễn Văn A', digestOptIn: true },
   });
   const testUser2 = await prisma.user.upsert({
     where: { email: 'trader@gpls.vn' },
-    update: {},
+    update: { passwordHash, status: UserStatus.active, role: UserRole.user, displayName: 'Trần Thị B', digestOptIn: false },
     create: { email: 'trader@gpls.vn', passwordHash, status: UserStatus.active, role: UserRole.user, displayName: 'Trần Thị B', digestOptIn: false },
   });
 

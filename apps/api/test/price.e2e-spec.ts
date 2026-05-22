@@ -1,0 +1,150 @@
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
+import request from 'supertest';
+import { AppModule } from '../src/app.module';
+import { PrismaService } from '../src/database/prisma.service';
+
+type PriceRecord = {
+  id: string;
+  brand: string;
+  goldType: string;
+  buyPrice: bigint;
+  sellPrice: bigint;
+  recordedAt: Date;
+  isAnomalous: boolean;
+  crawlSessionId: string;
+  anomalyReason: string | null;
+  approvedAt: Date | null;
+  rejectedAt: Date | null;
+};
+
+function makeRecord(overrides: Partial<PriceRecord> = {}): PriceRecord {
+  return {
+    id: 'rec-1',
+    brand: 'SJC',
+    goldType: 'MIEN_SJC',
+    buyPrice: 85_500_000n,
+    sellPrice: 85_520_000n,
+    recordedAt: new Date('2026-05-12T10:00:00Z'),
+    isAnomalous: false,
+    crawlSessionId: 'session-1',
+    anomalyReason: null,
+    approvedAt: null,
+    rejectedAt: null,
+    ...overrides,
+  };
+}
+
+const mockPrismaService = {
+  $connect: jest.fn().mockResolvedValue(undefined),
+  $disconnect: jest.fn().mockResolvedValue(undefined),
+  onModuleInit: jest.fn().mockResolvedValue(undefined),
+  priceRecord: {
+    findMany: jest.fn(),
+  },
+} as unknown as PrismaService;
+
+describe('Price endpoints (e2e)', () => {
+  let app: INestApplication;
+
+  beforeAll(async () => {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    })
+      .overrideProvider(PrismaService)
+      .useValue(mockPrismaService)
+      .compile();
+
+    app = moduleFixture.createNestApplication();
+    app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+    app.setGlobalPrefix('api');
+    await app.init();
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('GET /api/prices/domestic returns current prices with status and changePercent', async () => {
+    const now = new Date('2026-05-12T10:00:00Z');
+    jest.useFakeTimers().setSystemTime(now);
+
+    const currentRec = makeRecord({ recordedAt: new Date(now.getTime() - 2 * 60_000) });
+    const prevRec = makeRecord({
+      id: 'rec-0',
+      buyPrice: 85_000_000n,
+      sellPrice: 85_020_000n,
+      recordedAt: new Date(now.getTime() - 7 * 60_000),
+    });
+
+    (mockPrismaService.priceRecord.findMany as jest.Mock).mockResolvedValue([
+      currentRec,
+      prevRec,
+    ]);
+
+    const response = await request(app.getHttpServer())
+      .get('/api/prices/domestic')
+      .expect(200);
+
+    expect(response.body).toHaveLength(1);
+    expect(response.body[0].brand).toBe('SJC');
+    expect(response.body[0].goldType).toBe('MIEN_SJC');
+    expect(response.body[0].buyPrice).toBe(85_500_000);
+    expect(response.body[0].status).toBe('live');
+    expect(response.body[0].changePercent).toBeCloseTo(
+      ((85_500_000 - 85_000_000) / 85_000_000) * 100,
+      1,
+    );
+
+    jest.useRealTimers();
+  });
+
+  it('GET /api/prices/history returns chart points for range', async () => {
+    const records = [
+      makeRecord({ recordedAt: new Date('2026-05-12T08:00:00Z'), buyPrice: 85_000_000n, sellPrice: 85_020_000n }),
+      makeRecord({ recordedAt: new Date('2026-05-12T08:05:00Z'), buyPrice: 85_100_000n, sellPrice: 85_120_000n }),
+    ];
+    (mockPrismaService.priceRecord.findMany as jest.Mock).mockResolvedValue(records);
+
+    const response = await request(app.getHttpServer())
+      .get('/api/prices/history')
+      .query({ brand: 'SJC', goldType: 'MIEN_SJC', range: '1D' })
+      .expect(200);
+
+    expect(response.body).toEqual([
+      {
+        recordedAt: '2026-05-12T08:00:00.000Z',
+        buyPrice: 85_000_000,
+        sellPrice: 85_020_000,
+      },
+      {
+        recordedAt: '2026-05-12T08:05:00.000Z',
+        buyPrice: 85_100_000,
+        sellPrice: 85_120_000,
+      },
+    ]);
+  });
+
+  it('GET /api/prices/comparison returns per-brand best buy/sell flags', async () => {
+    const sjcRec = makeRecord({ brand: 'SJC', buyPrice: 85_500_000n, sellPrice: 85_520_000n });
+    const dojiRec = makeRecord({ id: 'rec-2', brand: 'DOJI', buyPrice: 85_200_000n, sellPrice: 85_380_000n });
+    (mockPrismaService.priceRecord.findMany as jest.Mock).mockResolvedValue([sjcRec, dojiRec]);
+
+    const response = await request(app.getHttpServer())
+      .get('/api/prices/comparison')
+      .query({ goldType: 'MIEN_SJC' })
+      .expect(200);
+
+    const sjcRow = response.body[0].brands.find((b: { brand: string }) => b.brand === 'SJC');
+    const dojiRow = response.body[0].brands.find((b: { brand: string }) => b.brand === 'DOJI');
+
+    expect(sjcRow.isBestBuy).toBe(true);
+    expect(dojiRow.isBestBuy).toBe(false);
+    expect(dojiRow.isBestSell).toBe(true);
+    expect(sjcRow.isBestSell).toBe(false);
+  });
+});
