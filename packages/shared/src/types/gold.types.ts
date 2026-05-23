@@ -393,3 +393,23 @@ export interface VoteHistoryDto {
   page: number;
   totalPages: number;
 }
+
+// ─── Plan 5: Arbitrage ────────────────────────────────────────────────────────
+
+export interface ArbitrageOpportunityDto {
+  goldType: string;
+  buyFromBrand: string;
+  buyFromPrice: number;   // price you PAY to buy (brand's sellPrice)
+  sellToBrand: string;
+  sellToPrice: number;    // price you RECEIVE when selling (brand's buyPrice)
+  grossProfit: number;    // sellToPrice - buyFromPrice
+  profitPercent: number;
+  updatedAt: string;
+}
+
+export interface ArbitrageHistoryDto {
+  goldType: string;
+  grossProfit: number;
+  profitPercent: number;
+  recordedAt: string;
+}
