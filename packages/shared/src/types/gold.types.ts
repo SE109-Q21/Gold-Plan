@@ -413,3 +413,29 @@ export interface ArbitrageHistoryDto {
   profitPercent: number;
   recordedAt: string;
 }
+
+// ─── Plan 10: Asset Comparison & Benchmarking ─────────────────────────────────
+
+export interface DataSeriesDto {
+  label: string;
+  returnPercent: number;
+  dataPoints: { date: string; value: number }[];
+}
+
+export interface AssetsComparisonDto {
+  range: string;
+  baseDate: string;
+  gold: DataSeriesDto;
+  usd: DataSeriesDto;
+  bankDeposit: DataSeriesDto;
+  vnIndex: DataSeriesDto | null;  // null when no mock data available
+  insight: string;
+}
+
+export interface AssetBenchmarkDto {
+  id: string;
+  assetType: string;
+  date: string;
+  value: number;
+  note: string | null;
+}
