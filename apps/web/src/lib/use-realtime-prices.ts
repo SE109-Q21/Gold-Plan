@@ -30,6 +30,7 @@ export function useRealTimePrices() {
       // Invalidate both brand-specific and all-brands queries
       queryClient.invalidateQueries({ queryKey: ['prices', 'domestic'] });
       queryClient.invalidateQueries({ queryKey: ['prices', 'comparison'] });
+      queryClient.invalidateQueries({ queryKey: ['prices', 'arbitrage'] });
     });
 
     return () => {
