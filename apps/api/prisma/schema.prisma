@@ -415,3 +415,19 @@ model ArbitrageSnapshot {
 
   @@index([goldType, recordedAt])
 }
+
+// ─── Asset Benchmarks (admin-editable mock data) ─────────────────────────────
+
+model AssetBenchmark {
+  id          String   @id @default(cuid())
+  assetType   String   // 'VN_INDEX' | 'BANK_DEPOSIT'
+  date        DateTime @db.Date
+  value       Decimal  @db.Decimal(12, 4)
+  // For VN_INDEX: index points (e.g. 1250.5)
+  // For BANK_DEPOSIT: annual rate % (e.g. 5.5)
+  note        String?
+  createdAt   DateTime @default(now())
+
+  @@unique([assetType, date])
+  @@index([assetType, date])
+}
