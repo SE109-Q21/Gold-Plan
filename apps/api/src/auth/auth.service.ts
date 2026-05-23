@@ -169,8 +169,9 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       role: user.role,
+      ver: user.tokenVersion,
     });
-    const refreshToken = this.jwtService.signRefresh({ sub: user.id });
+    const refreshToken = this.jwtService.signRefresh({ sub: user.id, ver: user.tokenVersion });
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
@@ -189,7 +190,7 @@ export class AuthService {
   // ─── Refresh ─────────────────────────────────────────────────────────────────
 
   async refresh(refreshToken: string): Promise<{ accessToken: string }> {
-    let payload: { sub: string };
+    let payload: { sub: string; ver: number };
     try {
       payload = this.jwtService.verifyRefresh(refreshToken);
     } catch {
@@ -204,10 +205,15 @@ export class AuthService {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
+    if (user.tokenVersion !== payload.ver) {
+      throw new UnauthorizedException('Token has been revoked');
+    }
+
     const accessToken = this.jwtService.signAccess({
       sub: user.id,
       email: user.email,
       role: user.role,
+      ver: user.tokenVersion,
     });
 
     return { accessToken };
@@ -215,7 +221,11 @@ export class AuthService {
 
   // ─── Logout ──────────────────────────────────────────────────────────────────
 
-  async logout(res: Response): Promise<{ message: string }> {
+  async logout(userId: string, res: Response): Promise<{ message: string }> {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { tokenVersion: { increment: 1 } },
+    });
     res.clearCookie('refreshToken', { path: '/api/auth/refresh' });
     return { message: 'Logged out' };
   }
@@ -369,8 +379,9 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       role: user.role,
+      ver: user.tokenVersion,
     });
-    const refreshToken = this.jwtService.signRefresh({ sub: user.id });
+    const refreshToken = this.jwtService.signRefresh({ sub: user.id, ver: user.tokenVersion });
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,

@@ -56,7 +56,6 @@ async function main() {
   await prisma.anomalyReview.deleteMany();
   await prisma.smartAlert.deleteMany();
   await prisma.priceAlert.deleteMany();
-  await prisma.behavioralEvent.deleteMany();
   await prisma.viewHistory.deleteMany();
   await prisma.portfolioTransaction.deleteMany();
   await prisma.userPreference.deleteMany();
@@ -64,7 +63,6 @@ async function main() {
   await prisma.forecastVote.deleteMany();
   await prisma.forecastSession.deleteMany();
   await prisma.goldDigest.deleteMany();
-  await prisma.morningDigest.deleteMany();
   await prisma.heatIndexRecord.deleteMany();
   await prisma.exchangeRate.deleteMany();
   await prisma.priceRecord.deleteMany();
@@ -284,16 +282,6 @@ async function main() {
     const sell = buy + BigInt(2_500_000);
     const xauUsd = 2280 + (DIGEST_DAYS - day) * 0.8 + rand(-20, 20);
     const change = rand(-150, 250) / 100;
-    await prisma.morningDigest.upsert({
-      where: { date: dateStr },
-      update: {},
-      create: {
-        date: dateStr,
-        content: `Bản tin vàng sáng ${dateStr}: Giá vàng SJC mua vào ${(Number(buy) / 1_000_000).toFixed(2)} triệu đồng/lượng. ${highlights[(DIGEST_DAYS - day) % highlights.length]}`,
-        sjcBuyPrice: buy, sjcSellPrice: sell, xauUsd, changeVsPrev: change,
-        aiGenerated: Math.random() > 0.35,
-      },
-    });
     await prisma.goldDigest.upsert({
       where: { date: d },
       update: {},
@@ -409,24 +397,7 @@ async function main() {
     ],
   });
 
-  // ── 12. Behavioral Events (35+ per user) ──────────────────────────────────
-  console.log('  → BehavioralEvents');
-  const eventRows = [];
-  for (const u of [testUser, testUser2, adminUser]) {
-    for (let i = 0; i < 36; i++) {
-      const vb = pick(viewBrands);
-      eventRows.push({
-        userId: u.id,
-        brand: vb.brand,
-        goldType: vb.goldType,
-        eventType: pick(['view', 'view', 'view', 'click', 'alert_create']),
-        occurredAt: daysAgo(rand(0, 60), rand(7, 22), rand(0, 59)),
-      });
-    }
-  }
-  await prisma.behavioralEvent.createMany({ data: eventRows });
-
-  // ── 13. Forecast Sessions (60 days closed + today open) ───────────────────
+  // ── 12. Forecast Sessions (60 days closed + today open) ───────────────────
   console.log('  → ForecastSessions + Votes');
   const FORECAST_DAYS = 60;
   const directionCycle: ForecastDirection[] = [

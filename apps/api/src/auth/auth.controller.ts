@@ -20,6 +20,7 @@ import { VerifyEmailDto } from './dto/verify-email.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller('auth')
 @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
@@ -60,8 +61,9 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(200)
-  logout(@Res({ passthrough: true }) res: Response) {
-    return this.authService.logout(res);
+  @UseGuards(JwtAuthGuard)
+  logout(@Req() req: { user: { sub: string } }, @Res({ passthrough: true }) res: Response) {
+    return this.authService.logout(req.user.sub, res);
   }
 
   @Post('forgot-password')

@@ -138,16 +138,17 @@ model HeatIndexRecord {
 // ─── Users & Auth (M06) ───────────────────────────────────────────────────────
 
 model User {
-  id           String     @id @default(cuid())
-  email        String     @unique
-  passwordHash String?
-  status       UserStatus @default(pending)
-  role         UserRole   @default(user)
-  displayName  String?
-  digestOptIn  Boolean    @default(false)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  deletedAt    DateTime?
+  id            String     @id @default(cuid())
+  email         String     @unique
+  passwordHash  String?
+  status        UserStatus @default(pending)
+  role          UserRole   @default(user)
+  displayName   String?
+  digestOptIn   Boolean    @default(false)
+  tokenVersion  Int        @default(0)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  deletedAt     DateTime?
 
   emailVerifications    EmailVerification[]
   passwordResets        PasswordReset[]
@@ -155,7 +156,6 @@ model User {
   priceAlerts           PriceAlert[]
   portfolioTransactions PortfolioTransaction[]
   userPreferences       UserPreference[]
-  behavioralEvents      BehavioralEvent[]
   viewHistory           ViewHistory[]
   forecastVotes         ForecastVote[]
   forecastScores        UserForecastScore[]
@@ -250,23 +250,6 @@ model PortfolioTransaction {
   @@index([userId, transactedAt])
 }
 
-// ─── Morning Digest (F04) ─────────────────────────────────────────────────────
-
-model MorningDigest {
-  id           String   @id @default(cuid())
-  date         String
-  content      String   @db.Text
-  sjcBuyPrice  BigInt
-  sjcSellPrice BigInt
-  xauUsd       Decimal  @db.Decimal(10, 2)
-  changeVsPrev Decimal  @db.Decimal(6, 2)
-  aiGenerated  Boolean  @default(false)
-  generatedAt  DateTime @default(now())
-
-  @@unique([date])
-  @@index([generatedAt])
-}
-
 // ─── Personalisation (F09) ────────────────────────────────────────────────────
 
 model UserPreference {
@@ -282,19 +265,6 @@ model UserPreference {
   user      User      @relation(fields: [userId], references: [id])
 
   @@unique([userId, brand, goldType])
-}
-
-model BehavioralEvent {
-  id         String    @id @default(cuid())
-  userId     String
-  brand      GoldBrand
-  goldType   GoldType
-  eventType  String    @default("view")
-  occurredAt DateTime  @default(now())
-
-  user       User      @relation(fields: [userId], references: [id])
-
-  @@index([userId, occurredAt])
 }
 
 // ─── View History (F10) ───────────────────────────────────────────────────────
