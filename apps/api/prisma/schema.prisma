@@ -401,3 +401,17 @@ model SmartAlert {
 
   @@index([userId, status])
 }
+
+// ─── Arbitrage Snapshots ──────────────────────────────────────────────────────
+
+model ArbitrageSnapshot {
+  id            String    @id @default(cuid())
+  goldType      GoldType
+  buyBrand      GoldBrand
+  sellBrand     GoldBrand
+  grossProfit   BigInt
+  profitPercent Decimal   @db.Decimal(6, 3)
+  recordedAt    DateTime  @default(now())
+
+  @@index([goldType, recordedAt])
+}
