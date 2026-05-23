@@ -16,8 +16,10 @@ export function useRealTimePrices() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
-    const socket = io(apiUrl, {
+    // Strip trailing /api so Socket.IO connects to the server root, not the REST prefix
+    const raw = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
+    const wsBase = raw.replace(/\/api\/?$/, '');
+    const socket = io(wsBase, {
       path: '/ws',
       transports: ['websocket'],
       reconnectionDelay: 2000,

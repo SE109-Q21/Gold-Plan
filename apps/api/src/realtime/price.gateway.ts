@@ -6,7 +6,10 @@ import { PriceUpdatedEvent } from './price-updated.event';
 
 @Injectable()
 @WebSocketGateway({
-  cors: { origin: '*' },
+  cors: {
+    origin: process.env.APP_URL ?? 'http://localhost:3000',
+    credentials: true,
+  },
   path: '/ws',
 })
 export class PriceGateway {
