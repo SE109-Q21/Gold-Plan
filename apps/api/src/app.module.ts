@@ -29,6 +29,7 @@ import { PushModule } from './push/push.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { RealtimeModule } from './realtime/realtime.module';
 import { ArbitrageModule } from './arbitrage/arbitrage.module';
+import { AssetsComparisonModule } from './assets-comparison/assets-comparison.module';
 
 @Module({
   imports: [
@@ -62,6 +63,7 @@ import { ArbitrageModule } from './arbitrage/arbitrage.module';
     SmartAlertsModule,
     ForecastModule,
     ArbitrageModule,
+    AssetsComparisonModule,
     PushModule,
   ],
   controllers: [HealthController],
