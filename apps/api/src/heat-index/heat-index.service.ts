@@ -97,7 +97,7 @@ export class HeatIndexService {
     const crossingScore = Math.min(crossings / 10, 1) * 30;
 
     const totalScore = Math.round(velocityScore + spreadScore + crossingScore);
-    const label = totalScore <= 33 ? 'Cold' : totalScore <= 66 ? 'Warm' : 'Hot';
+    const label = totalScore <= 33 ? 'cold' : totalScore <= 66 ? 'warm' : 'hot';
 
     return {
       indexValue: totalScore,

@@ -77,20 +77,24 @@ export class AdminController {
 
   // PATCH /admin/users/:id/lock
   @Patch('users/:id/lock')
-  lockUser(@Param('id') id: string) {
-    return this.adminService.lockUser(id);
+  lockUser(@Param('id') id: string, @Req() req: { user: { sub: string } }) {
+    return this.adminService.lockUser(id, req.user.sub);
   }
 
   // PATCH /admin/users/:id/unlock
   @Patch('users/:id/unlock')
-  unlockUser(@Param('id') id: string) {
-    return this.adminService.unlockUser(id);
+  unlockUser(@Param('id') id: string, @Req() req: { user: { sub: string } }) {
+    return this.adminService.unlockUser(id, req.user.sub);
   }
 
   // PATCH /admin/users/:id/role
   @Patch('users/:id/role')
-  changeUserRole(@Param('id') id: string, @Body() body: { role: 'user' | 'admin' }) {
-    return this.adminService.changeUserRole(id, body.role);
+  changeUserRole(
+    @Param('id') id: string,
+    @Body() body: { role: 'user' | 'admin' },
+    @Req() req: { user: { sub: string } },
+  ) {
+    return this.adminService.changeUserRole(id, body.role, req.user.sub);
   }
 
   // GET /admin/data-sources

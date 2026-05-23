@@ -9,6 +9,7 @@ import {
   usePortfolioAllocation,
   useTransactions,
   useAddTransaction,
+  useEditTransaction,
   useDeleteTransaction,
 } from '@/lib/portfolio.api';
 import type { AddTransactionPayload } from '@/lib/portfolio.api';
@@ -46,6 +47,15 @@ function IconX({ s = 16 }: { s?: number }) {
   return (
     <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M18 6 6 18M6 6l12 12"/>
+    </svg>
+  );
+}
+
+function IconPencil({ s = 14 }: { s?: number }) {
+  return (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
     </svg>
   );
 }
@@ -636,12 +646,175 @@ function AddTransactionModal({ onClose }: { onClose: () => void }) {
   );
 }
 
+// ─── Edit Transaction Modal ───────────────────────────────────────────────────
+
+interface EditableTx {
+  id: string;
+  type: 'BUY' | 'SELL';
+  brand: string;
+  goldType: string;
+  quantity: number;
+  pricePerTael: number;
+  transactedAt: string;
+  note: string | null;
+}
+
+function EditTransactionModal({ tx, onClose }: { tx: EditableTx; onClose: () => void }) {
+  const editTx = useEditTransaction();
+
+  const [txType, setTxType] = useState<'BUY' | 'SELL'>(tx.type);
+  const [brand, setBrand] = useState<string>(tx.brand);
+  const [goldType, setGoldType] = useState<string>(tx.goldType);
+  const [qty, setQty] = useState(String(tx.quantity));
+  const [price, setPrice] = useState(String(tx.pricePerTael));
+  const [date, setDate] = useState(tx.transactedAt.split('T')[0]);
+  const [note, setNote] = useState(tx.note ?? '');
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const today = new Date().toISOString().split('T')[0];
+
+  async function handleSubmit(e: { preventDefault(): void }) {
+    e.preventDefault();
+    const qtyNum = parseFloat(qty);
+    const priceNum = parseFloat(price);
+    if (!qtyNum || qtyNum <= 0) { setError('Quantity must be > 0'); return; }
+    if (!priceNum || priceNum <= 0) { setError('Price must be > 0'); return; }
+    setError('');
+    setSubmitting(true);
+    try {
+      await editTx.mutateAsync({
+        id: tx.id,
+        type: txType,
+        brand,
+        goldType,
+        quantity: qtyNum,
+        pricePerTael: priceNum,
+        transactedAt: new Date(date).toISOString(),
+        note: note || undefined,
+      });
+      onClose();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to save transaction');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  const inputStyle = {
+    width: '100%',
+    background: 'var(--ink-3)',
+    border: '1px solid var(--line)',
+    borderRadius: 8,
+    color: 'var(--chalk)',
+    font: '600 14px/1 var(--font-display)',
+    padding: '10px 14px',
+    outline: 'none',
+    appearance: 'none' as const,
+  };
+
+  function ChipSel<T extends string>({ options, value, onChange }: { options: readonly T[]; value: T; onChange: (v: T) => void }) {
+    return (
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+        {options.map(opt => (
+          <button
+            key={opt}
+            type="button"
+            onClick={() => onChange(opt)}
+            style={{
+              border: `1px solid ${value === opt ? 'var(--gold)' : 'var(--line)'}`,
+              background: value === opt ? 'rgba(212,175,55,0.12)' : 'transparent',
+              color: value === opt ? 'var(--gold)' : 'var(--bone)',
+              font: '700 11px/1 var(--font-mono)',
+              letterSpacing: '0.08em',
+              padding: '7px 13px',
+              borderRadius: 6,
+              cursor: 'pointer',
+            }}
+          >{opt}</button>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 999, background: 'rgba(11,11,15,0.85)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+      <div style={{ width: 480, maxWidth: '100%', background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 16, padding: '28px 28px 24px', position: 'relative', maxHeight: '90vh', overflowY: 'auto' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+          <div>
+            <div style={{ font: '800 18px/1 var(--font-display)', letterSpacing: '-0.02em' }}>edit transaction</div>
+            <div style={{ font: '500 12px/1 var(--font-mono)', color: 'var(--mute)', marginTop: 4, letterSpacing: '0.04em' }}>modify the details below</div>
+          </div>
+          <button type="button" onClick={onClose} style={{ background: 'transparent', border: '1px solid var(--line)', borderRadius: 8, color: 'var(--mute)', width: 34, height: 34, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <IconX s={14}/>
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+          <div>
+            <SectionLabel>Type</SectionLabel>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {(['BUY', 'SELL'] as const).map(t => (
+                <button key={t} type="button" onClick={() => setTxType(t)} style={{ flex: 1, padding: '10px', border: `1px solid ${txType === t ? (t === 'BUY' ? 'var(--up)' : 'var(--down)') : 'var(--line)'}`, background: txType === t ? t === 'BUY' ? 'rgba(88,200,150,0.12)' : 'rgba(229,72,77,0.12)' : 'transparent', color: txType === t ? (t === 'BUY' ? 'var(--up)' : 'var(--down)') : 'var(--bone)', font: '700 12px/1 var(--font-mono)', letterSpacing: '0.1em', borderRadius: 8, cursor: 'pointer' }}>
+                  {t}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <SectionLabel>Brand</SectionLabel>
+            <ChipSel options={BRANDS} value={brand as typeof BRANDS[number]} onChange={setBrand}/>
+          </div>
+
+          <div>
+            <SectionLabel>Gold Type</SectionLabel>
+            <ChipSel options={GOLD_TYPES} value={goldType as typeof GOLD_TYPES[number]} onChange={setGoldType}/>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <SectionLabel>Quantity (tael)</SectionLabel>
+              <input type="number" min="0.01" step="0.01" value={qty} onChange={(e: { target: { value: string } }) => setQty(e.target.value)} placeholder="e.g. 1.5" required style={inputStyle}/>
+            </div>
+            <div>
+              <SectionLabel>Price / Tael (VND)</SectionLabel>
+              <input type="number" min="1" step="1" value={price} onChange={(e: { target: { value: string } }) => setPrice(e.target.value)} placeholder="e.g. 79000000" required style={inputStyle}/>
+            </div>
+          </div>
+
+          <div>
+            <SectionLabel>Date</SectionLabel>
+            <input type="date" value={date} max={today} onChange={(e: { target: { value: string } }) => setDate(e.target.value)} required style={inputStyle}/>
+          </div>
+
+          <div>
+            <SectionLabel>Note (optional)</SectionLabel>
+            <input type="text" value={note} onChange={(e: { target: { value: string } }) => setNote(e.target.value)} placeholder="e.g. Bought at SJC Hà Nội" style={inputStyle}/>
+          </div>
+
+          {error && (
+            <div style={{ background: 'rgba(229,72,77,0.1)', border: '1px solid rgba(229,72,77,0.3)', borderRadius: 8, padding: '10px 14px', font: '500 12px/1.4 var(--font-mono)', color: 'var(--down)', letterSpacing: '0.04em' }}>
+              {error}
+            </div>
+          )}
+
+          <button type="submit" disabled={submitting} style={{ width: '100%', height: 44, background: submitting ? 'rgba(212,175,55,0.4)' : 'var(--gold)', border: 0, borderRadius: 10, cursor: submitting ? 'not-allowed' : 'pointer', font: '700 13px/1 var(--font-display)', color: '#0B0B0F', letterSpacing: '0.04em' }}>
+            {submitting ? 'Saving…' : 'Save Changes'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 function PortfolioContent() {
   const router = useRouter();
 
   const [showModal, setShowModal] = useState(false);
+  const [editingTx, setEditingTx] = useState<EditableTx | null>(null);
   const [txPage, setTxPage] = useState(1);
 
   const { data: summary, isLoading: summaryLoading } = usePortfolio();
@@ -929,21 +1102,20 @@ function PortfolioContent() {
                           {tx.note ?? '—'}
                         </td>
                         <td style={{ padding: '13px 10px', borderBottom: '1px solid var(--hairline)', textAlign: 'right' }}>
-                          <button
-                            onClick={() => deleteTx.mutateAsync(tx.id)}
-                            style={{
-                              background: 'transparent',
-                              border: '1px solid var(--line)',
-                              borderRadius: 6,
-                              color: 'var(--mute)',
-                              width: 28, height: 28,
-                              cursor: 'pointer',
-                              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                              transition: 'color 120ms, border-color 120ms',
-                            }}
-                          >
-                            <IconTrash s={12}/>
-                          </button>
+                          <div style={{ display: 'inline-flex', gap: 6 }}>
+                            <button
+                              onClick={() => setEditingTx(tx)}
+                              style={{ background: 'transparent', border: '1px solid var(--line)', borderRadius: 6, color: 'var(--mute)', width: 28, height: 28, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', transition: 'color 120ms, border-color 120ms' }}
+                            >
+                              <IconPencil s={12}/>
+                            </button>
+                            <button
+                              onClick={() => deleteTx.mutateAsync(tx.id)}
+                              style={{ background: 'transparent', border: '1px solid var(--line)', borderRadius: 6, color: 'var(--mute)', width: 28, height: 28, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', transition: 'color 120ms, border-color 120ms' }}
+                            >
+                              <IconTrash s={12}/>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -1001,6 +1173,7 @@ function PortfolioContent() {
 
       {/* Modal */}
       {showModal && <AddTransactionModal onClose={() => setShowModal(false)}/>}
+      {editingTx && <EditTransactionModal tx={editingTx} onClose={() => setEditingTx(null)}/>}
     </>
   );
 }

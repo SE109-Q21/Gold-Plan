@@ -1,0 +1,12 @@
+node_modules
+.next
+.git
+.claude
+.turbo
+dist
+*.log
+coverage
+
+# env files — secrets should be passed via docker-compose env_file or secrets
+apps/web/.env*
+*.env.local

@@ -108,23 +108,24 @@ export class AuthService {
     email: string,
     password: string,
     res: Response,
+    ip: string | null = null,
   ): Promise<{ accessToken: string; user: { id: string; email: string; role: string } }> {
     const user = await this.prisma.user.findFirst({
       where: { email, status: { not: 'deleted' } },
     });
 
     if (!user) {
-      await this.recordLoginAttempt(null, email, null, false);
+      await this.recordLoginAttempt(null, email, ip, false);
       throw new UnauthorizedException('Invalid credentials');
     }
 
     if (user.status === 'pending') {
-      await this.recordLoginAttempt(user.id, email, null, false);
+      await this.recordLoginAttempt(user.id, email, ip, false);
       throw new UnauthorizedException('Please verify your email first');
     }
 
     if (user.status === 'locked') {
-      await this.recordLoginAttempt(user.id, email, null, false);
+      await this.recordLoginAttempt(user.id, email, ip, false);
       throw new UnauthorizedException(
         'Account is locked. Please contact support or try again later.',
       );
@@ -151,18 +152,18 @@ export class AuthService {
     }
 
     if (!user.passwordHash) {
-      await this.recordLoginAttempt(user.id, email, null, false);
+      await this.recordLoginAttempt(user.id, email, ip, false);
       throw new UnauthorizedException('This account uses social login');
     }
 
     const passwordMatch = await bcrypt.compare(password, user.passwordHash);
 
     if (!passwordMatch) {
-      await this.recordLoginAttempt(user.id, email, null, false);
+      await this.recordLoginAttempt(user.id, email, ip, false);
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    await this.recordLoginAttempt(user.id, email, null, true);
+    await this.recordLoginAttempt(user.id, email, ip, true);
 
     const accessToken = this.jwtService.signAccess({
       sub: user.id,

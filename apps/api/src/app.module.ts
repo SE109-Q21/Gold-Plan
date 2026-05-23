@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { DatabaseModule } from './database/database.module';
 import { CrawlerModule } from './crawler/crawler.module';
 import { PriceModule } from './price/price.module';
@@ -31,6 +33,7 @@ import { ForecastModule } from './forecast/forecast.module';
       validationSchema: envValidationSchema,
       validationOptions: { allowUnknown: true },
     }),
+    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 120 }]),
     DatabaseModule,
     CrawlerModule,
     PriceModule,
@@ -54,5 +57,6 @@ import { ForecastModule } from './forecast/forecast.module';
     ForecastModule,
   ],
   controllers: [HealthController],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}

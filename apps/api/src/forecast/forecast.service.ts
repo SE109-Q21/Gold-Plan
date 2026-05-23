@@ -147,19 +147,25 @@ export class ForecastService {
       });
 
       if (isCorrect) {
+        const existing = await this.prisma.userForecastScore.findUnique({
+          where: { userId_month: { userId: vote.userId, month } },
+          select: { streak: true },
+        });
+        const newStreak = (existing?.streak ?? 0) + 1;
+        const points = newStreak >= 5 ? 20 : newStreak >= 3 ? 15 : 10;
         await this.prisma.userForecastScore.upsert({
           where: { userId_month: { userId: vote.userId, month } },
           create: {
             userId: vote.userId,
             month,
-            totalPoints: 10,
+            totalPoints: points,
             correctCount: 1,
-            streak: 1,
+            streak: newStreak,
           },
           update: {
-            totalPoints: { increment: 10 },
+            totalPoints: { increment: points },
             correctCount: { increment: 1 },
-            streak: { increment: 1 },
+            streak: newStreak,
           },
         });
       } else {
