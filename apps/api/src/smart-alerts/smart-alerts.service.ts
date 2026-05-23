@@ -5,9 +5,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
+import { OnEvent } from '@nestjs/event-emitter';
 import { AlertStatus, GoldBrand, GoldType, SmartAlert } from '@prisma/client';
 import { PrismaService } from '../database/prisma.service';
 import { MailService } from '../mail/mail.service';
+import { WebPushService } from '../push/web-push.service';
 import { CreateSmartAlertDto } from './dto/create-smart-alert.dto';
 
 const MAX_COMBINED_ALERTS = 10;
@@ -21,6 +23,7 @@ export class SmartAlertsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
+    private readonly webPushService: WebPushService,
   ) {}
 
   async createSmartAlert(
@@ -151,12 +154,76 @@ export class SmartAlertsService {
               currentPrice: BigInt(records[0]?.buyPrice ?? 0),
               chartSvg,
             });
+            await this.webPushService.sendToUser(alert.userId, {
+              title: 'GoldPlan Alert Fired',
+              body: this.attachNaturalLanguage(alert).naturalLanguage,
+              url: '/alerts',
+            }).catch(() => {});
           }
         }
       } catch (err) {
         this.logger.error(
           `evaluate: error processing alert ${alert.id}: ${(err as Error).message}`,
         );
+      }
+    }
+  }
+
+  @OnEvent('price.updated')
+  async onPriceUpdated(event: { brand: string; goldType: string }): Promise<void> {
+    const activeAlerts = await this.prisma.smartAlert.findMany({
+      where: {
+        status: AlertStatus.active,
+        brand: event.brand as any,
+        goldType: event.goldType as any,
+      },
+    });
+
+    for (const alert of activeAlerts) {
+      try {
+        const records = await this.prisma.priceRecord.findMany({
+          where: { brand: alert.brand, goldType: alert.goldType, isAnomalous: false },
+          orderBy: { recordedAt: 'desc' },
+          take: 10,
+          select: { buyPrice: true, sellPrice: true },
+        });
+
+        const cond1 = alert.condition1 as { type: string; params: any };
+        const cond2 = alert.condition2 as { type: string; params: any } | null | undefined;
+        const fired =
+          this.evaluateCondition(cond1, records) &&
+          (!cond2 || this.evaluateCondition(cond2, records));
+
+        if (fired) {
+          await this.prisma.smartAlert.update({
+            where: { id: alert.id },
+            data: { status: AlertStatus.triggered, lastFiredAt: new Date() },
+          });
+
+          const user = await this.prisma.user.findUnique({
+            where: { id: alert.userId },
+            select: { email: true },
+          });
+
+          if (user) {
+            const chartSvg = await this.buildPriceChartSvg(alert.brand, alert.goldType);
+            await this.mailService.sendAlertEmail(user.email, {
+              brand: alert.brand,
+              goldType: alert.goldType,
+              condition: 'smart',
+              thresholdPrice: BigInt(0),
+              currentPrice: BigInt(records[0]?.buyPrice ?? 0),
+              chartSvg,
+            });
+            await this.webPushService.sendToUser(alert.userId, {
+              title: 'GoldPlan Alert Fired',
+              body: this.attachNaturalLanguage(alert).naturalLanguage,
+              url: '/alerts',
+            }).catch(() => {});
+          }
+        }
+      } catch (err) {
+        this.logger.error(`onPriceUpdated: error processing alert ${alert.id}: ${(err as Error).message}`);
       }
     }
   }

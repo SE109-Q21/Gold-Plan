@@ -1,37 +1,66 @@
-# GPLS — Gold Price Lookup System
+# GoldPlan — Nền tảng theo dõi giá vàng thời gian thực
 
-Nền tảng tra cứu giá vàng thời gian thực dành cho thị trường Việt Nam. Hiển thị giá vàng trong nước (SJC, DOJI, PNJ, BTMC), giá quốc tế XAU/USD, lịch sử biến động, so sánh thương hiệu và nhiều công cụ phân tích chuyên sâu.
+[![CI](https://github.com/your-username/goldplan/actions/workflows/ci.yml/badge.svg)](https://github.com/your-username/goldplan/actions/workflows/ci.yml)
+
+Nền tảng tra cứu và phân tích giá vàng Việt Nam với **real-time WebSocket**, portfolio tracker, smart alerts và AI assistant.
+
+## Tính năng nổi bật
+
+- **Real-time prices** — giá vàng SJC, DOJI, PNJ, BTMC cập nhật qua WebSocket mỗi 5 phút, không cần refresh
+- **Smart Alerts** — thiết lập điều kiện phức tạp (TREND / SPREAD / THRESHOLD), nhận email + push notification khi điều kiện khớp
+- **Portfolio tracker** — theo dõi lãi/lỗ theo giá thị trường, biểu đồ donut phân bổ
+- **AI Assistant** — phân tích thị trường, trả lời câu hỏi về vàng (OpenAI)
+- **Forecast Community** — dự đoán xu hướng, bảng xếp hạng độ chính xác
+- **Admin Panel** — audit log, anomaly detection, thống kê theo kỳ
+- **Web Push Notifications** — nhận cảnh báo ngay cả khi đóng tab
 
 ## Tech Stack
 
 | Layer | Công nghệ |
 |---|---|
 | Monorepo | pnpm workspaces + Turborepo |
-| Backend | NestJS 11 · Prisma 7 · PostgreSQL |
+| Backend | NestJS 11 · Prisma 7 · PostgreSQL 16 |
+| Real-time | WebSocket (Socket.IO) · EventEmitter2 |
 | Frontend | Next.js 16 · React 19 · TanStack Query v5 |
+| Push | Web Push API (VAPID) · Service Worker |
 | Shared types | TypeScript 5 (`packages/shared`) |
-| Auth | JWT (access 24h + refresh 7d httpOnly cookie) · bcrypt |
+| Auth | JWT access/refresh · Google OAuth 2.0 · bcrypt |
 | Email | Nodemailer (SMTP) |
 | Charts | Recharts · Custom SVG |
+| CI/CD | GitHub Actions → Railway (API) + Vercel (web) |
+
+## Architecture
+
+```
+Crawlers (4 nguồn, 5 phút/lần)
+    │
+    ▼
+PriceRecord (PostgreSQL)
+    │
+    ├──► EventEmitter2 ──► PriceGateway (WebSocket) ──► Browser (live update)
+    │
+    └──► AlertEvaluator ──► Email + Web Push ──► Service Worker ──► Notification
+```
 
 ## Cấu trúc dự án
 
 ```
-gpls/
+goldplan/
 ├── apps/
-│   ├── api/          # NestJS REST API  (port 4000)
-│   └── web/          # Next.js App Router (port 3000)
+│   ├── api/          # NestJS REST + WebSocket API  (port 4000)
+│   └── web/          # Next.js App Router            (port 3000)
 ├── packages/
 │   └── shared/       # Shared TypeScript types & DTOs
-└── docs/
-    └── superpowers/plans/  # Implementation plans (Plan 1–9)
+├── .github/
+│   └── workflows/ci.yml  # GitHub Actions CI pipeline
+└── railway.toml          # Railway deployment config
 ```
 
 ## Yêu cầu môi trường
 
-- **Node.js 22** (via nvm) — Prisma 7 yêu cầu ≥20.9, Next.js 16 yêu cầu ≥20.9
-- **pnpm 9+**
-- **PostgreSQL 16** (chạy qua Docker hoặc local)
+- **Node.js 22** (via nvm) — Prisma 7 yêu cầu ≥20.9
+- **pnpm 10+**
+- **PostgreSQL 16** (Docker hoặc local)
 
 ## Khởi động nhanh
 
@@ -44,40 +73,22 @@ pnpm install
 ### 2. Khởi động PostgreSQL
 
 ```bash
-docker run -d \
-  --name gpls_postgres \
-  -e POSTGRES_USER=postgres \
-  -e POSTGRES_PASSWORD=postgres \
-  -e POSTGRES_DB=gpls_dev \
-  -p 5432:5432 \
-  postgres:16-alpine
+docker compose up -d db
 ```
 
-### 3. Tạo file `.env` cho API
+### 3. Cấu hình môi trường
 
 ```bash
+# Tạo file .env cho API (xem bảng biến môi trường bên dưới)
 cp apps/api/.env.example apps/api/.env
 ```
 
-Nội dung tối thiểu:
-
-```env
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/gpls_dev"
-JWT_SECRET="change-this-to-a-random-32-char-string!!"
-JWT_REFRESH_SECRET="another-random-32-char-string-here!!"
-APP_URL="http://localhost:3000"
-PORT=4000
-
-# SMTP (tuỳ chọn — bỏ trống để bỏ qua gửi email khi dev)
-SMTP_HOST=
-SMTP_USER=
-SMTP_PASS=
-```
-
-### 4. Chạy migrations
+### 4. Chạy migrations + seed
 
 ```bash
+nvm use 22
 pnpm --filter api prisma migrate dev
+pnpm --filter api seed
 ```
 
 ### 5. Khởi động dev servers
@@ -86,7 +97,7 @@ pnpm --filter api prisma migrate dev
 pnpm dev
 ```
 
-- API: `http://localhost:4000/api`
+- API: `http://localhost:4000/api`  
 - Web: `http://localhost:3000`
 
 ## Biến môi trường
@@ -96,112 +107,81 @@ pnpm dev
 | Biến | Bắt buộc | Mô tả |
 |---|---|---|
 | `DATABASE_URL` | ✅ | PostgreSQL connection string |
-| `JWT_SECRET` | ✅ | ≥32 ký tự, dùng cho access token |
-| `JWT_REFRESH_SECRET` | ✅ | ≥32 ký tự, dùng cho refresh token |
-| `APP_URL` | ✅ | URL frontend (cho CORS & email links) |
+| `JWT_SECRET` | ✅ | ≥32 ký tự, access token |
+| `JWT_REFRESH_SECRET` | ✅ | ≥32 ký tự, refresh token |
+| `APP_URL` | ✅ | URL frontend (CORS & email links) |
 | `PORT` | | Default: `4000` |
-| `SMTP_HOST` | | SMTP server (bỏ trống → không gửi email) |
-| `SMTP_PORT` | | Default: `587` |
-| `SMTP_USER` | | SMTP username |
-| `SMTP_PASS` | | SMTP password |
-| `SMTP_FROM` | | Default: `noreply@gpls.vn` |
-| `GOLD_API_KEY` | | API key cho gold price API |
-| `EXCHANGE_RATE_API_KEY` | | API key cho exchange rate |
-| `OPENAI_API_KEY` | | Dùng cho AI Assistant (Plan 8) |
+| `SMTP_HOST` | | SMTP server (bỏ trống → bỏ qua email) |
+| `SMTP_USER` / `SMTP_PASS` | | SMTP credentials |
+| `VAPID_PUBLIC_KEY` | | Web Push public key |
+| `VAPID_PRIVATE_KEY` | | Web Push private key |
+| `VAPID_EMAIL` | | Email cho VAPID contact |
+| `GOLD_API_KEY` | | goldapi.io (giá quốc tế) |
+| `EXCHANGE_RATE_API_KEY` | | exchangerate-api.com (tỷ giá) |
+| `OPENAI_API_KEY` | | AI Assistant |
+| `GOOGLE_CLIENT_ID/SECRET` | | Google OAuth |
+
+Tạo VAPID keys:
+```bash
+node -e "const wp=require('web-push'); const k=wp.generateVAPIDKeys(); console.log(k)"
+```
 
 ### `apps/web/.env.local`
 
 | Biến | Mô tả |
 |---|---|
-| `NEXT_PUBLIC_API_URL` | URL của API backend (default: `http://localhost:4000/api`) |
+| `NEXT_PUBLIC_API_URL` | URL API (default: `http://localhost:4000/api`) |
+| `NEXT_PUBLIC_VAPID_KEY` | VAPID public key (cùng giá trị với API) |
+
+## Deploy
+
+### Railway (API + Database)
+
+1. Kết nối repository tại [railway.app](https://railway.app)
+2. Thêm PostgreSQL service
+3. Set env vars (xem bảng trên)
+4. Deploy — `railway.toml` đã cấu hình sẵn build + start commands
+
+### Vercel (Frontend)
+
+1. Import repository tại [vercel.com](https://vercel.com)
+2. Set `NEXT_PUBLIC_API_URL` = URL Railway API của bạn
+3. Set `NEXT_PUBLIC_VAPID_KEY` = VAPID public key
+4. Deploy — `vercel.json` đã cấu hình sẵn
 
 ## Scripts
 
 ```bash
-# Chạy toàn bộ monorepo
-pnpm dev           # dev servers song song
+# Monorepo
+pnpm dev           # dev servers song song (API + web)
 pnpm build         # build tất cả
 pnpm test          # chạy toàn bộ test suite
 
-# Chỉ API
-pnpm --filter api dev
+# API
+pnpm --filter api start:dev
 pnpm --filter api test
 pnpm --filter api prisma studio
 
-# Chỉ Web
+# Web
 pnpm --filter web dev
-pnpm --filter web build
+pnpm --filter web test
 ```
-
-## Trạng thái triển khai (Plans)
-
-| Plan | Tên | Trạng thái |
-|---|---|---|
-| Plan 1 | Infrastructure (monorepo, Prisma, base crawlers) | ✅ Hoàn thành |
-| Plan 2 | Price Core — M01–M04 (domestic prices, international, history, comparison) | ✅ Hoàn thành |
-| Plan 3 | Exchange Rate, Converter & Spread Dashboard (M05, F08, F11) | ⬜ Chưa bắt đầu |
-| Plan 4 | Analytics Widgets — Market Heat Index & DCA Simulator (F03, F06) | ⬜ Chưa bắt đầu |
-| Plan 5 | User Authentication — M06 (register, login, JWT, email verification) | ✅ Hoàn thành |
-| Plan 6 | Price Alerts & Admin Dashboard — M07, M08 | ⬜ Chưa bắt đầu |
-| Plan 7 | R2 User Features — Portfolio, Personalization, Browsing History | ⬜ Chưa bắt đầu |
-| Plan 8 | R2 Intelligence — AI Assistant, Morning Digest, Smart Alerts | ⬜ Chưa bắt đầu |
-| Plan 9 | R3 Community — Forecast, Extended Charts, CSV Export | ⬜ Chưa bắt đầu |
-
-Chi tiết từng plan: [`docs/superpowers/plans/`](docs/superpowers/plans/)
-
-## API Endpoints (hiện có)
-
-### Auth — `/api/auth`
-| Method | Path | Mô tả |
-|---|---|---|
-| POST | `/register` | Đăng ký tài khoản |
-| POST | `/verify-email` | Xác thực email |
-| POST | `/login` | Đăng nhập, trả về JWT |
-| POST | `/refresh` | Làm mới access token |
-| POST | `/logout` | Đăng xuất |
-| POST | `/forgot-password` | Yêu cầu reset mật khẩu |
-| POST | `/reset-password` | Đặt lại mật khẩu |
-
-### Users — `/api/users`
-| Method | Path | Mô tả |
-|---|---|---|
-| GET | `/me` | Lấy thông tin tài khoản |
-| PATCH | `/me` | Cập nhật profile |
-| POST | `/me/change-password` | Đổi mật khẩu |
-| DELETE | `/me` | Xoá tài khoản |
-
-### Prices — `/api/prices`
-| Method | Path | Mô tả |
-|---|---|---|
-| GET | `/domestic` | Giá vàng trong nước hiện tại |
-| GET | `/history` | Lịch sử giá (1D/1W/1M) |
-| GET | `/comparison` | So sánh giá các thương hiệu |
-
-### International — `/api/international`
-| Method | Path | Mô tả |
-|---|---|---|
-| GET | `/price` | Giá XAU/USD quốc tế |
 
 ## Design System
 
-Giao diện dark-mode theo phong cách fintech. CSS variables chính:
+Dark-mode fintech aesthetic. CSS variables chính:
 
 ```css
 --gold:    #D4AF37   /* Brand accent */
---ink:     #0B0B0F   /* Background sâu nhất */
---ink-2:   #14141A   /* Surface chính */
---chalk:   #F5F0E6   /* Text chính */
---up:      #58C896   /* Màu tăng giá */
---down:    #E5484D   /* Màu giảm giá */
---live:    #9DCC6E   /* Chỉ báo live */
+--ink:     #0B0B0F   /* Background */
+--chalk:   #F5F0E6   /* Text */
+--up:      #58C896   /* Tăng giá */
+--down:    #E5484D   /* Giảm giá */
+--live:    #9DCC6E   /* Live indicator */
 ```
 
-Font: **Bricolage Grotesque** (display) + **JetBrains Mono** (mono)
-
-## Đóng góp & Phát triển
-
-Dự án sử dụng SRS v2.0 làm tài liệu yêu cầu chính thức (`GPLS_New_Features_SRS_v2 (1).pdf`). Mọi tính năng mới cần được đặc tả trong plan tương ứng trước khi triển khai.
+Font: **Bricolage Grotesque** · **JetBrains Mono**
 
 ---
 
-**Nhóm 14** · GPLS v2.0 · 2026
+**GoldPlan v2.0** · Full-stack portfolio project · 2026

@@ -31,3 +31,6 @@ prisma/migrations/*.sql.bak
 # OS
 .DS_Store
 Thumbs.db
+
+# Superpowers brainstorming sessions
+.superpowers/

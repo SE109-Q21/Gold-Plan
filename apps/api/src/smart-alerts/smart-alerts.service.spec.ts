@@ -9,7 +9,7 @@ describe('SmartAlertsService — protected evaluation helpers', () => {
   let service: TestableService;
 
   beforeEach(() => {
-    service = new TestableService(null as any, null as any);
+    service = new TestableService(null as any, null as any, null as any);
   });
 
   it('evaluateTrend: [100,110,120] n=3 up → true', () => {

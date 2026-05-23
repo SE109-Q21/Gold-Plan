@@ -160,6 +160,7 @@ model User {
   forecastVotes         ForecastVote[]
   forecastScores        UserForecastScore[]
   smartAlerts           SmartAlert[]
+  pushSubscriptions     PushSubscription[]
 }
 
 model EmailVerification {
@@ -366,6 +367,21 @@ model GoldDigest {
   generatedAt  DateTime @default(now())
 
   @@index([date(sort: Desc)])
+}
+
+// ─── Web Push Subscriptions ───────────────────────────────────────────────────
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 // ─── Smart Alerts (F05) ──────────────────────────────────────────────────────

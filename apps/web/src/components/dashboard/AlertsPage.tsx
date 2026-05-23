@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useAlerts, useToggleAlert, useDeleteAlert, useAlertHistory } from '@/lib/alerts.api';
 import { useSmartAlerts, useCreateSmartAlert, useToggleSmartAlert, useDeleteSmartAlert } from '@/lib/smart-alerts.api';
 import type { PriceAlertDto, SmartAlertDto, CreateSmartAlertDto, SmartAlertCondition } from '@gpls/shared';
+import { PushNotificationButton } from '@/components/PushNotificationButton';
 
 type TabId = 'rules' | 'history' | 'smart';
 
@@ -632,17 +633,20 @@ export function AlertsPage({ onOpenAdd }: { onOpenAdd: () => void }) {
             notified when the price crosses your threshold. email within 2 min, push within 30 sec.
           </p>
         </div>
-        <button
-          onClick={onOpenAdd}
-          style={{
-            height: 44, padding: '0 18px', display: 'inline-flex', alignItems: 'center', gap: 8,
-            background: 'var(--gold)', color: '#0B0B0F',
-            border: '1px solid var(--gold)', borderRadius: 10, cursor: 'pointer',
-            font: '700 14px/1 var(--font-mono)', letterSpacing: '0.04em', textTransform: 'uppercase',
-          }}
-        >
-          + new alert
-        </button>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <PushNotificationButton />
+          <button
+            onClick={onOpenAdd}
+            style={{
+              height: 44, padding: '0 18px', display: 'inline-flex', alignItems: 'center', gap: 8,
+              background: 'var(--gold)', color: '#0B0B0F',
+              border: '1px solid var(--gold)', borderRadius: 10, cursor: 'pointer',
+              font: '700 14px/1 var(--font-mono)', letterSpacing: '0.04em', textTransform: 'uppercase',
+            }}
+          >
+            + new alert
+          </button>
+        </div>
       </div>
 
       {/* Stats bar */}

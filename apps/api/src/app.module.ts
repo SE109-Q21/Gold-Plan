@@ -25,6 +25,9 @@ import { AiModule } from './ai/ai.module';
 import { DigestModule } from './digest/digest.module';
 import { SmartAlertsModule } from './smart-alerts/smart-alerts.module';
 import { ForecastModule } from './forecast/forecast.module';
+import { PushModule } from './push/push.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { RealtimeModule } from './realtime/realtime.module';
 
 @Module({
   imports: [
@@ -34,6 +37,8 @@ import { ForecastModule } from './forecast/forecast.module';
       validationOptions: { allowUnknown: true },
     }),
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 120 }]),
+    EventEmitterModule.forRoot(),
+    RealtimeModule,
     DatabaseModule,
     CrawlerModule,
     PriceModule,
@@ -55,6 +60,7 @@ import { ForecastModule } from './forecast/forecast.module';
     DigestModule,
     SmartAlertsModule,
     ForecastModule,
+    PushModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
