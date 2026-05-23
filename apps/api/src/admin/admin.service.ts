@@ -573,4 +573,26 @@ export class AdminService {
       limit,
     };
   }
+
+  // ── Asset benchmarks ───────────────────────────────────────────────────────────
+
+  async getBenchmarks(assetType?: string) {
+    return this.prisma.assetBenchmark.findMany({
+      where: assetType ? { assetType } : undefined,
+      orderBy: [{ assetType: 'asc' }, { date: 'desc' }],
+    });
+  }
+
+  async upsertBenchmark(dto: { assetType: string; date: string; value: number; note?: string }) {
+    const date = new Date(dto.date);
+    return this.prisma.assetBenchmark.upsert({
+      where: { assetType_date: { assetType: dto.assetType, date } },
+      create: { assetType: dto.assetType, date, value: dto.value, note: dto.note },
+      update: { value: dto.value, note: dto.note },
+    });
+  }
+
+  async deleteBenchmark(id: string) {
+    return this.prisma.assetBenchmark.delete({ where: { id } });
+  }
 }
