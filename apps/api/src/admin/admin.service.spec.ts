@@ -138,7 +138,8 @@ describe('AdminService', () => {
       prisma.user.findUnique.mockResolvedValue(user);
       prisma.user.update.mockResolvedValue(lockedUser);
 
-      const result = await service.lockUser('user-1');
+      prisma.adminAuditLog.create.mockResolvedValue({});
+      const result = await service.lockUser('user-1', 'admin-1');
 
       expect(prisma.user.update).toHaveBeenCalledWith({
         where: { id: 'user-1' },
@@ -150,7 +151,7 @@ describe('AdminService', () => {
     it('throws NotFoundException when user not found', async () => {
       prisma.user.findUnique.mockResolvedValue(null);
 
-      await expect(service.lockUser('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(service.lockUser('nonexistent', 'admin-1')).rejects.toThrow(NotFoundException);
       expect(prisma.user.update).not.toHaveBeenCalled();
     });
   });

@@ -10,6 +10,14 @@ describe('InternationalService', () => {
   beforeEach(() => {
     service = new InternationalService();
     jest.clearAllMocks();
+    // Service reads process.env directly — set keys so it doesn't take the fallback path
+    process.env.GOLD_API_KEY = 'test-key';
+    process.env.EXCHANGE_RATE_API_KEY = 'test-key';
+  });
+
+  afterEach(() => {
+    delete process.env.GOLD_API_KEY;
+    delete process.env.EXCHANGE_RATE_API_KEY;
   });
 
   it('returns correct InternationalPriceDto', async () => {

@@ -16,6 +16,7 @@ import { useBrowsingContext, useRecordBrowse } from '@/lib/browsing-history.api'
 import { DigestCard } from '@/components/DigestCard';
 import { ForecastVoteWidget } from '@/components/ForecastVoteWidget';
 import { HeatIndexHistoryChart } from '@/components/HeatIndexHistoryChart';
+import { ArbitrageWidget } from '@/components/ArbitrageWidget';
 import {
   DndContext,
   closestCenter,
@@ -698,6 +699,9 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
           <HeatIndexGauge />
           <HeatIndexStats />
         </div>
+
+        {/* Arbitrage opportunities */}
+        <ArbitrageWidget />
 
         {/* Heat Index 7-day trend */}
         <HeatIndexHistoryChart />

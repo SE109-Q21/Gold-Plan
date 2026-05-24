@@ -1,5 +1,6 @@
-import { Logger } from '@nestjs/common';
+import { Inject, Logger } from '@nestjs/common';
 import { GoldBrand, GoldType } from '@prisma/client';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../database/prisma.service';
 import { AnomalyDetectorService } from './anomaly-detector.service';
 
@@ -12,6 +13,9 @@ export interface RawPriceData {
 export abstract class BaseCrawlerService {
   protected readonly logger: Logger;
   protected abstract readonly brand: GoldBrand;
+
+  @Inject(EventEmitter2)
+  private readonly eventEmitter: EventEmitter2;
 
   constructor(
     protected readonly prisma: PrismaService,
@@ -69,6 +73,16 @@ export abstract class BaseCrawlerService {
             anomalyReason: isAnomalous ? 'deviation > 15%' : null,
           },
         });
+
+        if (!isAnomalous) {
+          this.eventEmitter.emit('price.updated', {
+            brand: this.brand,
+            goldType: price.goldType,
+            buyPrice: price.buyPrice,
+            sellPrice: price.sellPrice,
+            recordedAt: new Date(),
+          });
+        }
       }
 
       await this.prisma.crawlSession.update({

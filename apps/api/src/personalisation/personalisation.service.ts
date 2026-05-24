@@ -1,5 +1,4 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../database/prisma.service';
 
 export interface PersonalisationItemDto {
@@ -20,9 +19,6 @@ export class PersonalisationService {
         where: { userId_brand_goldType: { userId, brand: brand as any, goldType: goldType as any } },
         create: { userId, brand: brand as any, goldType: goldType as any, viewCount: 1 },
         update: { viewCount: { increment: 1 } },
-      });
-      await this.prisma.behavioralEvent.create({
-        data: { userId, brand: brand as any, goldType: goldType as any, eventType: 'view' },
       });
     });
   }
@@ -99,14 +95,5 @@ export class PersonalisationService {
 
   async resetPreferences(userId: string): Promise<void> {
     await this.prisma.userPreference.deleteMany({ where: { userId } });
-  }
-
-  @Cron('0 3 * * *')
-  async cleanupOldBehavioralEvents(): Promise<void> {
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - 90);
-    await this.prisma.behavioralEvent.deleteMany({
-      where: { occurredAt: { lt: cutoff } },
-    });
   }
 }

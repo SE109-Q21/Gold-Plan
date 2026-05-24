@@ -26,24 +26,26 @@ export class MailService {
         host: smtpHost,
         port: smtpPort,
         secure: smtpPort === 465,
+        // family:4 forces IPv4 on Railway (IPv6 not routed); cast needed as nodemailer types omit this option
+        family: 4,
         auth: {
           user: this.config.get<string>('SMTP_USER'),
           pass: this.config.get<string>('SMTP_PASS'),
         },
-      });
+      } as any);
     }
   }
 
   async sendVerificationEmail(to: string, token: string): Promise<void> {
     const link = `${this.appUrl}/auth/verify-email?token=${token}`;
-    const subject = 'Verify your GoldTracker account';
+    const subject = 'Verify your GPLS account';
     const html = this.buildVerificationHtml(link);
     await this.send(to, subject, html);
   }
 
   async sendPasswordResetEmail(to: string, token: string): Promise<void> {
     const link = `${this.appUrl}/auth/reset-password?token=${token}`;
-    const subject = 'Reset your GoldTracker password';
+    const subject = 'Reset your GPLS password';
     const html = this.buildPasswordResetHtml(link);
     await this.send(to, subject, html);
   }
@@ -61,7 +63,7 @@ export class MailService {
   ): Promise<void> {
     const condLabel = data.condition === 'gte' ? '≥' : data.condition === 'smart' ? '↑↓' : '≤';
     const fmt = (n: bigint) => Number(n).toLocaleString('vi-VN') + ' ₫';
-    const subject = `GoldTracker Alert: ${data.brand} ${data.goldType}`;
+    const subject = `GPLS Alert: ${data.brand} ${data.goldType}`;
     const html = `<p>Your alert was triggered!</p>
   <p><strong>${data.brand} ${data.goldType}</strong> buy price is now <strong>${fmt(data.currentPrice)}</strong></p>
   ${data.chartSvg ? `<div style="margin:16px 0">${data.chartSvg}</div><p style="font-size:11px;color:#888">24-hour price chart</p>` : ''}
@@ -85,7 +87,7 @@ export class MailService {
     const pctLabel = data.pctChangeSjc >= 0
       ? `+${data.pctChangeSjc.toFixed(2)}%`
       : `${data.pctChangeSjc.toFixed(2)}%`;
-    const subject = `GoldTracker Morning Digest — ${data.date}`;
+    const subject = `GPLS Morning Digest — ${data.date}`;
     const html = `
       <h2>📊 Morning Gold Digest — ${data.date}</h2>
       <table>

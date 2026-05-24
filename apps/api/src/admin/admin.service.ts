@@ -159,35 +159,69 @@ export class AdminService {
     };
   }
 
-  async lockUser(id: string) {
+  async lockUser(id: string, adminId: string) {
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) throw new NotFoundException(`User ${id} not found`);
 
-    return this.prisma.user.update({
+    const updated = await this.prisma.user.update({
       where: { id },
       data: { status: 'locked' as any },
     });
+
+    await this.prisma.adminAuditLog.create({
+      data: {
+        adminId,
+        action: 'user_locked',
+        entityType: 'User',
+        entityId: id,
+      },
+    });
+
+    return updated;
   }
 
-  async unlockUser(id: string) {
+  async unlockUser(id: string, adminId: string) {
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) throw new NotFoundException(`User ${id} not found`);
 
-    return this.prisma.user.update({
+    const updated = await this.prisma.user.update({
       where: { id },
       data: { status: 'active' as any },
     });
+
+    await this.prisma.adminAuditLog.create({
+      data: {
+        adminId,
+        action: 'user_unlocked',
+        entityType: 'User',
+        entityId: id,
+      },
+    });
+
+    return updated;
   }
 
-  async changeUserRole(id: string, role: 'user' | 'admin') {
+  async changeUserRole(id: string, role: 'user' | 'admin', adminId: string) {
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) throw new NotFoundException(`User ${id} not found`);
 
-    return this.prisma.user.update({
+    const updated = await this.prisma.user.update({
       where: { id },
       data: { role: role as any },
       select: { id: true, email: true, role: true },
     });
+
+    await this.prisma.adminAuditLog.create({
+      data: {
+        adminId,
+        action: 'user_role_changed',
+        entityType: 'User',
+        entityId: id,
+        newValue: { role },
+      },
+    });
+
+    return updated;
   }
 
   // ── Time-series analytics ─────────────────────────────────────────────────
@@ -441,10 +475,16 @@ export class AdminService {
       const isCorrect = vote.direction === actualResult;
       await this.prisma.forecastVote.update({ where: { id: vote.id }, data: { isCorrect } });
       if (isCorrect) {
+        const existing = await this.prisma.userForecastScore.findUnique({
+          where: { userId_month: { userId: vote.userId, month } },
+          select: { streak: true },
+        });
+        const newStreak = (existing?.streak ?? 0) + 1;
+        const points = newStreak >= 5 ? 20 : newStreak >= 3 ? 15 : 10;
         await this.prisma.userForecastScore.upsert({
           where: { userId_month: { userId: vote.userId, month } },
-          create: { userId: vote.userId, month, totalPoints: 10, correctCount: 1, streak: 1 },
-          update: { totalPoints: { increment: 10 }, correctCount: { increment: 1 }, streak: { increment: 1 } },
+          create: { userId: vote.userId, month, totalPoints: points, correctCount: 1, streak: newStreak },
+          update: { totalPoints: { increment: points }, correctCount: { increment: 1 }, streak: newStreak },
         });
       } else {
         await this.prisma.userForecastScore.upsert({
@@ -532,5 +572,27 @@ export class AdminService {
       page,
       limit,
     };
+  }
+
+  // ── Asset benchmarks ───────────────────────────────────────────────────────────
+
+  async getBenchmarks(assetType?: string) {
+    return this.prisma.assetBenchmark.findMany({
+      where: assetType ? { assetType } : undefined,
+      orderBy: [{ assetType: 'asc' }, { date: 'desc' }],
+    });
+  }
+
+  async upsertBenchmark(dto: { assetType: string; date: string; value: number; note?: string }) {
+    const date = new Date(dto.date);
+    return this.prisma.assetBenchmark.upsert({
+      where: { assetType_date: { assetType: dto.assetType, date } },
+      create: { assetType: dto.assetType, date, value: dto.value, note: dto.note },
+      update: { value: dto.value, note: dto.note },
+    });
+  }
+
+  async deleteBenchmark(id: string) {
+    return this.prisma.assetBenchmark.delete({ where: { id } });
   }
 }

@@ -1,13 +1,11 @@
-import 'dotenv/config';
-import { defineConfig, env } from 'prisma/config';
+import { defineConfig } from 'prisma/config'
 
-type Env = {
-  DATABASE_URL: string;
-};
+// DIRECT_URL = non-pooler Neon URL, required for prisma migrate deploy
+// (Neon's pooler/PgBouncer does not support pg_advisory_lock used by Prisma Migrate)
+// DATABASE_URL = pooler URL, used by the runtime app via @prisma/adapter-pg
+const migrationUrl = process.env.DIRECT_URL ?? process.env.DATABASE_URL
 
 export default defineConfig({
   schema: 'prisma/schema.prisma',
-  datasource: {
-    url: env<Env>('DATABASE_URL'),
-  },
-});
+  ...(migrationUrl ? { datasource: { url: migrationUrl } } : {}),
+})

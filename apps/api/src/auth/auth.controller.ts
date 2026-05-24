@@ -20,6 +20,7 @@ import { VerifyEmailDto } from './dto/verify-email.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller('auth')
 @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
@@ -43,8 +44,9 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(200)
-  login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
-    return this.authService.login(dto.email, dto.password, res);
+  login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response, @Req() req: Request) {
+    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ?? req.ip ?? null;
+    return this.authService.login(dto.email, dto.password, res, ip);
   }
 
   @Post('refresh')
@@ -59,8 +61,9 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(200)
-  logout(@Res({ passthrough: true }) res: Response) {
-    return this.authService.logout(res);
+  @UseGuards(JwtAuthGuard)
+  logout(@Req() req: { user: { sub: string } }, @Res({ passthrough: true }) res: Response) {
+    return this.authService.logout(req.user.sub, res);
   }
 
   @Post('forgot-password')

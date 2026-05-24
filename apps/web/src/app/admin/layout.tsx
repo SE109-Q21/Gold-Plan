@@ -10,6 +10,7 @@ const NAV_LINKS = [
   { href: '/admin/anomalies',    label: 'Anomalies' },
   { href: '/admin/forecast',    label: 'Forecast' },
   { href: '/admin/audit',       label: 'Audit Log' },
+  { href: '/admin/benchmarks',  label: 'Benchmarks' },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

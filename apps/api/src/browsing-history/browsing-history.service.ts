@@ -11,6 +11,7 @@ export interface LowestSeenItemDto {
 export interface BrowsingContextDto {
   lastViewedAt: string;
   deltaPct: number | null;
+  buyPrice: number;
 }
 
 export interface BrowsingHistoryItemDto {
@@ -72,6 +73,7 @@ export class BrowsingHistoryService {
     return {
       lastViewedAt: current.viewedAt.toISOString(),
       deltaPct,
+      buyPrice: Number(current.buyPrice),
     };
   }
 

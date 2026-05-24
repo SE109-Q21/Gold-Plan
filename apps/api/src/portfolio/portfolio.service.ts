@@ -249,27 +249,28 @@ export class PortfolioService {
       cursor.setDate(cursor.getDate() + 1);
     }
 
-    // Fetch historical price records for each brand:goldType pair
+    // Fetch all price records for all pairs in a single query
     const priceDayMap = new Map<string, Map<string, number>>();
-    for (const pair of pairs) {
+    const pairFilters = Array.from(pairs).map((pair) => {
       const [brand, goldType] = pair.split(':');
-      const records = await this.prisma.priceRecord.findMany({
-        where: {
-          brand: brand as any,
-          goldType: goldType as any,
-          isAnomalous: false,
-          recordedAt: { gte: new Date(firstDay), lte: new Date(todayDay + 'T23:59:59Z') },
-        },
-        orderBy: { recordedAt: 'asc' },
-      });
+      return { brand: brand as any, goldType: goldType as any };
+    });
 
-      // Map by day (last price of each day)
-      const dayMap = new Map<string, number>();
-      for (const r of records) {
-        const day = r.recordedAt.toISOString().slice(0, 10);
-        dayMap.set(day, Number(r.buyPrice));
-      }
-      priceDayMap.set(pair, dayMap);
+    const allRecords = await this.prisma.priceRecord.findMany({
+      where: {
+        OR: pairFilters,
+        isAnomalous: false,
+        recordedAt: { gte: new Date(firstDay), lte: new Date(todayDay + 'T23:59:59Z') },
+      },
+      orderBy: { recordedAt: 'asc' },
+      select: { brand: true, goldType: true, buyPrice: true, recordedAt: true },
+    });
+
+    for (const r of allRecords) {
+      const pair = `${r.brand}:${r.goldType}`;
+      if (!priceDayMap.has(pair)) priceDayMap.set(pair, new Map());
+      const day = r.recordedAt.toISOString().slice(0, 10);
+      priceDayMap.get(pair)!.set(day, Number(r.buyPrice));
     }
 
     // For each day, compute portfolio value

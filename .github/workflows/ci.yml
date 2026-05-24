@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: gpls_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        working-directory: apps/api
+        run: npx prisma generate
+
+      - name: Run migrations
+        working-directory: apps/api
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/gpls_test
+        run: npx prisma migrate deploy
+
+      - name: Type check (API)
+        working-directory: apps/api
+        run: npx tsc --noEmit
+
+      - name: Type check (web)
+        working-directory: apps/web
+        run: npx tsc --noEmit
+
+      - name: Unit tests (web)
+        working-directory: apps/web
+        run: pnpm test
+
+      - name: Unit tests (API)
+        working-directory: apps/api
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/gpls_test
+          JWT_SECRET: ci-secret-at-least-32-characters-long
+          JWT_REFRESH_SECRET: ci-refresh-secret-at-least-32-characters
+        run: pnpm test

@@ -1,0 +1,13 @@
+{
+  "typescript.tsserver.watchOptions": {},
+  "search.exclude": {
+    "**/.claude/worktrees": true
+  },
+  "files.watcherExclude": {
+    "**/.claude/worktrees/**": true
+  },
+  "typescript.preferences.excludeWorkspaceFiles": false,
+  "files.exclude": {
+    "**/.claude/worktrees": true
+  }
+}

@@ -20,4 +20,7 @@ export const envValidationSchema = Joi.object({
   GOOGLE_CLIENT_SECRET: Joi.string().optional().allow(''),
   GOOGLE_CALLBACK_URL: Joi.string().optional().allow(''),
   WEB_URL: Joi.string().optional().allow(''),
+  VAPID_PUBLIC_KEY: Joi.string().optional().allow('').default(''),
+  VAPID_PRIVATE_KEY: Joi.string().optional().allow('').default(''),
+  VAPID_EMAIL: Joi.string().optional().allow('').default('admin@goldplan.vn'),
 });

@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { DatabaseModule } from './database/database.module';
 import { CrawlerModule } from './crawler/crawler.module';
 import { PriceModule } from './price/price.module';
@@ -23,6 +25,11 @@ import { AiModule } from './ai/ai.module';
 import { DigestModule } from './digest/digest.module';
 import { SmartAlertsModule } from './smart-alerts/smart-alerts.module';
 import { ForecastModule } from './forecast/forecast.module';
+import { PushModule } from './push/push.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { RealtimeModule } from './realtime/realtime.module';
+import { ArbitrageModule } from './arbitrage/arbitrage.module';
+import { AssetsComparisonModule } from './assets-comparison/assets-comparison.module';
 
 @Module({
   imports: [
@@ -31,6 +38,9 @@ import { ForecastModule } from './forecast/forecast.module';
       validationSchema: envValidationSchema,
       validationOptions: { allowUnknown: true },
     }),
+    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 120 }]),
+    EventEmitterModule.forRoot(),
+    RealtimeModule,
     DatabaseModule,
     CrawlerModule,
     PriceModule,
@@ -52,7 +62,11 @@ import { ForecastModule } from './forecast/forecast.module';
     DigestModule,
     SmartAlertsModule,
     ForecastModule,
+    ArbitrageModule,
+    AssetsComparisonModule,
+    PushModule,
   ],
   controllers: [HealthController],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}

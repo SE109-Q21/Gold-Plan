@@ -108,23 +108,24 @@ export class AuthService {
     email: string,
     password: string,
     res: Response,
+    ip: string | null = null,
   ): Promise<{ accessToken: string; user: { id: string; email: string; role: string } }> {
     const user = await this.prisma.user.findFirst({
       where: { email, status: { not: 'deleted' } },
     });
 
     if (!user) {
-      await this.recordLoginAttempt(null, email, null, false);
+      await this.recordLoginAttempt(null, email, ip, false);
       throw new UnauthorizedException('Invalid credentials');
     }
 
     if (user.status === 'pending') {
-      await this.recordLoginAttempt(user.id, email, null, false);
+      await this.recordLoginAttempt(user.id, email, ip, false);
       throw new UnauthorizedException('Please verify your email first');
     }
 
     if (user.status === 'locked') {
-      await this.recordLoginAttempt(user.id, email, null, false);
+      await this.recordLoginAttempt(user.id, email, ip, false);
       throw new UnauthorizedException(
         'Account is locked. Please contact support or try again later.',
       );
@@ -151,30 +152,31 @@ export class AuthService {
     }
 
     if (!user.passwordHash) {
-      await this.recordLoginAttempt(user.id, email, null, false);
+      await this.recordLoginAttempt(user.id, email, ip, false);
       throw new UnauthorizedException('This account uses social login');
     }
 
     const passwordMatch = await bcrypt.compare(password, user.passwordHash);
 
     if (!passwordMatch) {
-      await this.recordLoginAttempt(user.id, email, null, false);
+      await this.recordLoginAttempt(user.id, email, ip, false);
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    await this.recordLoginAttempt(user.id, email, null, true);
+    await this.recordLoginAttempt(user.id, email, ip, true);
 
     const accessToken = this.jwtService.signAccess({
       sub: user.id,
       email: user.email,
       role: user.role,
+      ver: user.tokenVersion,
     });
-    const refreshToken = this.jwtService.signRefresh({ sub: user.id });
+    const refreshToken = this.jwtService.signRefresh({ sub: user.id, ver: user.tokenVersion });
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: '/api/auth/refresh',
     });
@@ -188,7 +190,7 @@ export class AuthService {
   // ─── Refresh ─────────────────────────────────────────────────────────────────
 
   async refresh(refreshToken: string): Promise<{ accessToken: string }> {
-    let payload: { sub: string };
+    let payload: { sub: string; ver: number };
     try {
       payload = this.jwtService.verifyRefresh(refreshToken);
     } catch {
@@ -203,10 +205,15 @@ export class AuthService {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
+    if (user.tokenVersion !== payload.ver) {
+      throw new UnauthorizedException('Token has been revoked');
+    }
+
     const accessToken = this.jwtService.signAccess({
       sub: user.id,
       email: user.email,
       role: user.role,
+      ver: user.tokenVersion,
     });
 
     return { accessToken };
@@ -214,8 +221,16 @@ export class AuthService {
 
   // ─── Logout ──────────────────────────────────────────────────────────────────
 
-  async logout(res: Response): Promise<{ message: string }> {
-    res.clearCookie('refreshToken', { path: '/api/auth/refresh' });
+  async logout(userId: string, res: Response): Promise<{ message: string }> {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { tokenVersion: { increment: 1 } },
+    });
+    res.clearCookie('refreshToken', {
+      path: '/api/auth/refresh',
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+    });
     return { message: 'Logged out' };
   }
 
@@ -328,7 +343,11 @@ export class AuthService {
       data: { status: 'deleted', deletedAt: new Date() },
     });
 
-    res.clearCookie('refreshToken', { path: '/api/auth/refresh' });
+    res.clearCookie('refreshToken', {
+      path: '/api/auth/refresh',
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+    });
 
     return { message: 'Account deleted' };
   }
@@ -368,13 +387,14 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       role: user.role,
+      ver: user.tokenVersion,
     });
-    const refreshToken = this.jwtService.signRefresh({ sub: user.id });
+    const refreshToken = this.jwtService.signRefresh({ sub: user.id, ver: user.tokenVersion });
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: '/api/auth/refresh',
     });

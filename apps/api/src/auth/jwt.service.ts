@@ -6,10 +6,12 @@ export interface AccessTokenPayload {
   sub: string;
   email: string;
   role: string;
+  ver: number;
 }
 
 export interface RefreshTokenPayload {
   sub: string;
+  ver: number;
 }
 
 @Injectable()

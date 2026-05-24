@@ -1,5 +1,4 @@
 'use client';
-import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -231,5 +230,5 @@ function DigestArchiveContent() {
 }
 
 export default function DigestArchivePage() {
-  return <ProtectedRoute><DigestArchiveContent /></ProtectedRoute>;
+  return <DigestArchiveContent />;
 }

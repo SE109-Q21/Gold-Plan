@@ -7,6 +7,21 @@ import { apiChangePassword, apiDeleteAccount } from '@/lib/auth.api';
 import { useClearHistory } from '@/lib/browsing-history.api';
 import { useSubscribeDigest } from '@/lib/digest.api';
 import { useResetPreferences } from '@/lib/personalisation.api';
+import { usePortfolio } from '@/lib/portfolio.api';
+import { useAlerts } from '@/lib/alerts.api';
+import { apiClient } from '@/lib/api-client';
+import { PushNotificationButton } from '@/components/PushNotificationButton';
+import type { PortfolioTransactionDto, PaginatedDto } from '@gpls/shared';
+
+function downloadCsv(data: Record<string, unknown>[], filename: string) {
+  if (data.length === 0) return;
+  const keys = Object.keys(data[0]);
+  const rows = [keys.join(','), ...data.map(row => keys.map(k => JSON.stringify(row[k] ?? '')).join(','))];
+  const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
 
 function Toggle({ on, onChange, disabled }: { on: boolean; onChange: () => void; disabled?: boolean }) {
   return (
@@ -103,10 +118,11 @@ export function AccountPage() {
   const clearHistory = useClearHistory();
   const subscribeDigest = useSubscribeDigest();
   const resetPrefs = useResetPreferences();
+  const portfolioQuery = usePortfolio();
+  const alertsQuery = useAlerts();
   const [theme, setTheme] = useState('DARK');
   const [unit, setUnit] = useState('TAEL');
   const [notifEmail, setNotifEmail] = useState(true);
-  const [notifPush, setNotifPush] = useState(true);
   const [notifDigest, setNotifDigest] = useState(user?.digestOptIn ?? false);
   const [showChangePw, setShowChangePw] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
@@ -159,14 +175,32 @@ export function AccountPage() {
             </div>
             <span className="stamp" style={{ fontSize: 10 }}>GOLD MEMBER</span>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', marginTop: 22, paddingTop: 18, borderTop: '1px solid var(--hairline)' }}>
-            {[{ l: 'Portfolio', v: '$14,820', tint: null }, { l: 'P&L · 30d', v: '+$1,247', tint: 'var(--up)' }, { l: 'Alerts', v: '4 / 10', tint: null }, { l: 'Logins · 30d', v: '23', tint: null }].map(s => (
-              <div key={s.l}>
-                <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 6 }}>{s.l}</div>
-                <div style={{ font: '700 22px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums', color: s.tint ?? 'var(--chalk)' }}>{s.v}</div>
+          {(() => {
+            const portfolio = portfolioQuery.data;
+            const alerts = alertsQuery.data ?? [];
+            const totalValue = portfolio ? (portfolio.totalValueVnd / 1_000_000).toFixed(1) + 'M ₫' : '—';
+            const pnl = portfolio
+              ? ((portfolio.totalPnlVnd >= 0 ? '+' : '') + (portfolio.totalPnlVnd / 1_000_000).toFixed(1) + 'M ₫')
+              : '—';
+            const pnlTint = portfolio
+              ? (portfolio.totalPnlVnd >= 0 ? 'var(--up)' : 'var(--down)')
+              : null;
+            const stats = [
+              { l: 'Portfolio', v: totalValue, tint: null },
+              { l: 'P&L · 30d', v: pnl, tint: pnlTint },
+              { l: 'Alerts', v: `${alerts.length} / 10`, tint: null },
+            ];
+            return (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', marginTop: 22, paddingTop: 18, borderTop: '1px solid var(--hairline)' }}>
+                {stats.map(s => (
+                  <div key={s.l}>
+                    <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 6 }}>{s.l}</div>
+                    <div style={{ font: '700 22px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums', color: s.tint ?? 'var(--chalk)' }}>{s.v}</div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            );
+          })()}
         </div>
 
         {/* Preferences */}
@@ -205,7 +239,7 @@ export function AccountPage() {
         <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14 }}>
           <div style={{ padding: '16px 22px' }}><h3 style={{ font: '700 16px/1 var(--font-display)', margin: 0 }}>notifications</h3></div>
           <Row label="Email alerts" detail="within 2 min of trigger" right={<Toggle on={notifEmail} onChange={() => setNotifEmail(!notifEmail)}/>}/>
-          <Row label="Push alerts" detail="device push · iOS, Android" right={<Toggle on={notifPush} onChange={() => setNotifPush(!notifPush)}/>}/>
+          <Row label="Push alerts" detail="browser push notifications" right={<PushNotificationButton />}/>
           <Row label="Morning digest" detail="market summary at 07:30 · opt-in" right={<Toggle on={notifDigest} disabled={subscribeDigest.isPending} onChange={() => { setNotifDigest(!notifDigest); subscribeDigest.mutate(!notifDigest); }} />}/>
         </div>
       </div>

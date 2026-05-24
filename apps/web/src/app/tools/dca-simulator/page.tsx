@@ -10,12 +10,21 @@ import type { DcaDataPointDto } from '@gpls/shared';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-type Brand = 'SJC' | 'DOJI';
+type Brand = 'SJC' | 'DOJI' | 'PNJ' | 'BAO_TIN';
 type Frequency = 'weekly' | 'monthly';
 
+const BRAND_LABEL: Record<Brand, string> = {
+  SJC:     'SJC',
+  DOJI:    'DOJI',
+  PNJ:     'PNJ',
+  BAO_TIN: 'Bảo Tín',
+};
+
 const BRAND_GOLD_TYPE: Record<Brand, string> = {
-  SJC:  'MIEN_SJC',
-  DOJI: 'NHAN_9999',
+  SJC:     'MIEN_SJC',
+  DOJI:    'NHAN_9999',
+  PNJ:     'VANG_24K',
+  BAO_TIN: 'VANG_24K',
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
