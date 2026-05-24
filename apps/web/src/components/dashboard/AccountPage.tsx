@@ -10,6 +10,7 @@ import { useResetPreferences } from '@/lib/personalisation.api';
 import { usePortfolio } from '@/lib/portfolio.api';
 import { useAlerts } from '@/lib/alerts.api';
 import { apiClient } from '@/lib/api-client';
+import { PushNotificationButton } from '@/components/PushNotificationButton';
 import type { PortfolioTransactionDto, PaginatedDto } from '@gpls/shared';
 
 function downloadCsv(data: Record<string, unknown>[], filename: string) {
@@ -238,7 +239,7 @@ export function AccountPage() {
         <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14 }}>
           <div style={{ padding: '16px 22px' }}><h3 style={{ font: '700 16px/1 var(--font-display)', margin: 0 }}>notifications</h3></div>
           <Row label="Email alerts" detail="within 2 min of trigger" right={<Toggle on={notifEmail} onChange={() => setNotifEmail(!notifEmail)}/>}/>
-          <Row label="Push alerts" detail="coming soon" right={<Toggle on={false} onChange={() => {}} disabled={true}/>}/>
+          <Row label="Push alerts" detail="browser push notifications" right={<PushNotificationButton />}/>
           <Row label="Morning digest" detail="market summary at 07:30 · opt-in" right={<Toggle on={notifDigest} disabled={subscribeDigest.isPending} onChange={() => { setNotifDigest(!notifDigest); subscribeDigest.mutate(!notifDigest); }} />}/>
         </div>
       </div>
