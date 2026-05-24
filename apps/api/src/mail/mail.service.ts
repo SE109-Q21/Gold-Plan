@@ -26,13 +26,13 @@ export class MailService {
         host: smtpHost,
         port: smtpPort,
         secure: smtpPort === 465,
-        // Railway does not route IPv6 — force IPv4 to avoid ENETUNREACH
+        // family:4 forces IPv4 on Railway (IPv6 not routed); cast needed as nodemailer types omit this option
         family: 4,
         auth: {
           user: this.config.get<string>('SMTP_USER'),
           pass: this.config.get<string>('SMTP_PASS'),
         },
-      });
+      } as any);
     }
   }
 
