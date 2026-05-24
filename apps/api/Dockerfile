@@ -32,4 +32,4 @@ COPY --from=builder /app/apps/api/dist ./dist
 COPY --from=builder /app/apps/api/package.json ./
 COPY --from=builder /app/apps/api/prisma ./prisma
 EXPOSE 4000
-CMD ["sh", "-c", "npx prisma migrate deploy --skip-advisory-lock && node dist/main"]
+CMD ["sh", "-c", "PRISMA_MIGRATE_SKIP_ADVISORY_LOCK=1 npx prisma migrate deploy && node dist/main"]
