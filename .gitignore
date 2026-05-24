@@ -34,3 +34,9 @@ Thumbs.db
 
 # Superpowers brainstorming sessions
 .superpowers/
+
+# Claude Code worktrees and local tooling
+.claude/worktrees/
+
+# PDF and other binary documents
+*.pdf
