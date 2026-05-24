@@ -44,7 +44,8 @@
       "Bash(findstr /i \"start\\\\|dev\\\\|build\")",
       "Bash(findstr /i \"\\\\\"dev\\\\\"\\\\|\\\\\"start\\\\\"\\\\|\\\\\"build\\\\\"\")",
       "WebSearch",
-      "Bash(xargs grep -l \"localhost\\\\|127\\\\.0\\\\.0\\\\.1\")"
+      "Bash(xargs grep -l \"localhost\\\\|127\\\\.0\\\\.0\\\\.1\")",
+      "Bash(python -m json.tool)"
     ]
   }
 }
