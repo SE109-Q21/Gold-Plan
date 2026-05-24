@@ -23,13 +23,18 @@ RUN pnpm --filter @gpls/shared build 2>/dev/null || true
 RUN pnpm --filter api exec nest build
 
 # ── Production runner ─────────────────────────────────────────────────────
-FROM node:22-alpine AS runner
+FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production
+# Restore monorepo structure so `pnpm --filter api run start:prod` resolves paths correctly
 COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/pnpm-workspace.yaml ./
+COPY --from=builder /app/package.json ./
 COPY --from=builder /app/packages/shared ./packages/shared
-COPY --from=builder /app/apps/api/dist ./dist
-COPY --from=builder /app/apps/api/package.json ./
-COPY --from=builder /app/apps/api/prisma ./prisma
+COPY --from=builder /app/apps/api/dist ./apps/api/dist
+COPY --from=builder /app/apps/api/package.json ./apps/api/
+COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
+COPY --from=builder /app/apps/api/prisma.config.ts ./apps/api/
+COPY scripts ./scripts
 EXPOSE 4000
-CMD ["sh", "-c", "PRISMA_MIGRATE_SKIP_ADVISORY_LOCK=1 npx prisma migrate deploy && node dist/main"]
+CMD ["sh", "-c", "sh scripts/migrate.sh && pnpm --filter api run start:prod"]
