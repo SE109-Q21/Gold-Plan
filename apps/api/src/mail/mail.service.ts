@@ -26,6 +26,8 @@ export class MailService {
         host: smtpHost,
         port: smtpPort,
         secure: smtpPort === 465,
+        // Railway does not route IPv6 — force IPv4 to avoid ENETUNREACH
+        family: 4,
         auth: {
           user: this.config.get<string>('SMTP_USER'),
           pass: this.config.get<string>('SMTP_PASS'),

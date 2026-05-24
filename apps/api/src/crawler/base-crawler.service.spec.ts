@@ -38,6 +38,8 @@ describe('BaseCrawlerService', () => {
       mockPrisma as unknown as PrismaService,
       anomalyDetector,
     );
+    // @Inject(EventEmitter2) is skipped when bypassing NestJS DI — provide a manual mock
+    (crawler as any)['eventEmitter'] = { emit: jest.fn() };
     jest.clearAllMocks();
     // Default: dataSource already exists
     mockPrisma.dataSource.findFirst.mockResolvedValue(MOCK_DATA_SOURCE);

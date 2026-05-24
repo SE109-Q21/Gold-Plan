@@ -68,6 +68,7 @@ describe('ForecastService', () => {
     };
     userForecastScore: {
       findMany: jest.Mock;
+      findUnique: jest.Mock;
       upsert: jest.Mock;
     };
   };
@@ -91,6 +92,7 @@ describe('ForecastService', () => {
       },
       userForecastScore: {
         findMany: jest.fn(),
+        findUnique: jest.fn(),
         upsert: jest.fn(),
       },
     };
