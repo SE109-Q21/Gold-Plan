@@ -3,8 +3,8 @@ builder = "NIXPACKS"
 buildCommand = "pnpm install --frozen-lockfile && pnpm --filter api exec npx prisma generate && pnpm --filter api build"
 
 [deploy]
-startCommand = "pnpm --filter api build && pnpm --filter api exec npx prisma migrate deploy && pnpm --filter api start:prod"
+startCommand = "pnpm --filter api build && sh scripts/migrate.sh && pnpm --filter api start:prod"
 healthcheckPath = "/api/health"
-healthcheckTimeout = 120
+healthcheckTimeout = 180
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
