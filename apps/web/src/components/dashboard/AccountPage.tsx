@@ -12,6 +12,11 @@ import { useAlerts } from '@/lib/alerts.api';
 import { PushNotificationButton } from '@/components/PushNotificationButton';
 import { cn } from '@/lib/utils';
 import type { PortfolioTransactionDto, PaginatedDto } from '@gpls/shared';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 function downloadCsv(data: Record<string, unknown>[], filename: string) {
   if (data.length === 0) return;
@@ -25,20 +30,12 @@ function downloadCsv(data: Record<string, unknown>[], filename: string) {
 
 function Toggle({ on, onChange, disabled }: { on: boolean; onChange: () => void; disabled?: boolean }) {
   return (
-    <button
-      onClick={onChange}
+    <Switch
+      checked={on}
+      onCheckedChange={onChange}
       disabled={disabled}
-      className={cn(
-        'w-[42px] h-6 p-[2px] shrink-0 rounded-full flex items-center border transition-colors duration-180',
-        on ? 'bg-gold border-gold' : 'bg-ink-3 border-line',
-        disabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer',
-      )}
-    >
-      <span className={cn(
-        'w-[18px] h-[18px] rounded-full transition-transform duration-[180ms]',
-        on ? 'translate-x-[18px] bg-gold-ink' : 'translate-x-0 bg-[#5a5b65]',
-      )}/>
-    </button>
+      className="data-[state=checked]:bg-gold data-[state=unchecked]:bg-ink-3"
+    />
   );
 }
 
@@ -46,16 +43,17 @@ function Segmented({ options, value, onChange }: { options: string[]; value: str
   return (
     <div className="flex bg-ink-3 border border-line rounded-md p-[2px] shrink-0">
       {options.map(o => (
-        <button
+        <Button
           key={o}
+          variant="ghost"
           onClick={() => onChange(o)}
           className={cn(
-            'px-3 py-[6px] border-0 cursor-pointer rounded font-mono text-[10px] leading-none font-bold tracking-[0.1em] uppercase',
-            value === o ? 'bg-gold text-gold-ink' : 'bg-transparent text-bone',
+            'px-3 py-[6px] h-auto rounded font-mono text-[10px] font-bold tracking-[0.1em] uppercase',
+            value === o ? 'bg-gold text-gold-ink hover:bg-gold hover:text-gold-ink' : 'bg-transparent text-bone hover:bg-transparent hover:text-chalk',
           )}
         >
           {o}
-        </button>
+        </Button>
       ))}
     </div>
   );
@@ -80,19 +78,20 @@ function SmallBtn({ onClick, disabled, danger, children }: {
   children: React.ReactNode;
 }) {
   return (
-    <button
+    <Button
+      variant="outline"
+      size="sm"
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        'h-8 px-3 rounded-md cursor-pointer font-mono text-[11px] leading-none font-bold tracking-[0.04em] uppercase',
+        'h-8 px-3 font-mono text-[11px] font-bold tracking-[0.04em] uppercase',
         danger
-          ? 'bg-transparent border border-[rgba(229,72,77,0.4)] text-down'
-          : 'bg-ink-3 border border-line text-bone',
-        disabled && 'opacity-60 cursor-not-allowed',
+          ? 'border-[rgba(229,72,77,0.4)] bg-transparent text-down hover:bg-[rgba(229,72,77,0.08)] hover:text-down'
+          : 'bg-ink-3 border-line text-bone hover:bg-ink-4 hover:text-chalk',
       )}
     >
       {children}
-    </button>
+    </Button>
   );
 }
 
@@ -124,54 +123,42 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
     }
   }
 
-  const inputCls = 'w-full h-9 bg-ink-3 border border-line rounded-md px-[10px] text-chalk font-sans text-[13px] leading-none font-medium outline-none box-border';
-  const labelCls = 'block font-mono text-[10px] leading-none font-semibold tracking-[0.1em] uppercase text-mute mb-[5px]';
+  const labelCls = 'font-mono text-[10px] leading-none font-semibold tracking-[0.1em] uppercase text-mute';
+  const inputCls = 'bg-ink-3 border-line text-chalk font-sans text-[13px] font-medium focus-visible:ring-gold h-9';
 
   return (
-    <div className="fixed inset-0 bg-[rgba(0,0,0,0.6)] flex items-center justify-center z-[200]">
-      <div className="w-[360px] bg-ink-2 border border-line rounded-[14px] p-7">
-        <h3 className="font-display text-[16px] leading-none font-bold m-0 mb-5">Change password</h3>
+    <Dialog open onOpenChange={o => !o && onClose()}>
+      <DialogContent className="w-[360px] bg-ink-2 border-line text-chalk p-7 gap-0">
+        <DialogHeader className="mb-5">
+          <DialogTitle className="font-display text-[16px] leading-none font-bold">Change password</DialogTitle>
+        </DialogHeader>
         {success ? (
           <div>
             <p className="text-up text-[14px]">Password updated successfully.</p>
-            <button
-              onClick={onClose}
-              className="mt-4 h-9 px-4 bg-gold border-0 rounded-md cursor-pointer font-mono text-[11px] leading-none font-bold text-gold-ink"
-            >
+            <Button onClick={onClose} className="mt-4 h-9 px-4 font-mono text-[11px] font-bold">
               Close
-            </button>
+            </Button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-            <div><label className={labelCls}>Current password</label><input type="password" value={oldPw} onChange={e => setOldPw(e.target.value)} required className={inputCls} autoComplete="current-password"/></div>
-            <div><label className={labelCls}>New password</label><input type="password" value={newPw} onChange={e => setNewPw(e.target.value)} required className={inputCls} autoComplete="new-password"/></div>
-            <div><label className={labelCls}>Confirm new password</label><input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} required className={inputCls} autoComplete="new-password"/></div>
+            <div className="flex flex-col gap-[5px]"><Label className={labelCls}>Current password</Label><Input type="password" value={oldPw} onChange={e => setOldPw(e.target.value)} required className={inputCls} autoComplete="current-password"/></div>
+            <div className="flex flex-col gap-[5px]"><Label className={labelCls}>New password</Label><Input type="password" value={newPw} onChange={e => setNewPw(e.target.value)} required className={inputCls} autoComplete="new-password"/></div>
+            <div className="flex flex-col gap-[5px]"><Label className={labelCls}>Confirm new password</Label><Input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} required className={inputCls} autoComplete="new-password"/></div>
             {error && (
               <div className="text-down text-[12px] px-[10px] py-2 bg-[rgba(229,72,77,0.1)] rounded-md">{error}</div>
             )}
             <div className="flex gap-2 justify-end mt-1">
-              <button
-                type="button"
-                onClick={onClose}
-                className="h-[34px] px-[14px] bg-ink-3 border border-line rounded-md cursor-pointer font-mono text-[10px] leading-none font-bold text-bone"
-              >
+              <Button type="button" variant="outline" onClick={onClose} className="h-[34px] px-[14px] bg-ink-3 border-line text-bone hover:bg-ink-4 hover:text-chalk font-mono text-[10px] font-bold">
                 Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className={cn(
-                  'h-[34px] px-[14px] bg-gold border-0 rounded-md font-mono text-[10px] leading-none font-bold text-gold-ink',
-                  loading ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer',
-                )}
-              >
+              </Button>
+              <Button type="submit" disabled={loading} className="h-[34px] px-[14px] font-mono text-[10px] font-bold">
                 {loading ? 'Saving…' : 'Update'}
-              </button>
+              </Button>
             </div>
           </form>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -225,7 +212,7 @@ export function AccountPage() {
 
   return (
     <>
-      {showChangePw && <ChangePasswordModal onClose={() => setShowChangePw(false)}/>}
+      {showChangePw && <ChangePasswordModal onClose={() => setShowChangePw(false)} />}
       <div
         className="p-[24px_28px_40px] grid gap-5"
         style={{ gridTemplateColumns: '1.4fr 1fr' }}

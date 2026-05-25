@@ -5,9 +5,8 @@ import {
   Line,
   XAxis,
   YAxis,
-  Tooltip,
-  ResponsiveContainer,
 } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
 import { useHeatIndexHistory } from '@/lib/heat-index.api';
 
 interface HeatIndexHistoryItem {
@@ -64,7 +63,7 @@ export function HeatIndexHistoryChart() {
   return (
     <div className={CARD_CLS}>
       <p className={TITLE_CLS}>Lịch sử Heat Index — 7 ngày</p>
-      <ResponsiveContainer width="100%" height={200}>
+      <ChartContainer config={{ score: { label: 'Heat Index', color: '#D4AF37' } } satisfies ChartConfig} className="h-[200px] w-full">
         <LineChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: -24 }}>
           <XAxis
             dataKey="label"
@@ -79,27 +78,17 @@ export function HeatIndexHistoryChart() {
             tickLine={false}
             axisLine={false}
           />
-          <Tooltip
-            contentStyle={{
-              background: 'var(--ink-3)',
-              border: '1px solid rgba(212,175,55,0.3)',
-              borderRadius: 8,
-              font: '500 12px/1.4 var(--font-mono)',
-              color: 'var(--chalk)',
-            }}
-            labelStyle={{ color: 'var(--mute)', marginBottom: 4 }}
-            formatter={(value) => [value, 'Heat Index']}
-          />
+          <ChartTooltip content={<ChartTooltipContent formatter={(value) => [value, 'Heat Index']} />} />
           <Line
             type="monotone"
             dataKey="score"
-            stroke="#D4AF37"
+            stroke="var(--color-score)"
             strokeWidth={2}
             dot={false}
             activeDot={{ r: 4, fill: '#D4AF37', stroke: 'var(--ink-2)', strokeWidth: 2 }}
           />
         </LineChart>
-      </ResponsiveContainer>
+      </ChartContainer>
     </div>
   );
 }

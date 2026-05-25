@@ -18,6 +18,7 @@ import { ForecastVoteWidget } from '@/components/ForecastVoteWidget';
 import { HeatIndexHistoryChart } from '@/components/HeatIndexHistoryChart';
 import { ArbitrageWidget } from '@/components/ArbitrageWidget';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import {
   DndContext,
   closestCenter,
@@ -178,16 +179,17 @@ function daysAgo(iso: string): string {
 
 function PinIcon({ pinned, onClick }: { pinned: boolean; onClick: (e: React.MouseEvent) => void }) {
   return (
-    <button
+    <Button
+      variant="ghost"
       onClick={onClick}
       title={pinned ? 'Unpin' : 'Pin'}
       className={cn(
-        'bg-transparent border-none cursor-pointer px-1 py-0.5 flex items-center text-[14px] leading-none shrink-0',
+        'w-auto h-auto px-1 py-0.5 text-[14px] leading-none shrink-0 hover:bg-transparent',
         pinned ? 'text-gold' : 'text-mute',
       )}
     >
       📌
-    </button>
+    </Button>
   );
 }
 
@@ -510,18 +512,22 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
                   SJC Miếng · <span className="text-chalk">{fmt(hoverVal)}</span>
                 </div>
               </div>
-              <div className="flex gap-1">
-                {RANGE_LABELS.map(r => (
-                  <button
+              <div className="flex gap-0">
+                {RANGE_LABELS.map((r, i) => (
+                  <Button
                     key={r}
+                    variant="outline"
                     onClick={() => setRange(r)}
                     className={cn(
-                      'inline-flex items-center h-[30px] px-[10px] border rounded-none font-mono text-[11px] leading-none font-bold tracking-[0.1em] uppercase cursor-pointer',
+                      'h-[30px] px-[10px] font-mono text-[11px] leading-none font-bold tracking-[0.1em] uppercase rounded-none border-line',
+                      i === 0 && 'rounded-l-[6px]',
+                      i === RANGE_LABELS.length - 1 && 'rounded-r-[6px]',
+                      i < RANGE_LABELS.length - 1 && 'border-r-0',
                       range === r
-                        ? 'border-gold bg-gold text-gold-ink'
-                        : 'border-line bg-transparent text-bone',
+                        ? 'border-gold bg-gold text-gold-ink hover:bg-gold hover:text-gold-ink'
+                        : 'bg-transparent text-bone hover:bg-ink-3',
                     )}
-                  >{r}</button>
+                  >{r}</Button>
                 ))}
               </div>
             </div>
@@ -647,12 +653,13 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
           <div className="bg-ink-2 border border-line rounded-[14px] p-5">
             <div className="flex justify-between items-baseline mb-[14px]">
               <h3 className="text-[16px] leading-none font-bold font-sans m-0">Your alerts</h3>
-              <button
+              <Button
+                variant="ghost"
                 onClick={handleNavigateAlerts}
-                className="bg-transparent border-0 cursor-pointer font-mono text-[11px] text-gold tracking-[0.08em] leading-none font-bold"
+                className="h-auto px-0 py-0 font-mono text-[11px] text-gold tracking-[0.08em] leading-none font-bold hover:bg-transparent hover:text-gold"
               >
                 view all →
-              </button>
+              </Button>
             </div>
             {!isLoggedIn && (
               <div className="py-5 text-center text-mute font-mono text-[12px] leading-none font-medium">
@@ -685,12 +692,12 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
                 </div>
               );
             })}
-            <button
+            <Button
               onClick={handleNavigateAlerts}
-              className="w-full h-11 mt-[10px] inline-flex items-center justify-center gap-2 bg-gold text-gold-ink border border-gold rounded-[10px] cursor-pointer font-mono text-[14px] leading-none font-bold tracking-[0.04em] uppercase"
+              className="w-full h-11 mt-[10px] gap-2 bg-gold text-gold-ink border border-gold rounded-[10px] font-mono text-[14px] leading-none font-bold tracking-[0.04em] uppercase hover:bg-gold/90 hover:text-gold-ink"
             >
               <IconPlus s={15}/> new alert
-            </button>
+            </Button>
           </div>
 
           {/* Community forecast */}

@@ -6,8 +6,14 @@ import { useSmartAlerts, useCreateSmartAlert, useToggleSmartAlert, useDeleteSmar
 import type { PriceAlertDto, SmartAlertDto, CreateSmartAlertDto, SmartAlertCondition } from '@gpls/shared';
 import { PushNotificationButton } from '@/components/PushNotificationButton';
 import { cn } from '@/lib/utils';
-
-type TabId = 'rules' | 'history' | 'smart';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 function ConfirmDeleteModal({ message, onConfirm, onClose }: {
   message: string;
@@ -15,11 +21,8 @@ function ConfirmDeleteModal({ message, onConfirm, onClose }: {
   onClose: () => void;
 }) {
   return (
-    <div
-      className="fixed inset-0 z-[1100] bg-[rgba(11,11,15,0.80)] flex items-center justify-center p-5"
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div className="w-[380px] bg-ink-2 border border-line rounded-[14px] px-7 pt-7 pb-6 flex flex-col gap-5">
+    <Dialog open onOpenChange={o => !o && onClose()}>
+      <DialogContent className="w-[380px] bg-ink-2 border-line text-chalk px-7 pt-7 pb-6 gap-5">
         <div className="flex items-start gap-[14px]">
           <div className="w-9 h-9 rounded-lg shrink-0 bg-[rgba(229,72,77,0.12)] border border-[rgba(229,72,77,0.25)] flex items-center justify-center">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--down)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -32,42 +35,18 @@ function ConfirmDeleteModal({ message, onConfirm, onClose }: {
           </div>
         </div>
         <div className="flex gap-2 justify-end">
-          <button
-            onClick={onClose}
-            className="h-9 px-4 bg-ink-3 border border-line rounded-lg cursor-pointer font-mono text-[12px] leading-none font-bold tracking-[0.04em] text-bone"
-          >
+          <Button variant="outline" onClick={onClose} className="h-9 px-4 bg-ink-3 border-line text-bone hover:bg-ink-4 hover:text-chalk font-mono text-[12px] font-bold tracking-[0.04em]">
             Hủy
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => { onConfirm(); onClose(); }}
-            className="h-9 px-4 bg-[rgba(229,72,77,0.15)] border border-[rgba(229,72,77,0.4)] rounded-lg cursor-pointer font-mono text-[12px] leading-none font-bold tracking-[0.04em] text-down"
+            className="h-9 px-4 bg-[rgba(229,72,77,0.15)] border border-[rgba(229,72,77,0.4)] text-down hover:bg-[rgba(229,72,77,0.25)] font-mono text-[12px] font-bold tracking-[0.04em]"
           >
             Xóa
-          </button>
+          </Button>
         </div>
-      </div>
-    </div>
-  );
-}
-
-function Toggle({ on, onChange, disabled }: { on: boolean; onChange: () => void; disabled?: boolean }) {
-  return (
-    <button
-      onClick={onChange}
-      disabled={disabled}
-      className={cn(
-        'w-[38px] h-[22px] p-0.5 rounded-full flex items-center border transition-colors duration-[180ms]',
-        on ? 'bg-gold border-gold' : 'bg-ink-3 border-line',
-        disabled ? 'opacity-50 cursor-default' : 'cursor-pointer',
-      )}
-    >
-      <span
-        className={cn(
-          'w-4 h-4 rounded-full transition-transform duration-[180ms]',
-          on ? 'bg-gold-ink translate-x-4' : 'bg-[#5a5b65] translate-x-0',
-        )}
-      />
-    </button>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -154,21 +133,20 @@ function toSmartAlertCondition(draft: ConditionDraft): SmartAlertCondition {
 
 function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
-    <button
+    <Button
+      variant="outline"
       onClick={onClick}
       className={cn(
-        'h-7 px-3 rounded-md border cursor-pointer font-mono text-[11px] leading-none font-bold tracking-[0.08em]',
-        active ? 'bg-gold border-gold text-gold-ink' : 'bg-ink-3 border-line text-bone',
+        'h-7 px-3 rounded-md font-mono text-[11px] leading-none font-bold tracking-[0.08em]',
+        active ? 'bg-gold border-gold text-gold-ink hover:bg-gold hover:text-gold-ink' : 'bg-ink-3 border-line text-bone hover:bg-ink-4 hover:text-bone',
       )}
     >
       {children}
-    </button>
+    </Button>
   );
 }
 
 function ConditionForm({ value, onChange }: { value: ConditionDraft; onChange: (v: ConditionDraft) => void }) {
-  const inputCls = 'h-9 px-3 bg-ink-3 border border-line rounded-md text-chalk font-mono text-[13px] leading-none w-full outline-none';
-
   return (
     <div className="flex flex-col gap-[10px]">
       <div className="flex gap-[6px]">
@@ -200,12 +178,12 @@ function ConditionForm({ value, onChange }: { value: ConditionDraft; onChange: (
       {value.type === 'SPREAD' && (
         <div className="flex gap-2 items-center">
           <span className="text-[12px] leading-none font-sans font-medium text-mute whitespace-nowrap">Threshold (VND)</span>
-          <input
+          <Input
             type="number"
             placeholder="e.g. 200000"
             value={value.spreadThreshold}
             onChange={e => onChange({ ...value, spreadThreshold: e.target.value })}
-            className={inputCls}
+            className="h-9 bg-ink-3 border-line text-chalk font-mono text-[13px] placeholder:text-mute focus-visible:ring-gold"
           />
         </div>
       )}
@@ -219,12 +197,12 @@ function ConditionForm({ value, onChange }: { value: ConditionDraft; onChange: (
               </Chip>
             ))}
           </div>
-          <input
+          <Input
             type="number"
             placeholder="e.g. 79000000"
             value={value.thresholdPrice}
             onChange={e => onChange({ ...value, thresholdPrice: e.target.value })}
-            className={inputCls}
+            className="h-9 bg-ink-3 border-line text-chalk font-mono text-[13px] placeholder:text-mute focus-visible:ring-gold"
           />
         </div>
       )}
@@ -273,15 +251,12 @@ function BuilderModal({ onClose }: { onClose: () => void }) {
   const labelCls = 'font-mono text-[10px] leading-none font-bold tracking-[0.14em] uppercase text-mute mb-2';
 
   return (
-    <div
-      className="fixed inset-0 z-[1000] bg-[rgba(11,11,15,0.85)] flex items-center justify-center p-5"
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div className="w-[500px] max-h-[90vh] overflow-y-auto bg-ink-2 border border-line rounded-[14px] px-7 py-6 flex flex-col gap-5">
-        <div className="flex justify-between items-center">
-          <h2 className="text-[20px] leading-none font-extrabold font-sans m-0">New Smart Alert</h2>
-          <button onClick={onClose} className="bg-transparent border-none cursor-pointer text-mute font-mono text-[18px] leading-none font-bold">×</button>
-        </div>
+    <Dialog open onOpenChange={o => !o && onClose()}>
+      <DialogContent className="w-[500px] max-h-[90vh] overflow-y-auto bg-ink-2 border-line text-chalk px-7 py-6 gap-5">
+        <DialogHeader>
+          <DialogTitle className="text-[20px] leading-none font-extrabold font-sans text-chalk">New Smart Alert</DialogTitle>
+          <DialogDescription className="sr-only">Create a new smart alert with one or two conditions</DialogDescription>
+        </DialogHeader>
 
         <div>
           <div className={labelCls}>Brand</div>
@@ -307,11 +282,10 @@ function BuilderModal({ onClose }: { onClose: () => void }) {
         </div>
 
         <label className="flex items-center gap-[10px] cursor-pointer">
-          <input
-            type="checkbox"
+          <Checkbox
             checked={hasCond2}
-            onChange={e => setHasCond2(e.target.checked)}
-            className="w-4 h-4 accent-gold"
+            onCheckedChange={v => setHasCond2(!!v)}
+            className="border-line data-[state=checked]:bg-gold data-[state=checked]:border-gold data-[state=checked]:text-gold-ink"
           />
           <span className="text-[13px] leading-none font-sans font-medium text-bone">Add condition 2 (AND)</span>
         </label>
@@ -334,18 +308,15 @@ function BuilderModal({ onClose }: { onClose: () => void }) {
           <div className="text-[13px] leading-[1.4] font-sans font-medium text-down">{error}</div>
         )}
 
-        <button
+        <Button
           onClick={handleSubmit}
           disabled={isSubmitting}
-          className={cn(
-            'h-11 bg-gold text-gold-ink border border-gold rounded-[10px] font-mono text-[14px] leading-none font-bold tracking-[0.04em] uppercase',
-            isSubmitting ? 'cursor-default opacity-70' : 'cursor-pointer',
-          )}
+          className="h-11 font-mono text-[14px] font-bold tracking-[0.04em] uppercase"
         >
           {isSubmitting ? 'Creating…' : 'Create Smart Alert'}
-        </button>
-      </div>
-    </div>
+        </Button>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -359,7 +330,7 @@ function SmartAlertsPanel() {
   const handleToggle = (id: string) => toggleAlert.mutate(id);
   const handleDelete = (id: string) => setPendingDeleteId(id);
 
-  const statusChipCls = (status: SmartAlertDto['status']) => {
+  const statusBadgeVariant = (status: SmartAlertDto['status']) => {
     if (status === 'active') return 'bg-[rgba(212,175,55,0.15)] text-gold border border-[rgba(212,175,55,0.4)]';
     if (status === 'triggered') return 'bg-[rgba(88,200,150,0.12)] text-up border border-[rgba(88,200,150,0.4)]';
     return 'bg-ink-3 text-mute border border-line';
@@ -379,12 +350,12 @@ function SmartAlertsPanel() {
       <div className="bg-ink-2 border border-line rounded-[14px]">
         <div className="flex items-center justify-between px-[22px] py-4 border-b border-hairline">
           <h3 className="text-[16px] leading-none font-bold font-sans m-0">smart alerts</h3>
-          <button
+          <Button
             onClick={() => setShowModal(true)}
-            className="h-[34px] px-[14px] inline-flex items-center gap-[6px] bg-gold text-gold-ink border border-gold rounded-lg cursor-pointer font-mono text-[11px] leading-none font-bold tracking-[0.08em] uppercase"
+            className="h-[34px] px-[14px] font-mono text-[11px] font-bold tracking-[0.08em] uppercase"
           >
             + New Smart Alert
-          </button>
+          </Button>
         </div>
 
         <div
@@ -425,20 +396,27 @@ function SmartAlertsPanel() {
             style={{ gridTemplateColumns: '1fr auto auto' }}
           >
             <div className="text-[14px] leading-[1.4] font-sans font-medium text-chalk">{a.naturalLanguage}</div>
-            <span className={cn('font-mono text-[9px] leading-none font-bold tracking-[0.14em] uppercase px-2 py-1 rounded', statusChipCls(a.status))}>
+            <span className={cn('font-mono text-[9px] leading-none font-bold tracking-[0.14em] uppercase px-2 py-1 rounded', statusBadgeVariant(a.status))}>
               {a.status}
             </span>
             <div className="flex gap-[6px] items-center">
-              <Toggle on={a.status === 'active'} onChange={() => handleToggle(a.id)} disabled={toggleAlert.isPending}/>
-              <button
+              <Switch
+                checked={a.status === 'active'}
+                onCheckedChange={() => handleToggle(a.id)}
+                disabled={toggleAlert.isPending}
+                className="data-[state=checked]:bg-gold data-[state=unchecked]:bg-ink-3"
+              />
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => handleDelete(a.id)}
                 disabled={deleteAlert.isPending}
-                className={cn('w-7 h-8 bg-transparent border border-transparent rounded-md cursor-pointer text-down flex items-center justify-center', deleteAlert.isPending && 'opacity-50')}
+                className={cn('w-7 h-8 text-down hover:bg-[rgba(229,72,77,0.08)] hover:text-down', deleteAlert.isPending && 'opacity-50')}
               >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14"/>
                 </svg>
-              </button>
+              </Button>
             </div>
           </div>
         ))}
@@ -448,7 +426,7 @@ function SmartAlertsPanel() {
 }
 
 export function AlertsPage({ onOpenAdd }: { onOpenAdd: () => void }) {
-  const [tab, setTab] = useState<TabId>('rules');
+  const [tab, setTab] = useState<string>('rules');
   const { data: alerts = [], isLoading } = useAlerts();
   const { data: history = [], isLoading: histLoading } = useAlertHistory();
   const toggleAlert = useToggleAlert();
@@ -481,12 +459,12 @@ export function AlertsPage({ onOpenAdd }: { onOpenAdd: () => void }) {
           </div>
           <div className="flex gap-[10px] items-center">
             <PushNotificationButton />
-            <button
+            <Button
               onClick={onOpenAdd}
-              className="h-11 px-[18px] inline-flex items-center gap-2 bg-gold text-gold-ink border border-gold rounded-[10px] cursor-pointer font-mono text-[14px] leading-none font-bold tracking-[0.04em] uppercase"
+              className="h-11 px-[18px] font-mono text-[14px] font-bold tracking-[0.04em] uppercase"
             >
               + new alert
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -507,182 +485,186 @@ export function AlertsPage({ onOpenAdd }: { onOpenAdd: () => void }) {
           ))}
         </div>
 
-        {/* Tab switcher */}
-        <div className="flex gap-[6px]">
-          {([
-            { id: 'rules',   label: 'Active rules' },
-            { id: 'history', label: 'Trigger history' },
-            { id: 'smart',   label: 'Smart alerts' },
-          ] as const).map(t => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={cn(
-                'h-[34px] px-4 rounded-lg cursor-pointer font-mono text-[11px] leading-none font-bold tracking-[0.1em] uppercase border',
-                tab === t.id ? 'bg-ink-3 border-line text-chalk' : 'bg-transparent border-transparent text-mute',
-              )}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
+        {/* Tabs */}
+        <Tabs value={tab} onValueChange={setTab}>
+          <TabsList className="bg-ink-3 border border-line h-auto p-1 gap-1">
+            <TabsTrigger value="rules" className="font-mono text-[11px] font-bold tracking-[0.1em] uppercase data-[state=active]:bg-ink-2 data-[state=active]:text-chalk data-[state=inactive]:text-mute">
+              Active rules
+            </TabsTrigger>
+            <TabsTrigger value="history" className="font-mono text-[11px] font-bold tracking-[0.1em] uppercase data-[state=active]:bg-ink-2 data-[state=active]:text-chalk data-[state=inactive]:text-mute">
+              Trigger history
+            </TabsTrigger>
+            <TabsTrigger value="smart" className="font-mono text-[11px] font-bold tracking-[0.1em] uppercase data-[state=active]:bg-ink-2 data-[state=active]:text-chalk data-[state=inactive]:text-mute">
+              Smart alerts
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Rules tab */}
-        {tab === 'rules' && (
-          <div className="bg-ink-2 border border-line rounded-[14px]">
-            <div className="flex items-center justify-between px-[22px] py-4 border-b border-hairline">
-              <h3 className="text-[16px] leading-none font-bold font-sans m-0">active rules</h3>
-            </div>
-            <div
-              className="grid px-[22px] py-3 font-mono text-[10px] text-mute tracking-[0.14em] uppercase bg-ink-3 border-b border-hairline"
-              style={{ gridTemplateColumns: '80px 2fr 1.4fr 1fr 110px 130px' }}
-            >
-              <span>brand</span>
-              <span>type / condition</span>
-              <span className="text-right">threshold</span>
-              <span>repeat</span>
-              <span>status</span>
-              <span className="text-right">actions</span>
-            </div>
-
-            {isLoading && [0, 1, 2].map(i => <SkeletonRow key={i}/>)}
-
-            {!isLoading && alerts.length === 0 && (
-              <div className="px-[22px] py-12 text-center text-mute text-[14px] leading-[1.5] font-sans font-medium">
-                no alerts yet — click <span className="text-gold">+ new alert</span> to get started
+          {/* Rules tab */}
+          <TabsContent value="rules" className="mt-0">
+            <div className="bg-ink-2 border border-line rounded-[14px]">
+              <div className="flex items-center justify-between px-[22px] py-4 border-b border-hairline">
+                <h3 className="text-[16px] leading-none font-bold font-sans m-0">active rules</h3>
               </div>
-            )}
+              <div
+                className="grid px-[22px] py-3 font-mono text-[10px] text-mute tracking-[0.14em] uppercase bg-ink-3 border-b border-hairline"
+                style={{ gridTemplateColumns: '80px 2fr 1.4fr 1fr 110px 130px' }}
+              >
+                <span>brand</span>
+                <span>type / condition</span>
+                <span className="text-right">threshold</span>
+                <span>repeat</span>
+                <span>status</span>
+                <span className="text-right">actions</span>
+              </div>
 
-            {!isLoading && alerts.map((a, i) => {
-              const isActive = a.status === 'active';
-              const isFired  = a.status === 'triggered';
-              return (
+              {isLoading && [0, 1, 2].map(i => <SkeletonRow key={i}/>)}
+
+              {!isLoading && alerts.length === 0 && (
+                <div className="px-[22px] py-12 text-center text-mute text-[14px] leading-[1.5] font-sans font-medium">
+                  no alerts yet — click <span className="text-gold">+ new alert</span> to get started
+                </div>
+              )}
+
+              {!isLoading && alerts.map((a, i) => {
+                const isActive = a.status === 'active';
+                const isFired  = a.status === 'triggered';
+                return (
+                  <div
+                    key={a.id}
+                    className={cn(
+                      'grid px-[22px] py-4 items-center',
+                      i !== 0 && 'border-t border-hairline',
+                      !isActive && 'opacity-55',
+                    )}
+                    style={{ gridTemplateColumns: '80px 2fr 1.4fr 1fr 110px 130px' }}
+                  >
+                    <span className="font-mono text-[11px] font-bold text-gold tracking-[0.1em]">{a.brand}</span>
+
+                    <div>
+                      <div className="text-[14px] leading-[1.1] font-sans font-medium mb-1">{a.goldType}</div>
+                      <Badge className={cn(
+                        'font-mono text-[10px] font-bold px-[6px] py-[3px] rounded-[3px] tracking-[0.08em] uppercase border-0',
+                        a.condition === 'gte'
+                          ? 'text-up bg-[rgba(88,200,150,0.10)] hover:bg-[rgba(88,200,150,0.10)]'
+                          : 'text-down bg-[rgba(229,72,77,0.10)] hover:bg-[rgba(229,72,77,0.10)]',
+                      )}>
+                        {a.condition === 'gte' ? 'crosses ↑' : 'crosses ↓'}
+                      </Badge>
+                    </div>
+
+                    <div className="text-right">
+                      <div className="text-[16px] leading-none font-bold font-sans tabular-nums">{fmtTarget(a)}</div>
+                      <div className="font-mono text-[10px] text-mute mt-1">created {fmtDate(a.createdAt)}</div>
+                    </div>
+
+                    <span className="font-mono text-[11px] text-bone">· {a.repeatMode ? 'repeat' : 'once'}</span>
+
+                    <div>
+                      {isFired
+                        ? <Badge className="font-mono text-[9px] font-bold tracking-[0.14em] uppercase bg-gold text-gold-ink hover:bg-gold rounded-[3px]">
+                            fired · {a.lastTriggeredAt ? fmtDate(a.lastTriggeredAt) : '—'}
+                          </Badge>
+                        : <Badge variant="outline" className={cn(
+                            'font-mono text-[9px] font-bold tracking-[0.14em] uppercase rounded-[3px]',
+                            isActive ? 'text-live border-[rgba(157,204,110,0.4)]' : 'text-mute border-line',
+                          )}>
+                            {isActive ? 'waiting' : 'paused'}
+                          </Badge>
+                      }
+                    </div>
+
+                    <div className="flex justify-end gap-1 items-center">
+                      <Switch
+                        checked={isActive}
+                        onCheckedChange={() => handleToggle(a.id)}
+                        disabled={toggleAlert.isPending}
+                        className="data-[state=checked]:bg-gold data-[state=unchecked]:bg-ink-3"
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(a.id)}
+                        disabled={deleteAlert.isPending}
+                        className={cn('w-7 h-8 text-down hover:bg-[rgba(229,72,77,0.08)] hover:text-down', deleteAlert.isPending && 'opacity-50')}
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14"/>
+                        </svg>
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </TabsContent>
+
+          {/* History tab */}
+          <TabsContent value="history" className="mt-0">
+            <div className="bg-ink-2 border border-line rounded-[14px]">
+              <div className="px-[22px] py-4 border-b border-hairline">
+                <h3 className="text-[16px] leading-none font-bold font-sans m-0">trigger history</h3>
+              </div>
+              <div
+                className="grid px-[22px] py-3 font-mono text-[10px] text-mute tracking-[0.14em] uppercase bg-ink-3 border-b border-hairline"
+                style={{ gridTemplateColumns: '2fr 1.4fr 1.4fr 1.4fr' }}
+              >
+                <span>alert id</span>
+                <span className="text-right">price at trigger</span>
+                <span className="text-right">triggered at</span>
+                <span className="text-right">email sent</span>
+              </div>
+
+              {histLoading && [0, 1, 2].map(i => (
                 <div
-                  key={a.id}
-                  className={cn(
-                    'grid px-[22px] py-4 items-center',
-                    i !== 0 && 'border-t border-hairline',
-                    !isActive && 'opacity-55',
-                  )}
-                  style={{ gridTemplateColumns: '80px 2fr 1.4fr 1fr 110px 130px' }}
+                  key={i}
+                  className="grid px-[22px] py-4 border-t border-hairline"
+                  style={{ gridTemplateColumns: '2fr 1.4fr 1.4fr 1.4fr' }}
                 >
-                  <span className="font-mono text-[11px] font-bold text-gold tracking-[0.1em]">{a.brand}</span>
+                  {[120, 80, 100, 100].map((w, j) => (
+                    <div
+                      key={j}
+                      className="h-[14px] rounded bg-ink-3 animate-pulse"
+                      style={{ width: w, justifySelf: j === 0 ? 'start' : 'end' }}
+                    />
+                  ))}
+                </div>
+              ))}
 
-                  <div>
-                    <div className="text-[14px] leading-[1.1] font-sans font-medium mb-1">{a.goldType}</div>
-                    <span className={cn(
-                      'font-mono text-[10px] font-bold px-[6px] py-[3px] rounded-[3px] tracking-[0.08em] uppercase',
-                      a.condition === 'gte'
-                        ? 'text-up bg-[rgba(88,200,150,0.10)]'
-                        : 'text-down bg-[rgba(229,72,77,0.10)]',
-                    )}>
-                      {a.condition === 'gte' ? 'crosses ↑' : 'crosses ↓'}
-                    </span>
+              {!histLoading && history.length === 0 && (
+                <div className="px-[22px] py-12 text-center text-mute text-[14px] leading-[1.5] font-sans font-medium">
+                  no trigger history yet
+                </div>
+              )}
+
+              {!histLoading && history.map((h, i) => (
+                <div
+                  key={h.id}
+                  className={cn('grid px-[22px] py-4 items-center', i !== 0 && 'border-t border-hairline')}
+                  style={{ gridTemplateColumns: '2fr 1.4fr 1.4fr 1.4fr' }}
+                >
+                  <span className="font-mono text-[11px] text-mute">{h.alertId.slice(0, 8)}…</span>
+                  <div className="text-right text-[14px] leading-none font-bold font-sans tabular-nums">
+                    {Number(h.priceAtTrigger).toLocaleString('en-US')}₫
                   </div>
-
-                  <div className="text-right">
-                    <div className="text-[16px] leading-none font-bold font-sans tabular-nums">{fmtTarget(a)}</div>
-                    <div className="font-mono text-[10px] text-mute mt-1">created {fmtDate(a.createdAt)}</div>
+                  <div className="font-mono text-right text-[11px] text-bone">
+                    {new Date(h.triggeredAt).toLocaleString('en-US', { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
                   </div>
-
-                  <span className="font-mono text-[11px] text-bone">· {a.repeatMode ? 'repeat' : 'once'}</span>
-
-                  <div>
-                    {isFired
-                      ? <span className="font-mono text-[9px] leading-none font-bold tracking-[0.14em] uppercase text-gold-ink bg-gold px-[7px] py-1 rounded-[3px]">
-                          fired · {a.lastTriggeredAt ? fmtDate(a.lastTriggeredAt) : '—'}
-                        </span>
-                      : <span className={cn(
-                          'font-mono text-[9px] leading-none font-bold tracking-[0.14em] uppercase px-[7px] py-1 rounded-[3px] border',
-                          isActive ? 'text-live border-[rgba(157,204,110,0.4)]' : 'text-mute border-line',
-                        )}>
-                          {isActive ? 'waiting' : 'paused'}
-                        </span>
+                  <div className="font-mono text-right text-[11px]">
+                    {h.emailSentAt
+                      ? <span className="text-live">sent</span>
+                      : <span className="text-mute">pending</span>
                     }
                   </div>
-
-                  <div className="flex justify-end gap-1 items-center">
-                    <Toggle on={isActive} onChange={() => handleToggle(a.id)} disabled={toggleAlert.isPending}/>
-                    <button
-                      onClick={() => handleDelete(a.id)}
-                      disabled={deleteAlert.isPending}
-                      className={cn('w-7 h-8 bg-transparent border border-transparent rounded-md cursor-pointer text-down flex items-center justify-center', deleteAlert.isPending && 'opacity-50')}
-                    >
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14"/>
-                      </svg>
-                    </button>
-                  </div>
                 </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* History tab */}
-        {tab === 'history' && (
-          <div className="bg-ink-2 border border-line rounded-[14px]">
-            <div className="px-[22px] py-4 border-b border-hairline">
-              <h3 className="text-[16px] leading-none font-bold font-sans m-0">trigger history</h3>
+              ))}
             </div>
-            <div
-              className="grid px-[22px] py-3 font-mono text-[10px] text-mute tracking-[0.14em] uppercase bg-ink-3 border-b border-hairline"
-              style={{ gridTemplateColumns: '2fr 1.4fr 1.4fr 1.4fr' }}
-            >
-              <span>alert id</span>
-              <span className="text-right">price at trigger</span>
-              <span className="text-right">triggered at</span>
-              <span className="text-right">email sent</span>
-            </div>
+          </TabsContent>
 
-            {histLoading && [0, 1, 2].map(i => (
-              <div
-                key={i}
-                className="grid px-[22px] py-4 border-t border-hairline"
-                style={{ gridTemplateColumns: '2fr 1.4fr 1.4fr 1.4fr' }}
-              >
-                {[120, 80, 100, 100].map((w, j) => (
-                  <div
-                    key={j}
-                    className="h-[14px] rounded bg-ink-3 animate-pulse"
-                    style={{ width: w, justifySelf: j === 0 ? 'start' : 'end' }}
-                  />
-                ))}
-              </div>
-            ))}
-
-            {!histLoading && history.length === 0 && (
-              <div className="px-[22px] py-12 text-center text-mute text-[14px] leading-[1.5] font-sans font-medium">
-                no trigger history yet
-              </div>
-            )}
-
-            {!histLoading && history.map((h, i) => (
-              <div
-                key={h.id}
-                className={cn('grid px-[22px] py-4 items-center', i !== 0 && 'border-t border-hairline')}
-                style={{ gridTemplateColumns: '2fr 1.4fr 1.4fr 1.4fr' }}
-              >
-                <span className="font-mono text-[11px] text-mute">{h.alertId.slice(0, 8)}…</span>
-                <div className="text-right text-[14px] leading-none font-bold font-sans tabular-nums">
-                  {Number(h.priceAtTrigger).toLocaleString('en-US')}₫
-                </div>
-                <div className="font-mono text-right text-[11px] text-bone">
-                  {new Date(h.triggeredAt).toLocaleString('en-US', { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
-                </div>
-                <div className="font-mono text-right text-[11px]">
-                  {h.emailSentAt
-                    ? <span className="text-live">sent</span>
-                    : <span className="text-mute">pending</span>
-                  }
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Smart Alerts tab */}
-        {tab === 'smart' && <SmartAlertsPanel />}
+          {/* Smart Alerts tab */}
+          <TabsContent value="smart" className="mt-0">
+            <SmartAlertsPanel />
+          </TabsContent>
+        </Tabs>
       </div>
     </>
   );

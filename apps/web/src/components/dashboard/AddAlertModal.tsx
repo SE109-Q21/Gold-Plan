@@ -3,6 +3,11 @@
 import { useState } from 'react';
 import { useCreateAlert } from '@/lib/alerts.api';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import type { GoldBrand, GoldType } from '@gpls/shared';
 
 interface Props { open: boolean; onClose: () => void; }
@@ -23,17 +28,17 @@ const GOLD_TYPES: { label: string; value: GoldType }[] = [
 
 function Chip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return (
-    <button
+    <Button
       type="button"
+      variant="outline"
       onClick={onClick}
       className={cn(
-        'flex-1 h-9 inline-flex items-center justify-center border cursor-pointer',
-        'font-mono text-[11px] leading-none font-bold tracking-[0.1em] uppercase rounded-none',
-        active ? 'bg-gold border-gold text-gold-ink' : 'bg-transparent border-line text-bone',
+        'flex-1 h-9 rounded-none font-mono text-[11px] leading-none font-bold tracking-[0.1em] uppercase',
+        active ? 'bg-gold border-gold text-gold-ink hover:bg-gold hover:text-gold-ink' : 'bg-transparent border-line text-bone hover:bg-ink-3',
       )}
     >
       {label}
-    </button>
+    </Button>
   );
 }
 
@@ -46,8 +51,6 @@ export function AddAlertModal({ open, onClose }: Props) {
   const [error,      setError]      = useState<string | null>(null);
 
   const createAlert = useCreateAlert();
-
-  if (!open) return null;
 
   const handleSubmit = () => {
     setError(null);
@@ -73,18 +76,16 @@ export function AddAlertModal({ open, onClose }: Props) {
   const goldTypeLabel = GOLD_TYPES.find(g => g.value === goldType)?.label ?? goldType;
 
   return (
-    <div
-      onClick={onClose}
-      className="fixed inset-0 z-[100] bg-[rgba(11,11,15,0.65)] backdrop-blur-[6px] flex items-center justify-center"
-    >
-      <div
-        onClick={e => e.stopPropagation()}
-        className="w-[520px] bg-ink-2 border border-line rounded-[14px] p-7 shadow-[0_30px_80px_rgba(0,0,0,0.6)]"
-      >
-        <div className="mb-5">
-          <h2 className="font-display text-[24px] leading-none font-bold m-0 tracking-[-0.015em]">new price alert</h2>
-          <div className="font-mono text-[11px] text-mute mt-[6px]">email + push when threshold is crossed</div>
-        </div>
+    <Dialog open={open} onOpenChange={o => !o && onClose()}>
+      <DialogContent className="w-[520px] bg-ink-2 border-line text-chalk p-7 gap-0">
+        <DialogHeader className="mb-5">
+          <DialogTitle className="font-display text-[24px] leading-none font-bold tracking-[-0.015em] text-chalk">
+            new price alert
+          </DialogTitle>
+          <DialogDescription className="font-mono text-[11px] text-mute mt-[6px]">
+            email + push when threshold is crossed
+          </DialogDescription>
+        </DialogHeader>
 
         {/* Brand */}
         <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-2">brand</div>
@@ -109,27 +110,26 @@ export function AddAlertModal({ open, onClose }: Props) {
         <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-2">threshold price (VND)</div>
         <div className="flex items-center gap-[10px] bg-ink-3 border border-line rounded-[10px] py-1 px-2 pl-4 mb-[18px]">
           <span className="font-display text-[24px] leading-none font-bold text-gold">₫</span>
-          <input
+          <Input
             type="number"
             value={threshold}
             onChange={e => setThreshold(+e.target.value)}
             min={0}
-            className="flex-1 h-[46px] bg-transparent border-0 outline-none font-display text-[24px] leading-none font-bold text-chalk [font-variant-numeric:tabular-nums]"
+            className="flex-1 h-[46px] bg-transparent border-0 outline-none font-display text-[24px] leading-none font-bold text-chalk [font-variant-numeric:tabular-nums] ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
           />
         </div>
 
         {/* Repeat */}
         <div className="flex items-center gap-[10px] mb-[22px]">
-          <input
+          <Checkbox
             id="repeatMode"
-            type="checkbox"
             checked={repeatMode}
-            onChange={e => setRepeatMode(e.target.checked)}
-            className="w-4 h-4 cursor-pointer [accent-color:var(--gold)]"
+            onCheckedChange={v => setRepeatMode(!!v)}
+            className="border-line data-[state=checked]:bg-gold data-[state=checked]:border-gold data-[state=checked]:text-gold-ink"
           />
-          <label htmlFor="repeatMode" className="font-sans text-[13px] leading-none font-medium text-bone cursor-pointer">
+          <Label htmlFor="repeatMode" className="font-sans text-[13px] leading-none font-medium text-bone cursor-pointer">
             repeat (re-arm after each trigger)
-          </label>
+          </Label>
         </div>
 
         {/* Summary */}
@@ -150,28 +150,22 @@ export function AddAlertModal({ open, onClose }: Props) {
 
         {/* Buttons */}
         <div className="flex gap-[10px]">
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={onClose}
             disabled={createAlert.isPending}
-            className={cn(
-              'flex-1 h-[46px] bg-ink-3 border border-line rounded-[10px] cursor-pointer',
-              'font-mono text-[14px] leading-none font-bold text-chalk tracking-[0.04em] uppercase',
-              createAlert.isPending && 'opacity-50',
-            )}
+            className="flex-1 h-[46px] bg-ink-3 border-line text-chalk hover:bg-ink-4 hover:text-chalk font-mono text-[14px] font-bold tracking-[0.04em] uppercase"
           >
             cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             onClick={handleSubmit}
             disabled={createAlert.isPending}
             className={cn(
-              'flex-[2] h-[46px] rounded-[10px] font-mono text-[14px] leading-none font-bold tracking-[0.04em] uppercase',
-              'flex items-center justify-center gap-2',
-              createAlert.isPending
-                ? 'bg-ink-3 border border-line text-mute cursor-default'
-                : 'bg-gold border border-gold text-gold-ink cursor-pointer',
+              'flex-[2] h-[46px] font-mono text-[14px] font-bold tracking-[0.04em] uppercase flex items-center justify-center gap-2',
+              createAlert.isPending ? 'bg-ink-3 border border-line text-mute cursor-default hover:bg-ink-3' : '',
             )}
           >
             {createAlert.isPending ? (
@@ -180,9 +174,9 @@ export function AddAlertModal({ open, onClose }: Props) {
                 creating…
               </>
             ) : 'create alert'}
-          </button>
+          </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

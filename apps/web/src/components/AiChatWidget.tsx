@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import { streamAiChat, getRemainingQuestions, incrementQuestionCount } from '@/lib/ai.api';
 import { useAuth } from '@/contexts/auth-context';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -98,15 +100,16 @@ export function AiChatWidget() {
 
   if (!open) {
     return (
-      <button
+      <Button
         onClick={() => setOpen(true)}
         aria-label="Open AI Assistant"
-        className="fixed bottom-7 right-7 z-[1000] w-14 h-14 rounded-full bg-gold border-0 cursor-pointer flex items-center justify-center shadow-[0_4px_20px_rgba(212,175,55,0.4)] transition-shadow"
+        size="icon"
+        className="fixed bottom-7 right-7 z-[1000] w-14 h-14 rounded-full bg-gold shadow-[0_4px_20px_rgba(212,175,55,0.4)] transition-shadow hover:bg-gold/90"
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
           <path d="M4 4h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H8l-4 4V5a1 1 0 0 1 1-1z" fill="white"/>
         </svg>
-      </button>
+      </Button>
     );
   }
 
@@ -126,13 +129,15 @@ export function AiChatWidget() {
             AI Assistant
           </span>
         </div>
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={() => setOpen(false)}
           aria-label="Close"
-          className="bg-transparent border-0 cursor-pointer text-mute font-mono text-[16px] leading-none font-medium px-[6px] py-[2px] rounded"
+          className="w-auto h-auto px-[6px] py-[2px] text-mute font-mono text-[16px] leading-none font-medium hover:bg-transparent hover:text-bone"
         >
           ✕
-        </button>
+        </Button>
       </div>
 
       {/* Guest counter */}
@@ -151,13 +156,14 @@ export function AiChatWidget() {
             </div>
             <div className="flex flex-wrap gap-2 justify-center">
               {SUGGESTIONS.map(s => (
-                <button
+                <Button
                   key={s}
+                  variant="outline"
                   onClick={() => submit(s)}
-                  className="bg-ink-3 border border-line rounded-[20px] px-3 py-[6px] font-sans text-[11px] leading-[1.3] font-medium text-bone cursor-pointer text-left transition-[border-color] duration-150"
+                  className="bg-ink-3 border-line rounded-[20px] px-3 py-[6px] h-auto font-sans text-[11px] leading-[1.3] font-medium text-bone hover:bg-ink-3 hover:border-gold transition-[border-color] duration-150"
                 >
                   {s}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -197,28 +203,27 @@ export function AiChatWidget() {
 
       {/* Input row */}
       <div className="flex items-center gap-2 px-3 py-[10px] border-t border-line shrink-0">
-        <input
+        <Input
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={handleKey}
           placeholder="Hỏi về giá vàng…"
           disabled={streaming}
-          className="flex-1 bg-ink-3 border border-line rounded-lg px-3 py-2 font-sans text-[13px] leading-none font-medium text-chalk outline-none disabled:opacity-60"
+          className="flex-1 bg-ink-3 border-line rounded-lg font-sans text-[13px] font-medium text-chalk placeholder:text-mute focus-visible:ring-gold disabled:opacity-60 h-[36px]"
         />
-        <button
+        <Button
           onClick={handleSend}
           disabled={sendDisabled}
+          size="icon"
           className={cn(
-            'w-9 h-9 rounded-lg border flex items-center justify-center shrink-0 transition-[background] duration-150',
-            sendDisabled
-              ? 'bg-ink-3 border-line cursor-not-allowed'
-              : 'bg-gold border-gold cursor-pointer',
+            'w-9 h-9 rounded-lg shrink-0 border',
+            sendDisabled ? 'bg-ink-3 border-line' : 'bg-gold border-gold hover:bg-gold/90',
           )}
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path d="M2 8l12-6-5 6 5 6-12-6z" fill={sendDisabled ? 'var(--mute)' : '#0B0B0F'}/>
           </svg>
-        </button>
+        </Button>
       </div>
     </div>
   );

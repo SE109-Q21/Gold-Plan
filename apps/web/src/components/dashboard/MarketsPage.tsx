@@ -8,8 +8,6 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
 } from 'recharts';
 import { usePriceHistory, type HistoryRange } from '@/lib/price.api';
 import { useSpreadRanking, useSpreadHistory } from '@/lib/spread.api';
@@ -18,6 +16,8 @@ import { useAlerts, useCreateAlert } from '@/lib/alerts.api';
 import type { GoldBrand, GoldType } from '@gpls/shared';
 import { useAuth } from '@/contexts/auth-context';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
 
 const ASSETS = ['XAU/USD', 'XAU/VND', 'SJC', 'DOJI', 'PNJ'] as const;
 type Range = HistoryRange;
@@ -80,22 +80,20 @@ function QuickAlertPanel({
       </div>
 
       <div className="flex gap-2 ml-auto">
-        <button
+        <Button
           onClick={handleCreate}
           disabled={createAlert.isPending}
-          className={cn(
-            'inline-flex items-center h-9 px-[18px] border border-[rgba(212,175,55,0.6)] rounded-md bg-[rgba(212,175,55,0.12)] text-gold font-mono text-[11px] leading-none font-bold tracking-[0.08em] uppercase',
-            createAlert.isPending ? 'cursor-wait opacity-60' : 'cursor-pointer',
-          )}
+          className="h-9 px-[18px] border border-[rgba(212,175,55,0.6)] bg-[rgba(212,175,55,0.12)] text-gold hover:bg-[rgba(212,175,55,0.20)] hover:text-gold font-mono text-[11px] font-bold tracking-[0.08em] uppercase"
         >
           {createAlert.isPending ? 'Creating…' : 'Create Alert'}
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="outline"
           onClick={onClose}
-          className="inline-flex items-center h-9 px-[14px] border border-line rounded-md bg-transparent text-mute font-mono text-[11px] leading-none font-bold tracking-[0.08em] uppercase cursor-pointer"
+          className="h-9 px-[14px] border-line bg-transparent text-mute hover:bg-ink-3 hover:text-bone font-mono text-[11px] font-bold tracking-[0.08em] uppercase"
         >
           Cancel
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -135,16 +133,17 @@ function SpreadRankingSection() {
 
       <div className="flex gap-1 mb-[18px] flex-wrap">
         {GOLD_TYPES.map(gt => (
-          <button
+          <Button
             key={gt}
+            variant="outline"
             onClick={() => setGoldType(gt)}
             className={cn(
-              'inline-flex items-center h-8 px-[10px] border rounded-none font-mono text-[11px] leading-none font-bold tracking-[0.1em] uppercase cursor-pointer',
-              goldType === gt ? 'border-gold bg-gold text-gold-ink' : 'border-line bg-transparent text-bone',
+              'h-8 px-[10px] rounded-none font-mono text-[11px] leading-none font-bold tracking-[0.1em] uppercase',
+              goldType === gt ? 'border-gold bg-gold text-gold-ink hover:bg-gold hover:text-gold-ink' : 'border-line bg-transparent text-bone hover:bg-ink-3',
             )}
           >
             {gt}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -201,6 +200,10 @@ function SpreadRankingSection() {
   );
 }
 
+const SPREAD_CHART_CONFIG = {
+  spreadVnd: { label: 'Spread (₫)', color: 'var(--gold)' },
+} satisfies ChartConfig;
+
 function SpreadHistoryChart() {
   const [brand, setBrand] = useState<GoldBrand>('SJC');
   const [goldType, setGoldType] = useState<GoldType>('MIEN_SJC');
@@ -229,31 +232,33 @@ function SpreadHistoryChart() {
 
       <div className="flex gap-1 mb-2 flex-wrap">
         {BRANDS.map(b => (
-          <button
+          <Button
             key={b}
+            variant="outline"
             onClick={() => setBrand(b)}
             className={cn(
-              'inline-flex items-center h-7 px-2 border rounded-none font-mono text-[10px] leading-none font-bold tracking-[0.1em] uppercase cursor-pointer',
-              brand === b ? 'border-gold bg-gold text-gold-ink' : 'border-line bg-transparent text-bone',
+              'h-7 px-2 rounded-none font-mono text-[10px] leading-none font-bold tracking-[0.1em] uppercase',
+              brand === b ? 'border-gold bg-gold text-gold-ink hover:bg-gold hover:text-gold-ink' : 'border-line bg-transparent text-bone hover:bg-ink-3',
             )}
           >
             {b}
-          </button>
+          </Button>
         ))}
       </div>
 
       <div className="flex gap-1 mb-[18px] flex-wrap">
         {GOLD_TYPES.map(gt => (
-          <button
+          <Button
             key={gt}
+            variant="outline"
             onClick={() => setGoldType(gt)}
             className={cn(
-              'inline-flex items-center h-7 px-2 border rounded-none font-mono text-[10px] leading-none font-bold tracking-[0.1em] uppercase cursor-pointer',
-              goldType === gt ? 'border-gold bg-gold text-gold-ink' : 'border-line bg-transparent text-bone',
+              'h-7 px-2 rounded-none font-mono text-[10px] leading-none font-bold tracking-[0.1em] uppercase',
+              goldType === gt ? 'border-gold bg-gold text-gold-ink hover:bg-gold hover:text-gold-ink' : 'border-line bg-transparent text-bone hover:bg-ink-3',
             )}
           >
             {gt}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -270,7 +275,7 @@ function SpreadHistoryChart() {
       )}
 
       {!isLoading && chartData.length > 0 && (
-        <ResponsiveContainer width="100%" height={200}>
+        <ChartContainer config={SPREAD_CHART_CONFIG} className="h-[200px] w-full">
           <ReLineChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
             <XAxis
@@ -287,21 +292,23 @@ function SpreadHistoryChart() {
               width={52}
               label={{ value: 'Spread (₫)', angle: -90, position: 'insideLeft', offset: 12, style: { fill: '#5a5b65', fontSize: 9, fontFamily: 'var(--font-mono)' } }}
             />
-            <Tooltip
-              contentStyle={{ background: '#14141A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, font: '500 11px/1.5 var(--font-mono)', color: '#e8e6df' }}
-              formatter={(value) => [typeof value === 'number' ? (value / 1_000_000).toFixed(3) + 'M₫' : '-', 'spread']}
-              labelStyle={{ color: '#5a5b65', marginBottom: 4 }}
+            <ChartTooltip
+              content={
+                <ChartTooltipContent
+                  formatter={(value) => [typeof value === 'number' ? (value / 1_000_000).toFixed(3) + 'M₫' : '-', 'spread']}
+                />
+              }
             />
             <Line
               type="monotone"
               dataKey="spreadVnd"
-              stroke="#D4AF37"
+              stroke="var(--color-spreadVnd)"
               strokeWidth={2}
               dot={false}
-              activeDot={{ r: 4, fill: '#D4AF37', stroke: '#0B0B0F', strokeWidth: 2 }}
+              activeDot={{ r: 4, fill: 'var(--color-spreadVnd)', stroke: '#0B0B0F', strokeWidth: 2 }}
             />
           </ReLineChart>
-        </ResponsiveContainer>
+        </ChartContainer>
       )}
     </div>
   );
@@ -401,14 +408,15 @@ export function MarketsPage({ currency = 'VND' }: { currency?: string }) {
       {/* Asset tabs */}
       <div className="flex gap-[6px]">
         {ASSETS.map(a => (
-          <button
+          <Button
             key={a}
+            variant="outline"
             onClick={() => setAsset(a)}
             className={cn(
-              'inline-flex items-center h-[34px] px-[14px] border rounded-none font-mono text-[11px] leading-none font-bold tracking-[0.1em] uppercase cursor-pointer',
-              asset === a ? 'border-gold bg-gold text-gold-ink' : 'border-line bg-transparent text-bone',
+              'h-[34px] px-[14px] rounded-none font-mono text-[11px] leading-none font-bold tracking-[0.1em] uppercase',
+              asset === a ? 'border-gold bg-gold text-gold-ink hover:bg-gold hover:text-gold-ink' : 'border-line bg-transparent text-bone hover:bg-ink-3',
             )}
-          >{a}</button>
+          >{a}</Button>
         ))}
       </div>
 
@@ -429,37 +437,40 @@ export function MarketsPage({ currency = 'VND' }: { currency?: string }) {
           </div>
           <div className="flex gap-1 items-center">
             {RANGES.map(r => (
-              <button
+              <Button
                 key={r}
+                variant="outline"
                 onClick={() => setRange(r)}
                 className={cn(
-                  'inline-flex items-center h-8 px-[10px] border rounded-none font-mono text-[11px] leading-none font-bold tracking-[0.1em] uppercase cursor-pointer',
-                  range === r ? 'border-gold bg-gold text-gold-ink' : 'border-line bg-transparent text-bone',
+                  'h-8 px-[10px] rounded-none font-mono text-[11px] leading-none font-bold tracking-[0.1em] uppercase',
+                  range === r ? 'border-gold bg-gold text-gold-ink hover:bg-gold hover:text-gold-ink' : 'border-line bg-transparent text-bone hover:bg-ink-3',
                 )}
-              >{r}</button>
+              >{r}</Button>
             ))}
-            <button
+            <Button
+              variant="outline"
               onClick={() => { setShowCompare(v => !v); setPendingAlertPrice(null); }}
               className={cn(
-                'inline-flex items-center gap-[5px] h-8 px-[10px] border rounded-none font-mono text-[11px] leading-none font-bold tracking-[0.1em] uppercase cursor-pointer ml-1',
-                showCompare ? 'border-[rgba(147,197,253,0.5)] bg-[rgba(147,197,253,0.08)] text-[#93c5fd]' : 'border-line bg-transparent text-bone',
+                'h-8 px-[10px] gap-[5px] rounded-none font-mono text-[11px] leading-none font-bold tracking-[0.1em] uppercase ml-1',
+                showCompare ? 'border-[rgba(147,197,253,0.5)] bg-[rgba(147,197,253,0.08)] text-[#93c5fd] hover:bg-[rgba(147,197,253,0.12)] hover:text-[#93c5fd]' : 'border-line bg-transparent text-bone hover:bg-ink-3',
               )}
             >
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M3 3v18h18"/><path d="M7 16l4-4 4 4 5-5"/></svg>
               compare
-            </button>
+            </Button>
             {user && (
-              <button
+              <Button
+                variant="outline"
                 onClick={handleExportCsv}
                 disabled={csvLoading}
                 className={cn(
-                  'inline-flex items-center gap-[5px] h-8 px-[10px] border border-line rounded-none font-mono text-[11px] leading-none font-bold tracking-[0.1em] uppercase ml-1',
-                  csvLoading ? 'cursor-not-allowed text-mute opacity-60' : 'cursor-pointer text-bone bg-transparent',
+                  'h-8 px-[10px] gap-[5px] border-line rounded-none font-mono text-[11px] leading-none font-bold tracking-[0.1em] uppercase ml-1',
+                  csvLoading ? 'text-mute opacity-60' : 'text-bone bg-transparent hover:bg-ink-3',
                 )}
               >
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 {csvLoading ? '…' : 'csv'}
-              </button>
+              </Button>
             )}
           </div>
         </div>

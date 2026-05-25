@@ -6,6 +6,8 @@ import { useAuth } from '@/contexts/auth-context';
 import { useInternationalPrice, useComparison } from '@/lib/price.api';
 import type { GoldType } from '@gpls/shared';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 // Icons (Lucide-style inline SVG)
 function IconHome({ s = 20 }: { s?: number }) {
@@ -151,13 +153,13 @@ function Sidebar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
           const active = tab === it.id;
           const handleClick = () => onChange(it.id as Tab);
           return (
-            <button
+            <Button
               key={it.id}
+              variant="ghost"
               onClick={handleClick}
               className={cn(
-                'relative flex items-center gap-3 px-3 py-[10px] rounded-md border-0 cursor-pointer w-full',
-                'text-[13px] leading-none font-medium font-sans transition-colors duration-[140ms]',
-                active ? 'bg-ink-3 text-chalk' : 'bg-transparent text-bone hover:bg-ink-3/60 hover:text-chalk',
+                'relative w-full justify-start gap-3 px-3 py-[10px] h-auto font-medium font-sans text-[13px] leading-none transition-colors duration-[140ms]',
+                active ? 'bg-ink-3 text-chalk hover:bg-ink-3 hover:text-chalk' : 'text-bone hover:bg-ink-3/60 hover:text-chalk',
               )}
             >
               {active && (
@@ -167,7 +169,7 @@ function Sidebar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
                 <it.Icon s={16}/>
               </span>
               <span>{it.label}</span>
-            </button>
+            </Button>
           );
         })}
 
@@ -176,16 +178,17 @@ function Sidebar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
           {NAV_ITEMS.filter(it => !!it.href && !it.adminOnly && (!it.requiresAuth || !!user)).map(it => {
             const handleClick = () => router.push(it.href as string);
             return (
-              <button
+              <Button
                 key={it.id}
+                variant="ghost"
                 onClick={handleClick}
-                className="relative flex items-center gap-3 px-3 py-[10px] border-0 rounded-md cursor-pointer bg-transparent text-bone hover:bg-ink-3/60 hover:text-chalk text-[13px] leading-none font-medium font-sans transition-colors duration-[140ms] w-full"
+                className="relative w-full justify-start gap-3 px-3 py-[10px] h-auto text-bone hover:bg-ink-3/60 hover:text-chalk font-medium font-sans text-[13px] leading-none transition-colors duration-[140ms]"
               >
                 <span className="text-mute">
                   <it.Icon s={16}/>
                 </span>
                 <span>{it.label}</span>
-              </button>
+              </Button>
             );
           })}
         </>
@@ -196,16 +199,17 @@ function Sidebar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
             {NAV_ITEMS.filter(it => it.adminOnly).map(it => {
               const handleClick = () => router.push(it.href as string);
               return (
-                <button
+                <Button
                   key={it.id}
+                  variant="ghost"
                   onClick={handleClick}
-                  className="relative flex items-center gap-3 px-3 py-[10px] border-0 rounded-md cursor-pointer bg-transparent text-bone hover:bg-ink-3/60 hover:text-chalk text-[13px] leading-none font-medium font-sans transition-colors duration-[140ms] w-full"
+                  className="relative w-full justify-start gap-3 px-3 py-[10px] h-auto text-bone hover:bg-ink-3/60 hover:text-chalk font-medium font-sans text-[13px] leading-none transition-colors duration-[140ms]"
                 >
                   <span className="text-mute">
                     <it.Icon s={16}/>
                   </span>
                   <span>{it.label}</span>
-                </button>
+                </Button>
               );
             })}
           </>
@@ -254,12 +258,12 @@ function Sidebar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
             </div>
           </div>
         ) : (
-          <button
+          <Button
             onClick={() => router.push('/auth/login')}
-            className="w-full h-[34px] bg-gold border-0 rounded-lg cursor-pointer text-[11px] leading-none font-bold font-sans text-gold-ink tracking-[0.04em]"
+            className="w-full h-[34px] bg-gold rounded-lg text-[11px] leading-none font-bold font-sans text-gold-ink tracking-[0.04em] hover:bg-gold/90 hover:text-gold-ink"
           >
             Log in
-          </button>
+          </Button>
         )}
       </div>
     </aside>
@@ -374,13 +378,13 @@ function TopBar({ currency, onCurrency, onTab }: { currency: string; onCurrency:
           )}
         >
           <span className="text-mute shrink-0"><IconSearch s={14}/></span>
-          <input
+          <Input
             ref={searchInputRef}
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             onFocus={() => setSearchOpen(true)}
             placeholder="search assets, brands, alerts…"
-            className="flex-1 bg-transparent border-0 outline-none text-[12px] leading-none font-normal font-mono text-chalk placeholder:text-mute"
+            className="flex-1 bg-transparent border-0 shadow-none text-[12px] leading-none font-normal font-mono text-chalk placeholder:text-mute h-auto p-0 focus-visible:ring-0"
           />
           {!searchOpen && (
             <span className="font-mono text-[9px] text-mute tracking-[0.1em] border border-line rounded-[3px] px-1.5 py-0.5 shrink-0">⌘ K</span>
@@ -389,14 +393,15 @@ function TopBar({ currency, onCurrency, onTab }: { currency: string; onCurrency:
         {searchOpen && filteredItems.length > 0 && (
           <div className="absolute top-[calc(100%+6px)] left-0 right-0 bg-ink-2 border border-line rounded-[10px] z-[300] overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
             {filteredItems.map((item, i) => (
-              <button
+              <Button
                 key={i}
+                variant="ghost"
                 onClick={item.action}
-                className="w-full flex items-center justify-between px-[14px] py-[10px] bg-transparent border-0 cursor-pointer text-chalk text-[13px] leading-none font-medium font-sans text-left hover:bg-ink-3 transition-colors duration-100"
+                className="w-full justify-between px-[14px] py-[10px] h-auto text-chalk text-[13px] leading-none font-medium font-sans hover:bg-ink-3 transition-colors duration-100"
               >
                 <span>{item.label}</span>
                 <span className="font-mono text-[9px] text-mute uppercase tracking-[0.1em]">{item.type}</span>
-              </button>
+              </Button>
             ))}
           </div>
         )}
@@ -417,38 +422,45 @@ function TopBar({ currency, onCurrency, onTab }: { currency: string; onCurrency:
         {/* Currency switcher */}
         <div className="flex bg-ink-3 border border-line rounded-md p-0.5">
           {['USD', 'VND', 'EUR'].map(c => (
-            <button
+            <Button
               key={c}
+              variant="ghost"
               onClick={() => onCurrency(c)}
               className={cn(
-                'px-[10px] py-[5px] border-0 cursor-pointer text-[10px] leading-none font-bold font-mono tracking-[0.1em] rounded',
-                currency === c ? 'bg-gold text-gold-ink' : 'bg-transparent text-bone',
+                'px-[10px] py-[5px] h-auto font-bold font-mono text-[10px] leading-none tracking-[0.1em] rounded',
+                currency === c ? 'bg-gold text-gold-ink hover:bg-gold hover:text-gold-ink' : 'bg-transparent text-bone hover:bg-ink-3/60',
               )}
-            >{c}</button>
+            >{c}</Button>
           ))}
         </div>
 
         {/* Bell with dropdown */}
         <div ref={bellRef} className="relative">
-          <button
+          <Button
+            variant="outline"
+            size="icon"
             onClick={handleBellClick}
             className={cn(
-              'w-[34px] h-[34px] border border-line rounded-md cursor-pointer text-bone flex items-center justify-center relative',
-              bellOpen ? 'bg-ink-3' : 'bg-transparent',
+              'w-[34px] h-[34px] border-line rounded-md text-bone relative',
+              bellOpen ? 'bg-ink-3 hover:bg-ink-3' : 'bg-transparent hover:bg-ink-3',
             )}
           >
             <IconBell s={15}/>
             {!bellOpen && hasUnread && (
               <span className="absolute top-[6px] right-[7px] w-[7px] h-[7px] rounded-full bg-gold shadow-[0_0_0_2px_var(--ink-2)]"/>
             )}
-          </button>
+          </Button>
           {bellOpen && (
             <div className="absolute top-[calc(100%+8px)] right-0 w-[300px] bg-ink-2 border border-line rounded-xl z-[200] overflow-hidden">
               <div className="flex items-center justify-between px-4 py-3 border-b border-line">
                 <span className="font-mono text-[9px] leading-none font-bold tracking-[0.12em] uppercase text-mute">Notifications</span>
-                <button onClick={() => {}} className="bg-transparent border-0 cursor-pointer font-mono text-[11px] leading-none font-semibold text-gold p-0">
+                <Button
+                  variant="ghost"
+                  onClick={() => {}}
+                  className="h-auto px-0 py-0 font-mono text-[11px] leading-none font-semibold text-gold hover:bg-transparent hover:text-gold"
+                >
                   all →
-                </button>
+                </Button>
               </div>
               <div className="flex flex-col items-center justify-center px-5 py-8 gap-[10px]">
                 <span className="text-gold"><IconBell s={28}/></span>
@@ -462,19 +474,21 @@ function TopBar({ currency, onCurrency, onTab }: { currency: string; onCurrency:
         {/* Avatar / auth */}
         <div ref={avatarRef} className="relative">
           {user ? (
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setAvatarOpen(v => !v)}
-              className="w-8 h-8 rounded-full bg-[linear-gradient(135deg,#D4AF37,#8E7321)] flex items-center justify-center text-[11px] leading-none font-extrabold font-sans text-gold-ink border-0 cursor-pointer"
+              className="w-8 h-8 rounded-full bg-[linear-gradient(135deg,#D4AF37,#8E7321)] text-[11px] leading-none font-extrabold font-sans text-gold-ink hover:bg-[linear-gradient(135deg,#b8922d,#6b5519)] hover:text-gold-ink p-0"
             >
               {initials || 'GT'}
-            </button>
+            </Button>
           ) : (
-            <button
+            <Button
               onClick={() => router.push('/auth/login')}
-              className="h-8 px-[14px] bg-gold border-0 rounded-full cursor-pointer text-[11px] leading-none font-bold font-sans text-gold-ink tracking-[0.04em]"
+              className="h-8 px-[14px] bg-gold rounded-full text-[11px] leading-none font-bold font-sans text-gold-ink tracking-[0.04em] hover:bg-gold/90 hover:text-gold-ink"
             >
               Log in
-            </button>
+            </Button>
           )}
           {avatarOpen && user && (
             <div className="absolute top-[calc(100%+8px)] right-0 w-[220px] bg-ink-2 border border-line rounded-xl z-[200] overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
@@ -500,20 +514,22 @@ function TopBar({ currency, onCurrency, onTab }: { currency: string; onCurrency:
                 </div>
               </div>
               <div className="py-[6px]">
-                <button
+                <Button
+                  variant="ghost"
                   onClick={() => { onTab('profile'); setAvatarOpen(false); }}
-                  className="w-full flex items-center gap-[10px] px-4 py-[10px] bg-transparent border-0 cursor-pointer text-chalk text-[13px] leading-none font-medium font-sans text-left hover:bg-ink-3 transition-colors"
+                  className="w-full justify-start gap-[10px] px-4 py-[10px] h-auto text-chalk text-[13px] leading-none font-medium font-sans hover:bg-ink-3 hover:text-chalk transition-colors"
                 >
                   <IconUser s={14}/>
                   Profile &amp; settings
-                </button>
+                </Button>
                 <div className="h-px bg-line my-1"/>
-                <button
+                <Button
+                  variant="ghost"
                   onClick={() => { logout(); setAvatarOpen(false); }}
-                  className="w-full flex items-center gap-[10px] px-4 py-[10px] bg-transparent border-0 cursor-pointer text-[#e05252] text-[13px] leading-none font-medium font-sans text-left hover:bg-ink-3 transition-colors"
+                  className="w-full justify-start gap-[10px] px-4 py-[10px] h-auto text-[#e05252] text-[13px] leading-none font-medium font-sans hover:bg-ink-3 hover:text-[#e05252] transition-colors"
                 >
                   Log out
-                </button>
+                </Button>
               </div>
             </div>
           )}

@@ -1,13 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  LineChart, Line, XAxis, YAxis, Tooltip,
-  CartesianGrid, ResponsiveContainer, Legend,
-} from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
 import type { GoldBrand, GoldType } from '@gpls/shared';
 import { usePriceHistory } from '@/lib/price.api';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
 
 type Range = '1D' | '1W' | '1M';
 
@@ -57,16 +56,17 @@ export function PriceHistoryChart() {
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <div className="flex gap-[2px] rounded-md bg-ink-3 border border-line p-[2px]">
           {RANGES.map((r) => (
-            <button
+            <Button
               key={r}
+              variant="ghost"
               onClick={() => setRange(r)}
               className={cn(
-                'rounded px-3 py-1 font-sans text-[13px] font-medium transition-colors',
-                range === r ? 'bg-ink-4 shadow text-gold' : 'text-bone hover:text-chalk',
+                'rounded px-3 py-1 h-auto font-sans text-[13px] font-medium',
+                range === r ? 'bg-ink-4 shadow text-gold hover:bg-ink-4 hover:text-gold' : 'text-bone hover:text-chalk hover:bg-transparent',
               )}
             >
               {RANGE_LABELS[r]}
-            </button>
+            </Button>
           ))}
         </div>
         <select value={brand} onChange={(e) => setBrand(e.target.value as GoldBrand)} className={SELECT_CLS}>
@@ -84,29 +84,23 @@ export function PriceHistoryChart() {
       )}
 
       {!isLoading && !error && chartData.length > 0 && (
-        <ResponsiveContainer width="100%" height={280}>
+        <ChartContainer config={{
+          buyPrice:  { label: 'Giá mua', color: 'var(--up)' },
+          sellPrice: { label: 'Giá bán', color: 'var(--down)' },
+        } satisfies ChartConfig} className="h-[280px] w-full">
           <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
             <XAxis dataKey="time" tick={{ fontSize: 11, fill: 'var(--mute)', fontFamily: 'var(--font-mono)' }} interval="preserveStartEnd" />
             <YAxis tickFormatter={formatVndShort} tick={{ fontSize: 11, fill: 'var(--mute)', fontFamily: 'var(--font-mono)' }} width={55} />
-            <Tooltip
-              contentStyle={{
-                background: 'var(--ink-3)',
-                border: '1px solid var(--line)',
-                borderRadius: 8,
-                font: '500 12px/1.4 var(--font-mono)',
-                color: 'var(--chalk)',
-              }}
-              formatter={(value: unknown) => {
-                if (value === undefined) return '';
-                return new Intl.NumberFormat('vi-VN').format(Number(value)) + ' ₫';
-              }}
-            />
+            <ChartTooltip content={<ChartTooltipContent formatter={(value) => {
+              if (value === undefined) return '';
+              return new Intl.NumberFormat('vi-VN').format(Number(value)) + ' ₫';
+            }}/>}/>
             <Legend wrapperStyle={{ fontSize: 12, fontFamily: 'var(--font-mono)', color: 'var(--bone)' }} />
-            <Line type="monotone" dataKey="buyPrice" name="Giá mua" stroke="var(--up)" dot={false} strokeWidth={2} />
-            <Line type="monotone" dataKey="sellPrice" name="Giá bán" stroke="var(--down)" dot={false} strokeWidth={2} />
+            <Line type="monotone" dataKey="buyPrice" name="Giá mua" stroke="var(--color-buyPrice)" dot={false} strokeWidth={2} />
+            <Line type="monotone" dataKey="sellPrice" name="Giá bán" stroke="var(--color-sellPrice)" dot={false} strokeWidth={2} />
           </LineChart>
-        </ResponsiveContainer>
+        </ChartContainer>
       )}
     </div>
   );

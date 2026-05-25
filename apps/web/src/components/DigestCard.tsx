@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { useLatestDigest } from '@/lib/digest.api';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 function todayKey(): string {
   return `digest_dismissed_${new Date().toISOString().slice(0, 10)}`;
@@ -63,19 +64,12 @@ export function DigestCard() {
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setExpanded(e => !e)}
-            className="bg-transparent border border-line rounded px-[10px] py-1 font-mono text-[11px] leading-none font-semibold text-bone cursor-pointer tracking-[0.04em]"
-          >
+          <Button variant="outline" onClick={() => setExpanded(e => !e)} className="px-[10px] py-1 h-auto border-line bg-transparent text-bone hover:bg-ink-3 hover:text-chalk font-mono text-[11px] font-semibold tracking-[0.04em]">
             {expanded ? '▲ collapse' : '▼ expand'}
-          </button>
-          <button
-            onClick={handleDismiss}
-            aria-label="Dismiss digest"
-            className="bg-transparent border-0 cursor-pointer text-mute font-mono text-[14px] leading-none font-medium px-1 py-[2px]"
-          >
+          </Button>
+          <Button variant="ghost" size="icon" onClick={handleDismiss} aria-label="Dismiss digest" className="w-auto h-auto px-1 py-[2px] text-mute hover:bg-transparent hover:text-bone font-mono text-[14px] font-medium">
             ✕
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -128,12 +122,9 @@ export function DigestCard() {
           )}
 
           <div className="mt-[14px] text-center">
-            <button
-              onClick={() => setExpanded(false)}
-              className="bg-transparent border border-line rounded px-4 py-[5px] font-mono text-[11px] leading-none font-semibold text-mute cursor-pointer tracking-[0.04em]"
-            >
+            <Button variant="outline" onClick={() => setExpanded(false)} className="px-4 py-[5px] h-auto border-line bg-transparent text-mute hover:bg-ink-3 hover:text-bone font-mono text-[11px] font-semibold tracking-[0.04em]">
               ▲ collapse
-            </button>
+            </Button>
           </div>
         </div>
       )}
