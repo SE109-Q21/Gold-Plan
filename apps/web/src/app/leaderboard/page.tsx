@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useLeaderboard } from '@/lib/forecast.api';
 import type { LeaderboardEntryDto } from '@gpls/shared';
+import { cn } from '@/lib/utils';
 
 function prevMonth(ym: string): string {
   const [y, m] = ym.split('-').map(Number);
@@ -22,11 +23,11 @@ function fmtMonth(ym: string): string {
 }
 
 function RankBadge({ rank }: { rank: number }) {
-  if (rank === 1) return <span style={{ fontSize: 18 }}>🥇</span>;
-  if (rank === 2) return <span style={{ fontSize: 18 }}>🥈</span>;
-  if (rank === 3) return <span style={{ fontSize: 18 }}>🥉</span>;
+  if (rank === 1) return <span className="text-[18px]">🥇</span>;
+  if (rank === 2) return <span className="text-[18px]">🥈</span>;
+  if (rank === 3) return <span className="text-[18px]">🥉</span>;
   return (
-    <span className="mono" style={{ font: '700 13px/1 var(--font-mono)', color: 'var(--mute)', minWidth: 22, display: 'inline-block', textAlign: 'center' }}>
+    <span className="font-mono text-[13px] leading-none font-bold text-mute min-w-[22px] inline-block text-center">
       {rank}
     </span>
   );
@@ -35,41 +36,40 @@ function RankBadge({ rank }: { rank: number }) {
 function EntryRow({ entry, index }: { entry: LeaderboardEntryDto; index: number }) {
   const isTop3 = entry.rank <= 3;
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: '44px 1fr 80px 64px 64px',
-      alignItems: 'center',
-      padding: '14px 24px',
-      borderTop: index === 0 ? 'none' : '1px solid var(--hairline)',
-      background: entry.rank === 1 ? 'rgba(212,175,55,0.05)' : 'transparent',
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div
+      className={cn(
+        'grid items-center px-6 py-[14px]',
+        index !== 0 && 'border-t border-hairline',
+        entry.rank === 1 && 'bg-[rgba(212,175,55,0.05)]',
+      )}
+      style={{ gridTemplateColumns: '44px 1fr 80px 64px 64px' }}
+    >
+      <div className="flex items-center justify-center">
         <RankBadge rank={entry.rank} />
       </div>
       <div>
-        <span style={{
-          font: `${isTop3 ? '700' : '500'} 14px/1 var(--font-display)`,
-          color: isTop3 ? 'var(--chalk)' : 'var(--bone)',
-        }}>
+        <span className={cn(
+          'font-display text-[14px] leading-none',
+          isTop3 ? 'font-bold text-chalk' : 'font-medium text-bone',
+        )}>
           {entry.displayName ?? `User ${entry.userId.slice(0, 6)}`}
         </span>
       </div>
-      <div style={{ textAlign: 'right' }}>
-        <span style={{
-          font: '700 16px/1 var(--font-display)',
-          fontVariantNumeric: 'tabular-nums',
-          color: isTop3 ? 'var(--gold)' : 'var(--chalk)',
-        }}>
+      <div className="text-right">
+        <span className={cn(
+          'font-display text-[16px] leading-none font-bold [font-variant-numeric:tabular-nums]',
+          isTop3 ? 'text-gold' : 'text-chalk',
+        )}>
           {entry.totalPoints}
         </span>
       </div>
-      <div style={{ textAlign: 'right' }}>
-        <span className="mono" style={{ fontSize: 13, fontVariantNumeric: 'tabular-nums', color: '#22c55e', fontWeight: 600 }}>
+      <div className="text-right">
+        <span className="font-mono text-[13px] [font-variant-numeric:tabular-nums] text-[#22c55e] font-semibold">
           {entry.correctCount}
         </span>
       </div>
-      <div style={{ textAlign: 'right' }}>
-        <span className="mono" style={{ fontSize: 13, fontVariantNumeric: 'tabular-nums', color: 'var(--mute)', fontWeight: 600 }}>
+      <div className="text-right">
+        <span className="font-mono text-[13px] [font-variant-numeric:tabular-nums] text-mute font-semibold">
           {entry.streak}
         </span>
       </div>
@@ -88,6 +88,8 @@ function buildMonthOptions(): { value: string; label: string }[] {
   return options;
 }
 
+const NAV_BTN = 'w-[34px] h-[34px] bg-ink-2 border border-line rounded-md cursor-pointer text-bone font-display text-[16px] leading-none font-bold flex items-center justify-center';
+
 function LeaderboardContent() {
   const [month, setMonth] = useState<string>(() => new Date().toISOString().slice(0, 7));
   const { data, isLoading, isError } = useLeaderboard(month);
@@ -96,26 +98,22 @@ function LeaderboardContent() {
   const monthOptions = buildMonthOptions();
 
   return (
-    <div style={{ padding: '32px 28px 60px', maxWidth: 760, margin: '0 auto' }}>
+    <div className="p-[32px_28px_60px] max-w-[760px] mx-auto">
       {/* Page header */}
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ font: '800 28px/1 var(--font-display)', margin: '0 0 8px', letterSpacing: '-0.02em' }}>
+      <div className="mb-7">
+        <h1 className="font-display text-[28px] leading-none font-extrabold m-0 mb-2 tracking-[-0.02em]">
           Bảng xếp hạng
         </h1>
-        <p style={{ font: '500 13px/1.5 var(--font-mono)', color: 'var(--mute)', margin: 0 }}>
+        <p className="font-mono text-[13px] leading-[1.5] text-mute m-0">
           Top nhà dự báo theo điểm tháng
         </p>
       </div>
 
       {/* Month selector */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24 }}>
+      <div className="flex items-center gap-2 mb-6">
         <button
           onClick={() => setMonth(prev => prevMonth(prev))}
-          style={{
-            width: 34, height: 34, background: 'var(--ink-2)', border: '1px solid var(--line)',
-            borderRadius: 6, cursor: 'pointer', color: 'var(--bone)',
-            font: '700 16px/1 var(--font-display)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}
+          className={NAV_BTN}
           aria-label="Tháng trước"
         >
           ‹
@@ -123,87 +121,53 @@ function LeaderboardContent() {
         <select
           value={month}
           onChange={e => setMonth(e.target.value)}
-          style={{
-            height: 34, padding: '0 28px 0 12px',
-            background: 'var(--ink-2)', border: '1px solid var(--line)',
-            borderRadius: 6, color: 'var(--chalk)',
-            font: '700 13px/1 var(--font-display)', cursor: 'pointer',
-            outline: 'none', appearance: 'none',
-            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")`,
-            backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'right 8px center',
-          }}
+          className="h-[34px] px-3 bg-ink-2 border border-line rounded-md text-chalk font-display text-[13px] font-bold cursor-pointer outline-none"
         >
-          {monthOptions.map(o => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
+          {monthOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
         <button
           onClick={() => setMonth(prev => nextMonth(prev))}
           disabled={!canGoForward}
-          style={{
-            width: 34, height: 34, background: 'var(--ink-2)', border: '1px solid var(--line)',
-            borderRadius: 6, cursor: canGoForward ? 'pointer' : 'not-allowed', color: canGoForward ? 'var(--bone)' : 'var(--mute)',
-            font: '700 16px/1 var(--font-display)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            opacity: canGoForward ? 1 : 0.4,
-          }}
           aria-label="Tháng sau"
+          className={cn(NAV_BTN, !canGoForward && 'opacity-40 cursor-not-allowed text-mute')}
         >
           ›
         </button>
       </div>
 
       {/* Table */}
-      <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, overflow: 'hidden' }}>
-        {/* Table header */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '44px 1fr 80px 64px 64px',
-          padding: '12px 24px',
-          background: 'var(--ink-3)',
-          borderBottom: '1px solid var(--hairline)',
-          font: '700 10px/1 var(--font-mono)',
-          color: 'var(--mute)',
-          letterSpacing: '0.14em',
-          textTransform: 'uppercase',
-        }}>
-          <span style={{ textAlign: 'center' }}>#</span>
+      <div className="bg-ink-2 border border-line rounded-[14px] overflow-hidden">
+        {/* Header */}
+        <div
+          className="grid px-6 py-3 bg-ink-3 border-b border-hairline font-mono text-[10px] text-mute tracking-[0.14em] uppercase"
+          style={{ gridTemplateColumns: '44px 1fr 80px 64px 64px' }}
+        >
+          <span className="text-center">#</span>
           <span>Tên</span>
-          <span style={{ textAlign: 'right' }}>Điểm</span>
-          <span style={{ textAlign: 'right' }}>Đúng</span>
-          <span style={{ textAlign: 'right' }}>Chuỗi</span>
+          <span className="text-right">Điểm</span>
+          <span className="text-right">Đúng</span>
+          <span className="text-right">Chuỗi</span>
         </div>
 
-        {/* Loading */}
         {isLoading && (
-          <div style={{ padding: '32px 24px', font: '500 13px/1 var(--font-mono)', color: 'var(--mute)', textAlign: 'center' }}>
-            đang tải…
-          </div>
+          <div className="p-[32px_24px] font-mono text-[13px] leading-none text-mute text-center">đang tải…</div>
         )}
 
-        {/* Error */}
         {isError && !isLoading && (
-          <div style={{ padding: '32px 24px', font: '500 13px/1 var(--font-mono)', color: '#ef4444', textAlign: 'center' }}>
-            Không thể tải bảng xếp hạng.
-          </div>
+          <div className="p-[32px_24px] font-mono text-[13px] leading-none text-down text-center">Không thể tải bảng xếp hạng.</div>
         )}
 
-        {/* Empty */}
         {!isLoading && !isError && data && data.entries.length === 0 && (
-          <div style={{ padding: '32px 24px', font: '500 13px/1 var(--font-mono)', color: 'var(--mute)', textAlign: 'center' }}>
-            Chưa có dữ liệu cho tháng này.
-          </div>
+          <div className="p-[32px_24px] font-mono text-[13px] leading-none text-mute text-center">Chưa có dữ liệu cho tháng này.</div>
         )}
 
-        {/* Entries */}
         {!isLoading && !isError && data && data.entries.map((entry, i) => (
           <EntryRow key={entry.userId} entry={entry} index={i} />
         ))}
       </div>
 
-      {/* Footer note */}
       {data && data.entries.length > 0 && (
-        <p style={{ font: '500 11px/1.5 var(--font-mono)', color: 'var(--mute)', marginTop: 16, textAlign: 'center' }}>
+        <p className="font-mono text-[11px] leading-[1.5] text-mute mt-4 text-center">
           Mỗi dự báo đúng = +1 điểm · Chuỗi liên tiếp thưởng thêm điểm bonus
         </p>
       )}

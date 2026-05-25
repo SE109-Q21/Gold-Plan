@@ -13,6 +13,7 @@ import {
   useDeleteTransaction,
 } from '@/lib/portfolio.api';
 import type { AddTransactionPayload } from '@/lib/portfolio.api';
+import { cn } from '@/lib/utils';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -73,13 +74,7 @@ function fmtVnd(v: number): string {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{
-      font: '700 9px/1 var(--font-mono)',
-      letterSpacing: '0.18em',
-      textTransform: 'uppercase',
-      color: 'var(--mute)',
-      marginBottom: 12,
-    }}>
+    <div className="font-mono text-[9px] leading-none font-bold tracking-[0.18em] uppercase text-mute mb-3">
       {children}
     </div>
   );
@@ -87,63 +82,41 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 function Skeleton({ w, h, radius = 4 }: { w: number | string; h: number; radius?: number }) {
   return (
-    <div style={{
-      width: w, height: h, borderRadius: radius,
-      background: 'linear-gradient(90deg, var(--ink-3) 25%, rgba(212,175,55,0.05) 50%, var(--ink-3) 75%)',
-      backgroundSize: '200% 100%',
-      animation: 'skshimmer 1.5s infinite',
-    }}/>
+    <div
+      className="animate-pulse bg-ink-3"
+      style={{ width: w, height: h, borderRadius: radius }}
+    />
   );
 }
 
 // ─── Summary card ─────────────────────────────────────────────────────────────
 
 function SummaryCard({
-  label, value, subLabel, color, loading,
+  label, value, subLabel, colorClass, loading,
 }: {
   label: string;
   value: string;
   subLabel?: string;
-  color?: string;
+  colorClass?: string;
   loading: boolean;
 }) {
   return (
-    <div style={{
-      background: 'var(--ink-2)',
-      border: '1px solid var(--line)',
-      borderRadius: 12,
-      padding: '20px 22px',
-      flex: 1,
-      minWidth: 0,
-    }}>
-      <div style={{
-        font: '700 9px/1 var(--font-mono)',
-        letterSpacing: '0.18em',
-        textTransform: 'uppercase',
-        color: 'var(--mute)',
-        marginBottom: 10,
-      }}>
+    <div className="bg-ink-2 border border-line rounded-[12px] p-[20px_22px] flex-1 min-w-0">
+      <div className="font-mono text-[9px] leading-none font-bold tracking-[0.18em] uppercase text-mute mb-[10px]">
         {label}
       </div>
       {loading ? (
         <Skeleton w={140} h={30}/>
       ) : (
-        <div style={{
-          font: '800 28px/1 var(--font-display)',
-          letterSpacing: '-0.03em',
-          color: color ?? 'var(--chalk)',
-          fontVariantNumeric: 'tabular-nums',
-        }}>
+        <div className={cn(
+          'font-display text-[28px] leading-none font-extrabold tracking-[-0.03em] [font-variant-numeric:tabular-nums]',
+          colorClass ?? 'text-chalk',
+        )}>
           {value}
         </div>
       )}
       {subLabel && !loading && (
-        <div style={{
-          font: '500 11px/1 var(--font-mono)',
-          color: 'var(--mute)',
-          marginTop: 6,
-          letterSpacing: '0.04em',
-        }}>
+        <div className="font-mono text-[11px] leading-none font-medium text-mute mt-[6px] tracking-[0.04em]">
           {subLabel}
         </div>
       )}
@@ -186,7 +159,7 @@ function PnlChart({ data, loading }: { data: { date: string; valueVnd: number }[
 
   if (loading) {
     return (
-      <div style={{ height: H, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="flex items-center justify-center" style={{ height: H }}>
         <Skeleton w="100%" h={H - 20}/>
       </div>
     );
@@ -194,8 +167,8 @@ function PnlChart({ data, loading }: { data: { date: string; valueVnd: number }[
 
   if (!chartData || !points.length) {
     return (
-      <div style={{ height: H, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ font: '500 13px/1 var(--font-mono)', color: 'var(--mute)', letterSpacing: '0.06em' }}>
+      <div className="flex items-center justify-center" style={{ height: H }}>
+        <span className="font-mono text-[13px] leading-none font-medium text-mute tracking-[0.06em]">
           no history yet
         </span>
       </div>
@@ -210,7 +183,6 @@ function PnlChart({ data, loading }: { data: { date: string; valueVnd: number }[
           <stop offset="100%" stopColor="#60A5FA" stopOpacity="0"/>
         </linearGradient>
       </defs>
-      {/* Y grid lines */}
       {chartData.yTicks.map((t: { v: number; y: number }, i: number) => (
         <g key={i}>
           <line
@@ -226,11 +198,8 @@ function PnlChart({ data, loading }: { data: { date: string; valueVnd: number }[
           </text>
         </g>
       ))}
-      {/* Area fill */}
       <path d={chartData.areaPath} fill="url(#chartGrad)"/>
-      {/* Line */}
       <path d={chartData.linePath} fill="none" stroke="#60A5FA" strokeWidth="1.75" strokeLinejoin="round" strokeLinecap="round"/>
-      {/* X axis ticks */}
       {chartData.xTicks.map((i: number) => {
         const d = new Date(points[i].date);
         const label = `${d.getDate()}/${d.getMonth() + 1}`;
@@ -241,7 +210,6 @@ function PnlChart({ data, loading }: { data: { date: string; valueVnd: number }[
           </text>
         );
       })}
-      {/* Last point dot */}
       <circle
         cx={chartData.xs[chartData.xs.length - 1]}
         cy={chartData.ys[chartData.ys.length - 1]}
@@ -289,7 +257,6 @@ function DonutChart({ items }: { items: { label: string; pct: number }[] }) {
     ].join(' ');
   }
 
-  // Single item: full circle as two half-arcs
   if (items.length === 1) {
     const c = allocColor(items[0].label, 0);
     return (
@@ -333,32 +300,29 @@ function AllocationGroup({
   loading: boolean;
 }) {
   return (
-    <div style={{ flex: 1, minWidth: 200 }}>
+    <div className="flex-1 min-w-[200px]">
       <SectionLabel>{title}</SectionLabel>
       {loading ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div className="flex flex-col gap-2">
           <Skeleton w={160} h={160} radius={80}/>
           <Skeleton w="80%" h={12} radius={3}/>
         </div>
       ) : items.length === 0 ? (
-        <div style={{ font: '500 11px/1 var(--font-mono)', color: 'var(--mute)' }}>no data</div>
+        <div className="font-mono text-[11px] leading-none font-medium text-mute">no data</div>
       ) : (
         <>
-          {/* Donut chart */}
           <DonutChart items={items}/>
-          {/* Legend */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginTop: 14 }}>
+          <div className="flex flex-col gap-[7px] mt-[14px]">
             {items.map((item, i) => (
-              <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{
-                  width: 9, height: 9, borderRadius: '50%',
-                  background: allocColor(item.label, i),
-                  flexShrink: 0,
-                }}/>
-                <span style={{ font: '600 11px/1 var(--font-mono)', color: 'var(--bone)', flex: 1 }}>
+              <div key={item.label} className="flex items-center gap-2">
+                <div
+                  className="w-[9px] h-[9px] rounded-full shrink-0"
+                  style={{ background: allocColor(item.label, i) }}
+                />
+                <span className="font-mono text-[11px] leading-none font-semibold text-bone flex-1">
                   {item.label}
                 </span>
-                <span className="mono" style={{ fontSize: 11, color: 'var(--mute)', fontVariantNumeric: 'tabular-nums' }}>
+                <span className="font-mono text-[11px] leading-none text-mute [font-variant-numeric:tabular-nums]">
                   {item.pct.toFixed(1)}%
                 </span>
               </div>
@@ -366,6 +330,40 @@ function AllocationGroup({
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+// ─── Shared modal input style ─────────────────────────────────────────────────
+
+const INPUT_CLS = 'w-full bg-ink-3 border border-line rounded-lg text-chalk font-display text-[14px] leading-none font-semibold px-[14px] py-[10px] outline-none appearance-none';
+
+// ─── ChipSel ─────────────────────────────────────────────────────────────────
+
+function ChipSel<T extends string>({
+  options, value, onChange,
+}: {
+  options: readonly T[];
+  value: T;
+  onChange: (v: T) => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-[6px]">
+      {options.map(opt => (
+        <button
+          key={opt}
+          type="button"
+          onClick={() => onChange(opt)}
+          className={cn(
+            'font-mono text-[11px] leading-none font-bold tracking-[0.08em] px-[13px] py-[7px] rounded-md border cursor-pointer transition-[border-color,background,color] duration-[120ms]',
+            value === opt
+              ? 'border-gold bg-[rgba(212,175,55,0.12)] text-gold'
+              : 'border-line bg-transparent text-bone',
+          )}
+        >
+          {opt}
+        </button>
+      ))}
     </div>
   );
 }
@@ -417,121 +415,46 @@ function AddTransactionModal({ onClose }: { onClose: () => void }) {
     }
   }
 
-  const inputStyle = {
-    width: '100%',
-    background: 'var(--ink-3)',
-    border: '1px solid var(--line)',
-    borderRadius: 8,
-    color: 'var(--chalk)',
-    font: '600 14px/1 var(--font-display)',
-    padding: '10px 14px',
-    outline: 'none',
-    appearance: 'none' as const,
-  };
-
-  function ChipSel<T extends string>({
-    options, value, onChange,
-  }: {
-    options: readonly T[];
-    value: T;
-    onChange: (v: T) => void;
-  }) {
-    return (
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-        {options.map(opt => (
-          <button
-            key={opt}
-            type="button"
-            onClick={() => onChange(opt)}
-            style={{
-              border: `1px solid ${value === opt ? 'var(--gold)' : 'var(--line)'}`,
-              background: value === opt ? 'rgba(212,175,55,0.12)' : 'transparent',
-              color: value === opt ? 'var(--gold)' : 'var(--bone)',
-              font: '700 11px/1 var(--font-mono)',
-              letterSpacing: '0.08em',
-              padding: '7px 13px',
-              borderRadius: 6,
-              cursor: 'pointer',
-              transition: 'border-color 120ms, background 120ms, color 120ms',
-            }}
-          >
-            {opt}
-          </button>
-        ))}
-      </div>
-    );
-  }
-
   return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 999,
-      background: 'rgba(11,11,15,0.85)',
-      backdropFilter: 'blur(6px)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: '20px',
-    }}>
-      <div style={{
-        width: 480, maxWidth: '100%',
-        background: 'var(--ink-2)',
-        border: '1px solid var(--line)',
-        borderRadius: 16,
-        padding: '28px 28px 24px',
-        position: 'relative',
-        maxHeight: '90vh',
-        overflowY: 'auto',
-      }}>
+    <div className="fixed inset-0 z-[999] bg-[rgba(11,11,15,0.85)] backdrop-blur-[6px] flex items-center justify-center p-5">
+      <div className="w-[480px] max-w-full bg-ink-2 border border-line rounded-2xl p-[28px_28px_24px] relative max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <div style={{ font: '800 18px/1 var(--font-display)', letterSpacing: '-0.02em' }}>
+            <div className="font-display text-[18px] leading-none font-extrabold tracking-[-0.02em]">
               add transaction
             </div>
-            <div style={{ font: '500 12px/1 var(--font-mono)', color: 'var(--mute)', marginTop: 4, letterSpacing: '0.04em' }}>
+            <div className="font-mono text-[12px] leading-none font-medium text-mute mt-1 tracking-[0.04em]">
               record a buy or sell
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            style={{
-              background: 'transparent',
-              border: '1px solid var(--line)',
-              borderRadius: 8,
-              color: 'var(--mute)',
-              width: 34, height: 34,
-              cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              transition: 'color 120ms, border-color 120ms',
-            }}
+            className="bg-transparent border border-line rounded-lg text-mute w-[34px] h-[34px] cursor-pointer flex items-center justify-center"
           >
             <IconX s={14}/>
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-[18px]">
           {/* Type */}
           <div>
             <SectionLabel>Type</SectionLabel>
-            <div style={{ display: 'flex', gap: 6 }}>
+            <div className="flex gap-[6px]">
               {(['BUY', 'SELL'] as const).map(t => (
                 <button
                   key={t}
                   type="button"
                   onClick={() => setTxType(t)}
-                  style={{
-                    flex: 1,
-                    padding: '10px',
-                    border: `1px solid ${txType === t ? (t === 'BUY' ? 'var(--up)' : 'var(--down)') : 'var(--line)'}`,
-                    background: txType === t
-                      ? t === 'BUY' ? 'rgba(88,200,150,0.12)' : 'rgba(229,72,77,0.12)'
-                      : 'transparent',
-                    color: txType === t ? (t === 'BUY' ? 'var(--up)' : 'var(--down)') : 'var(--bone)',
-                    font: '700 12px/1 var(--font-mono)',
-                    letterSpacing: '0.1em',
-                    borderRadius: 8,
-                    cursor: 'pointer',
-                    transition: 'border-color 120ms, background 120ms, color 120ms',
-                  }}
+                  className={cn(
+                    'flex-1 py-[10px] font-mono text-[12px] leading-none font-bold tracking-[0.1em] rounded-lg border cursor-pointer transition-[border-color,background,color] duration-[120ms]',
+                    txType === t
+                      ? t === 'BUY'
+                        ? 'border-up bg-[rgba(88,200,150,0.12)] text-up'
+                        : 'border-down bg-[rgba(229,72,77,0.12)] text-down'
+                      : 'border-line bg-transparent text-bone',
+                  )}
                 >
                   {t}
                 </button>
@@ -552,7 +475,7 @@ function AddTransactionModal({ onClose }: { onClose: () => void }) {
           </div>
 
           {/* Quantity & Price */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div className="grid grid-cols-2 gap-3">
             <div>
               <SectionLabel>Quantity (tael)</SectionLabel>
               <input
@@ -563,7 +486,7 @@ function AddTransactionModal({ onClose }: { onClose: () => void }) {
                 onChange={(e: { target: { value: string } }) => setQty(e.target.value)}
                 placeholder="e.g. 1.5"
                 required
-                style={inputStyle}
+                className={INPUT_CLS}
               />
             </div>
             <div>
@@ -576,7 +499,7 @@ function AddTransactionModal({ onClose }: { onClose: () => void }) {
                 onChange={(e: { target: { value: string } }) => setPrice(e.target.value)}
                 placeholder="e.g. 79000000"
                 required
-                style={inputStyle}
+                className={INPUT_CLS}
               />
             </div>
           </div>
@@ -590,7 +513,7 @@ function AddTransactionModal({ onClose }: { onClose: () => void }) {
               max={today}
               onChange={(e: { target: { value: string } }) => setDate(e.target.value)}
               required
-              style={inputStyle}
+              className={INPUT_CLS}
             />
           </div>
 
@@ -602,21 +525,13 @@ function AddTransactionModal({ onClose }: { onClose: () => void }) {
               value={note}
               onChange={(e: { target: { value: string } }) => setNote(e.target.value)}
               placeholder="e.g. Bought at SJC Hà Nội"
-              style={inputStyle}
+              className={INPUT_CLS}
             />
           </div>
 
           {/* Error */}
           {error && (
-            <div style={{
-              background: 'rgba(229,72,77,0.1)',
-              border: '1px solid rgba(229,72,77,0.3)',
-              borderRadius: 8,
-              padding: '10px 14px',
-              font: '500 12px/1.4 var(--font-mono)',
-              color: 'var(--down)',
-              letterSpacing: '0.04em',
-            }}>
+            <div className="bg-[rgba(229,72,77,0.1)] border border-[rgba(229,72,77,0.3)] rounded-lg px-[14px] py-[10px] font-mono text-[12px] leading-[1.4] font-medium text-down tracking-[0.04em]">
               {error}
             </div>
           )}
@@ -625,18 +540,10 @@ function AddTransactionModal({ onClose }: { onClose: () => void }) {
           <button
             type="submit"
             disabled={submitting}
-            style={{
-              width: '100%',
-              height: 44,
-              background: submitting ? 'rgba(212,175,55,0.4)' : 'var(--gold)',
-              border: 0,
-              borderRadius: 10,
-              cursor: submitting ? 'not-allowed' : 'pointer',
-              font: '700 13px/1 var(--font-display)',
-              color: '#0B0B0F',
-              letterSpacing: '0.04em',
-              transition: 'background 140ms',
-            }}
+            className={cn(
+              'w-full h-11 border-0 rounded-[10px] font-display text-[13px] leading-none font-bold text-gold-ink tracking-[0.04em] transition-[background] duration-[140ms]',
+              submitting ? 'bg-[rgba(212,175,55,0.4)] cursor-not-allowed' : 'bg-gold cursor-pointer',
+            )}
           >
             {submitting ? 'Saving…' : `Record ${txType}`}
           </button>
@@ -701,61 +608,41 @@ function EditTransactionModal({ tx, onClose }: { tx: EditableTx; onClose: () => 
     }
   }
 
-  const inputStyle = {
-    width: '100%',
-    background: 'var(--ink-3)',
-    border: '1px solid var(--line)',
-    borderRadius: 8,
-    color: 'var(--chalk)',
-    font: '600 14px/1 var(--font-display)',
-    padding: '10px 14px',
-    outline: 'none',
-    appearance: 'none' as const,
-  };
-
-  function ChipSel<T extends string>({ options, value, onChange }: { options: readonly T[]; value: T; onChange: (v: T) => void }) {
-    return (
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-        {options.map(opt => (
-          <button
-            key={opt}
-            type="button"
-            onClick={() => onChange(opt)}
-            style={{
-              border: `1px solid ${value === opt ? 'var(--gold)' : 'var(--line)'}`,
-              background: value === opt ? 'rgba(212,175,55,0.12)' : 'transparent',
-              color: value === opt ? 'var(--gold)' : 'var(--bone)',
-              font: '700 11px/1 var(--font-mono)',
-              letterSpacing: '0.08em',
-              padding: '7px 13px',
-              borderRadius: 6,
-              cursor: 'pointer',
-            }}
-          >{opt}</button>
-        ))}
-      </div>
-    );
-  }
-
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 999, background: 'rgba(11,11,15,0.85)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-      <div style={{ width: 480, maxWidth: '100%', background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 16, padding: '28px 28px 24px', position: 'relative', maxHeight: '90vh', overflowY: 'auto' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+    <div className="fixed inset-0 z-[999] bg-[rgba(11,11,15,0.85)] backdrop-blur-[6px] flex items-center justify-center p-5">
+      <div className="w-[480px] max-w-full bg-ink-2 border border-line rounded-2xl p-[28px_28px_24px] relative max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <div style={{ font: '800 18px/1 var(--font-display)', letterSpacing: '-0.02em' }}>edit transaction</div>
-            <div style={{ font: '500 12px/1 var(--font-mono)', color: 'var(--mute)', marginTop: 4, letterSpacing: '0.04em' }}>modify the details below</div>
+            <div className="font-display text-[18px] leading-none font-extrabold tracking-[-0.02em]">edit transaction</div>
+            <div className="font-mono text-[12px] leading-none font-medium text-mute mt-1 tracking-[0.04em]">modify the details below</div>
           </div>
-          <button type="button" onClick={onClose} style={{ background: 'transparent', border: '1px solid var(--line)', borderRadius: 8, color: 'var(--mute)', width: 34, height: 34, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button
+            type="button"
+            onClick={onClose}
+            className="bg-transparent border border-line rounded-lg text-mute w-[34px] h-[34px] cursor-pointer flex items-center justify-center"
+          >
             <IconX s={14}/>
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-[18px]">
           <div>
             <SectionLabel>Type</SectionLabel>
-            <div style={{ display: 'flex', gap: 6 }}>
+            <div className="flex gap-[6px]">
               {(['BUY', 'SELL'] as const).map(t => (
-                <button key={t} type="button" onClick={() => setTxType(t)} style={{ flex: 1, padding: '10px', border: `1px solid ${txType === t ? (t === 'BUY' ? 'var(--up)' : 'var(--down)') : 'var(--line)'}`, background: txType === t ? t === 'BUY' ? 'rgba(88,200,150,0.12)' : 'rgba(229,72,77,0.12)' : 'transparent', color: txType === t ? (t === 'BUY' ? 'var(--up)' : 'var(--down)') : 'var(--bone)', font: '700 12px/1 var(--font-mono)', letterSpacing: '0.1em', borderRadius: 8, cursor: 'pointer' }}>
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setTxType(t)}
+                  className={cn(
+                    'flex-1 py-[10px] font-mono text-[12px] leading-none font-bold tracking-[0.1em] rounded-lg border cursor-pointer transition-[border-color,background,color] duration-[120ms]',
+                    txType === t
+                      ? t === 'BUY'
+                        ? 'border-up bg-[rgba(88,200,150,0.12)] text-up'
+                        : 'border-down bg-[rgba(229,72,77,0.12)] text-down'
+                      : 'border-line bg-transparent text-bone',
+                  )}
+                >
                   {t}
                 </button>
               ))}
@@ -772,34 +659,49 @@ function EditTransactionModal({ tx, onClose }: { tx: EditableTx; onClose: () => 
             <ChipSel options={GOLD_TYPES} value={goldType as typeof GOLD_TYPES[number]} onChange={setGoldType}/>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div className="grid grid-cols-2 gap-3">
             <div>
               <SectionLabel>Quantity (tael)</SectionLabel>
-              <input type="number" min="0.01" step="0.01" value={qty} onChange={(e: { target: { value: string } }) => setQty(e.target.value)} placeholder="e.g. 1.5" required style={inputStyle}/>
+              <input type="number" min="0.01" step="0.01" value={qty}
+                onChange={(e: { target: { value: string } }) => setQty(e.target.value)}
+                placeholder="e.g. 1.5" required className={INPUT_CLS}/>
             </div>
             <div>
               <SectionLabel>Price / Tael (VND)</SectionLabel>
-              <input type="number" min="1" step="1" value={price} onChange={(e: { target: { value: string } }) => setPrice(e.target.value)} placeholder="e.g. 79000000" required style={inputStyle}/>
+              <input type="number" min="1" step="1" value={price}
+                onChange={(e: { target: { value: string } }) => setPrice(e.target.value)}
+                placeholder="e.g. 79000000" required className={INPUT_CLS}/>
             </div>
           </div>
 
           <div>
             <SectionLabel>Date</SectionLabel>
-            <input type="date" value={date} max={today} onChange={(e: { target: { value: string } }) => setDate(e.target.value)} required style={inputStyle}/>
+            <input type="date" value={date} max={today}
+              onChange={(e: { target: { value: string } }) => setDate(e.target.value)}
+              required className={INPUT_CLS}/>
           </div>
 
           <div>
             <SectionLabel>Note (optional)</SectionLabel>
-            <input type="text" value={note} onChange={(e: { target: { value: string } }) => setNote(e.target.value)} placeholder="e.g. Bought at SJC Hà Nội" style={inputStyle}/>
+            <input type="text" value={note}
+              onChange={(e: { target: { value: string } }) => setNote(e.target.value)}
+              placeholder="e.g. Bought at SJC Hà Nội" className={INPUT_CLS}/>
           </div>
 
           {error && (
-            <div style={{ background: 'rgba(229,72,77,0.1)', border: '1px solid rgba(229,72,77,0.3)', borderRadius: 8, padding: '10px 14px', font: '500 12px/1.4 var(--font-mono)', color: 'var(--down)', letterSpacing: '0.04em' }}>
+            <div className="bg-[rgba(229,72,77,0.1)] border border-[rgba(229,72,77,0.3)] rounded-lg px-[14px] py-[10px] font-mono text-[12px] leading-[1.4] font-medium text-down tracking-[0.04em]">
               {error}
             </div>
           )}
 
-          <button type="submit" disabled={submitting} style={{ width: '100%', height: 44, background: submitting ? 'rgba(212,175,55,0.4)' : 'var(--gold)', border: 0, borderRadius: 10, cursor: submitting ? 'not-allowed' : 'pointer', font: '700 13px/1 var(--font-display)', color: '#0B0B0F', letterSpacing: '0.04em' }}>
+          <button
+            type="submit"
+            disabled={submitting}
+            className={cn(
+              'w-full h-11 border-0 rounded-[10px] font-display text-[13px] leading-none font-bold text-gold-ink tracking-[0.04em] transition-[background] duration-[140ms]',
+              submitting ? 'bg-[rgba(212,175,55,0.4)] cursor-not-allowed' : 'bg-gold cursor-pointer',
+            )}
+          >
             {submitting ? 'Saving…' : 'Save Changes'}
           </button>
         </form>
@@ -809,6 +711,9 @@ function EditTransactionModal({ tx, onClose }: { tx: EditableTx; onClose: () => 
 }
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
+
+const TH_BASE = 'font-mono text-[9px] leading-none font-bold tracking-[0.14em] uppercase text-mute pb-[14px] px-3 border-b border-line';
+const TD_BASE = 'px-3 py-[14px] border-b border-hairline';
 
 function PortfolioContent() {
   const router = useRouter();
@@ -823,9 +728,8 @@ function PortfolioContent() {
   const { data: txData, isLoading: txLoading } = useTransactions(txPage);
   const deleteTx = useDeleteTransaction();
 
-  // Derived values
   const pnlPositive = (summary?.totalPnlVnd ?? 0) >= 0;
-  const pnlColor = pnlPositive ? 'var(--up)' : 'var(--down)';
+  const pnlClass = pnlPositive ? 'text-up' : 'text-down';
   const pnlArrow = pnlPositive ? '↑' : '↓';
   const pnlPctValue = summary?.totalPnlPct ?? 0;
   const pnlPctPositive = pnlPctValue >= 0;
@@ -835,61 +739,35 @@ function PortfolioContent() {
 
   return (
     <>
-      <style>{`
-        @keyframes skshimmer {
-          0%   { background-position: 200% 0; }
-          100% { background-position: -200% 0; }
-        }
-      `}</style>
-
-      <div style={{ minHeight: '100vh', background: 'var(--ink)', color: 'var(--chalk)', padding: '32px 40px' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+      <div className="min-h-screen bg-ink text-chalk p-[32px_40px]">
+        <div className="max-w-[1100px] mx-auto">
 
           {/* ── Header bar ── */}
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 32, gap: 16 }}>
+          <div className="flex items-start justify-between mb-8 gap-4">
             <div>
               <button
                 onClick={() => router.back()}
-                style={{
-                  background: 'transparent', border: 0, cursor: 'pointer',
-                  color: 'var(--mute)', display: 'flex', alignItems: 'center', gap: 6,
-                  font: '600 12px/1 var(--font-mono)', letterSpacing: '0.08em',
-                  padding: '0 0 14px', transition: 'color 140ms',
-                }}
+                className="bg-transparent border-0 cursor-pointer text-mute flex items-center gap-[6px] font-mono text-[12px] leading-none font-semibold tracking-[0.08em] p-0 pb-[14px]"
               >
                 <IconArrowLeft s={13}/> portfolio
               </button>
-              <h1 style={{ font: '800 40px/1 var(--font-display)', letterSpacing: '-0.035em', margin: 0 }}>
+              <h1 className="font-display text-[40px] leading-none font-extrabold tracking-[-0.035em] m-0">
                 my portfolio
               </h1>
-              <p style={{ font: '400 13px/1.5 var(--font-display)', color: 'var(--mute)', margin: '8px 0 0' }}>
-                Track your gold holdings, P&L, and transaction history
+              <p className="font-display text-[13px] leading-[1.5] text-mute m-0 mt-2">
+                Track your gold holdings, P&amp;L, and transaction history
               </p>
             </div>
             <button
               onClick={() => setShowModal(true)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 7,
-                height: 40,
-                background: 'var(--gold)',
-                border: 0,
-                borderRadius: 10,
-                cursor: 'pointer',
-                font: '700 13px/1 var(--font-display)',
-                color: '#0B0B0F',
-                padding: '0 18px',
-                letterSpacing: '0.02em',
-                flexShrink: 0,
-                marginTop: 6,
-                transition: 'opacity 140ms',
-              }}
+              className="flex items-center gap-[7px] h-10 bg-gold border-0 rounded-[10px] cursor-pointer font-display text-[13px] leading-none font-bold text-gold-ink px-[18px] tracking-[0.02em] shrink-0 mt-[6px]"
             >
               <IconPlus s={14}/> add transaction
             </button>
           </div>
 
           {/* ── Summary cards ── */}
-          <div style={{ display: 'flex', gap: 12, marginBottom: 28, flexWrap: 'wrap' }}>
+          <div className="flex gap-3 mb-7 flex-wrap">
             <SummaryCard
               label="Total Value"
               value={summary ? fmtM(summary.totalValueVnd) : '—'}
@@ -906,52 +784,31 @@ function PortfolioContent() {
               label={`P&L ${summary ? pnlArrow : ''}`}
               value={summary ? `${pnlPositive ? '+' : ''}${fmtM(summary.totalPnlVnd)}` : '—'}
               subLabel={summary ? fmtVnd(summary.totalPnlVnd) : undefined}
-              color={summary ? pnlColor : undefined}
+              colorClass={summary ? pnlClass : undefined}
               loading={summaryLoading}
             />
             <SummaryCard
               label="P&L %"
               value={summary ? `${pnlPctPositive ? '+' : ''}${pnlPctValue.toFixed(2)}%` : '—'}
-              color={summary ? (pnlPctPositive ? 'var(--up)' : 'var(--down)') : undefined}
+              colorClass={summary ? (pnlPctPositive ? 'text-up' : 'text-down') : undefined}
               loading={summaryLoading}
             />
           </div>
 
           {/* ── P&L Chart ── */}
-          <div style={{
-            background: 'var(--ink-2)',
-            border: '1px solid var(--line)',
-            borderRadius: 12,
-            padding: '20px 24px',
-            marginBottom: 28,
-          }}>
+          <div className="bg-ink-2 border border-line rounded-xl p-[20px_24px] mb-7">
             <SectionLabel>portfolio value history</SectionLabel>
             <PnlChart data={chartData ?? []} loading={chartLoading}/>
           </div>
 
           {/* ── Holdings table ── */}
-          <div style={{
-            background: 'var(--ink-2)',
-            border: '1px solid var(--line)',
-            borderRadius: 12,
-            padding: '20px 24px',
-            marginBottom: 28,
-            overflowX: 'auto',
-          }}>
+          <div className="bg-ink-2 border border-line rounded-xl p-[20px_24px] mb-7 overflow-x-auto">
             <SectionLabel>holdings</SectionLabel>
-            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 700 }}>
+            <table className="w-full border-collapse min-w-[700px]">
               <thead>
                 <tr>
                   {['Brand', 'Gold Type', 'Net Qty', 'Avg Cost', 'Current Price', 'Value', 'P&L', 'P&L%'].map(h => (
-                    <th key={h} style={{
-                      font: '700 9px/1 var(--font-mono)',
-                      letterSpacing: '0.14em',
-                      textTransform: 'uppercase',
-                      color: 'var(--mute)',
-                      padding: '0 12px 14px',
-                      textAlign: h === 'Brand' || h === 'Gold Type' ? 'left' : 'right',
-                      borderBottom: '1px solid var(--line)',
-                    }}>
+                    <th key={h} className={cn(TH_BASE, h === 'Brand' || h === 'Gold Type' ? 'text-left' : 'text-right')}>
                       {h}
                     </th>
                   ))}
@@ -962,7 +819,7 @@ function PortfolioContent() {
                   [1, 2, 3].map(i => (
                     <tr key={i}>
                       {Array.from({ length: 8 }).map((_, j) => (
-                        <td key={j} style={{ padding: '14px 12px', borderBottom: '1px solid var(--hairline)' }}>
+                        <td key={j} className={TD_BASE}>
                           <Skeleton w={j < 2 ? 60 : 80} h={12}/>
                         </td>
                       ))}
@@ -970,26 +827,26 @@ function PortfolioContent() {
                   ))
                 ) : !summary?.holdings.length ? (
                   <tr>
-                    <td colSpan={8} style={{ padding: '32px', textAlign: 'center', font: '500 13px/1 var(--font-mono)', color: 'var(--mute)' }}>
+                    <td colSpan={8} className="p-8 text-center font-mono text-[13px] leading-none font-medium text-mute">
                       no holdings yet — add a buy transaction to get started
                     </td>
                   </tr>
                 ) : (
                   summary.holdings.map((h: { brand: string; goldType: string; netQty: number; avgCostPerTael: number; currentBuyPrice: number; currentValueVnd: number; pnlVnd: number; pnlPct: number }, idx: number) => {
                     const hPnlPos = h.pnlVnd >= 0;
-                    const hPnlColor = hPnlPos ? 'var(--up)' : 'var(--down)';
+                    const hPnlCls = hPnlPos ? 'text-up' : 'text-down';
                     return (
-                      <tr key={idx} style={{ transition: 'background 120ms' }}>
-                        <td style={{ padding: '14px 12px', borderBottom: '1px solid var(--hairline)', font: '600 13px/1 var(--font-display)', color: 'var(--chalk)' }}>{h.brand}</td>
-                        <td style={{ padding: '14px 12px', borderBottom: '1px solid var(--hairline)', font: '600 11px/1 var(--font-mono)', color: 'var(--bone)', letterSpacing: '0.04em' }}>{h.goldType}</td>
-                        <td className="mono" style={{ padding: '14px 12px', borderBottom: '1px solid var(--hairline)', textAlign: 'right', fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{h.netQty.toFixed(3)}</td>
-                        <td className="mono" style={{ padding: '14px 12px', borderBottom: '1px solid var(--hairline)', textAlign: 'right', fontSize: 12, color: 'var(--bone)', fontVariantNumeric: 'tabular-nums' }}>{fmtM(h.avgCostPerTael)}</td>
-                        <td className="mono" style={{ padding: '14px 12px', borderBottom: '1px solid var(--hairline)', textAlign: 'right', fontSize: 12, color: 'var(--bone)', fontVariantNumeric: 'tabular-nums' }}>{fmtM(h.currentBuyPrice)}</td>
-                        <td className="mono" style={{ padding: '14px 12px', borderBottom: '1px solid var(--hairline)', textAlign: 'right', fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{fmtM(h.currentValueVnd)}</td>
-                        <td className="mono" style={{ padding: '14px 12px', borderBottom: '1px solid var(--hairline)', textAlign: 'right', fontSize: 13, color: hPnlColor, fontVariantNumeric: 'tabular-nums' }}>
+                      <tr key={idx}>
+                        <td className={cn(TD_BASE, 'font-display text-[13px] leading-none font-semibold text-chalk')}>{h.brand}</td>
+                        <td className={cn(TD_BASE, 'font-mono text-[11px] leading-none font-semibold text-bone tracking-[0.04em]')}>{h.goldType}</td>
+                        <td className={cn(TD_BASE, 'text-right font-mono text-[13px] [font-variant-numeric:tabular-nums]')}>{h.netQty.toFixed(3)}</td>
+                        <td className={cn(TD_BASE, 'text-right font-mono text-[12px] text-bone [font-variant-numeric:tabular-nums]')}>{fmtM(h.avgCostPerTael)}</td>
+                        <td className={cn(TD_BASE, 'text-right font-mono text-[12px] text-bone [font-variant-numeric:tabular-nums]')}>{fmtM(h.currentBuyPrice)}</td>
+                        <td className={cn(TD_BASE, 'text-right font-mono text-[13px] [font-variant-numeric:tabular-nums]')}>{fmtM(h.currentValueVnd)}</td>
+                        <td className={cn(TD_BASE, 'text-right font-mono text-[13px] [font-variant-numeric:tabular-nums]', hPnlCls)}>
                           {hPnlPos ? '+' : ''}{fmtM(h.pnlVnd)}
                         </td>
-                        <td className="mono" style={{ padding: '14px 12px', borderBottom: '1px solid var(--hairline)', textAlign: 'right', fontSize: 12, color: hPnlColor, fontVariantNumeric: 'tabular-nums' }}>
+                        <td className={cn(TD_BASE, 'text-right font-mono text-[12px] [font-variant-numeric:tabular-nums]', hPnlCls)}>
                           {hPnlPos ? '+' : ''}{h.pnlPct.toFixed(2)}%
                         </td>
                       </tr>
@@ -1001,49 +858,29 @@ function PortfolioContent() {
           </div>
 
           {/* ── Allocation ── */}
-          <div style={{
-            background: 'var(--ink-2)',
-            border: '1px solid var(--line)',
-            borderRadius: 12,
-            padding: '20px 24px',
-            marginBottom: 28,
-          }}>
+          <div className="bg-ink-2 border border-line rounded-xl p-[20px_24px] mb-7">
             <SectionLabel>allocation</SectionLabel>
-            <div style={{ display: 'flex', gap: 48, flexWrap: 'wrap' }}>
+            <div className="flex gap-12 flex-wrap">
               <AllocationGroup title="by brand" items={allocByBrand} loading={allocLoading}/>
               <AllocationGroup title="by gold type" items={allocByType} loading={allocLoading}/>
             </div>
           </div>
 
           {/* ── Transactions ── */}
-          <div style={{
-            background: 'var(--ink-2)',
-            border: '1px solid var(--line)',
-            borderRadius: 12,
-            padding: '20px 24px',
-            overflowX: 'auto',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <div className="bg-ink-2 border border-line rounded-xl p-[20px_24px] overflow-x-auto">
+            <div className="flex items-center justify-between mb-4">
               <SectionLabel>transactions</SectionLabel>
               {txData && txData.totalPages > 1 && (
-                <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '0.1em' }}>
+                <div className="font-mono text-[10px] text-mute tracking-[0.1em]">
                   page {txData.page} of {txData.totalPages}
                 </div>
               )}
             </div>
-            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 680 }}>
+            <table className="w-full border-collapse min-w-[680px]">
               <thead>
                 <tr>
                   {['Date', 'Type', 'Brand', 'Gold Type', 'Qty', 'Price/Tael', 'Note', ''].map((h, i) => (
-                    <th key={i} style={{
-                      font: '700 9px/1 var(--font-mono)',
-                      letterSpacing: '0.14em',
-                      textTransform: 'uppercase',
-                      color: 'var(--mute)',
-                      padding: '0 10px 14px',
-                      textAlign: i >= 4 ? 'right' : 'left',
-                      borderBottom: '1px solid var(--line)',
-                    }}>
+                    <th key={i} className={cn(TH_BASE, i >= 4 ? 'text-right' : 'text-left')}>
                       {h}
                     </th>
                   ))}
@@ -1054,7 +891,7 @@ function PortfolioContent() {
                   [1, 2, 3, 4].map(i => (
                     <tr key={i}>
                       {Array.from({ length: 8 }).map((_, j) => (
-                        <td key={j} style={{ padding: '13px 10px', borderBottom: '1px solid var(--hairline)' }}>
+                        <td key={j} className="px-[10px] py-[13px] border-b border-hairline">
                           <Skeleton w={j === 1 ? 40 : 70} h={11}/>
                         </td>
                       ))}
@@ -1062,7 +899,7 @@ function PortfolioContent() {
                   ))
                 ) : !txData?.items.length ? (
                   <tr>
-                    <td colSpan={8} style={{ padding: '32px', textAlign: 'center', font: '500 13px/1 var(--font-mono)', color: 'var(--mute)' }}>
+                    <td colSpan={8} className="p-8 text-center font-mono text-[13px] leading-none font-medium text-mute">
                       no transactions yet
                     </td>
                   </tr>
@@ -1073,45 +910,41 @@ function PortfolioContent() {
                     const isBuy = tx.type === 'BUY';
                     return (
                       <tr key={tx.id}>
-                        <td className="mono" style={{ padding: '13px 10px', borderBottom: '1px solid var(--hairline)', fontSize: 11, color: 'var(--bone)', fontVariantNumeric: 'tabular-nums' }}>
+                        <td className="px-[10px] py-[13px] border-b border-hairline font-mono text-[11px] text-bone [font-variant-numeric:tabular-nums]">
                           {dateStr}
                         </td>
-                        <td style={{ padding: '13px 10px', borderBottom: '1px solid var(--hairline)' }}>
-                          <span style={{
-                            display: 'inline-block',
-                            padding: '3px 8px',
-                            borderRadius: 4,
-                            font: '700 10px/1 var(--font-mono)',
-                            letterSpacing: '0.1em',
-                            background: isBuy ? 'rgba(88,200,150,0.12)' : 'rgba(229,72,77,0.12)',
-                            color: isBuy ? 'var(--up)' : 'var(--down)',
-                            border: `1px solid ${isBuy ? 'rgba(88,200,150,0.3)' : 'rgba(229,72,77,0.3)'}`,
-                          }}>
+                        <td className="px-[10px] py-[13px] border-b border-hairline">
+                          <span className={cn(
+                            'inline-block px-2 py-[3px] rounded font-mono text-[10px] leading-none font-bold tracking-[0.1em] border',
+                            isBuy
+                              ? 'bg-[rgba(88,200,150,0.12)] text-up border-[rgba(88,200,150,0.3)]'
+                              : 'bg-[rgba(229,72,77,0.12)] text-down border-[rgba(229,72,77,0.3)]',
+                          )}>
                             {tx.type}
                           </span>
                         </td>
-                        <td style={{ padding: '13px 10px', borderBottom: '1px solid var(--hairline)', font: '600 12px/1 var(--font-display)', color: 'var(--chalk)' }}>{tx.brand}</td>
-                        <td className="mono" style={{ padding: '13px 10px', borderBottom: '1px solid var(--hairline)', fontSize: 11, color: 'var(--bone)', letterSpacing: '0.04em' }}>{tx.goldType}</td>
-                        <td className="mono" style={{ padding: '13px 10px', borderBottom: '1px solid var(--hairline)', textAlign: 'right', fontSize: 12, fontVariantNumeric: 'tabular-nums' }}>
+                        <td className="px-[10px] py-[13px] border-b border-hairline font-display text-[12px] leading-none font-semibold text-chalk">{tx.brand}</td>
+                        <td className="px-[10px] py-[13px] border-b border-hairline font-mono text-[11px] text-bone tracking-[0.04em]">{tx.goldType}</td>
+                        <td className="px-[10px] py-[13px] border-b border-hairline text-right font-mono text-[12px] [font-variant-numeric:tabular-nums]">
                           {tx.quantity.toFixed(3)}
                         </td>
-                        <td className="mono" style={{ padding: '13px 10px', borderBottom: '1px solid var(--hairline)', textAlign: 'right', fontSize: 12, fontVariantNumeric: 'tabular-nums' }}>
+                        <td className="px-[10px] py-[13px] border-b border-hairline text-right font-mono text-[12px] [font-variant-numeric:tabular-nums]">
                           {fmtM(tx.pricePerTael)}
                         </td>
-                        <td style={{ padding: '13px 10px', borderBottom: '1px solid var(--hairline)', font: '400 12px/1.4 var(--font-display)', color: 'var(--mute)', maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <td className="px-[10px] py-[13px] border-b border-hairline font-display text-[12px] leading-[1.4] text-mute max-w-[140px] overflow-hidden text-ellipsis whitespace-nowrap">
                           {tx.note ?? '—'}
                         </td>
-                        <td style={{ padding: '13px 10px', borderBottom: '1px solid var(--hairline)', textAlign: 'right' }}>
-                          <div style={{ display: 'inline-flex', gap: 6 }}>
+                        <td className="px-[10px] py-[13px] border-b border-hairline text-right">
+                          <div className="inline-flex gap-[6px]">
                             <button
                               onClick={() => setEditingTx(tx)}
-                              style={{ background: 'transparent', border: '1px solid var(--line)', borderRadius: 6, color: 'var(--mute)', width: 28, height: 28, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', transition: 'color 120ms, border-color 120ms' }}
+                              className="bg-transparent border border-line rounded-md text-mute w-7 h-7 cursor-pointer inline-flex items-center justify-center"
                             >
                               <IconPencil s={12}/>
                             </button>
                             <button
                               onClick={() => deleteTx.mutateAsync(tx.id)}
-                              style={{ background: 'transparent', border: '1px solid var(--line)', borderRadius: 6, color: 'var(--mute)', width: 28, height: 28, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', transition: 'color 120ms, border-color 120ms' }}
+                              className="bg-transparent border border-line rounded-md text-mute w-7 h-7 cursor-pointer inline-flex items-center justify-center"
                             >
                               <IconTrash s={12}/>
                             </button>
@@ -1126,41 +959,27 @@ function PortfolioContent() {
 
             {/* Pagination */}
             {txData && txData.totalPages > 1 && (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
+              <div className="flex items-center justify-end gap-2 mt-4">
                 <button
                   onClick={() => setTxPage((p: number) => Math.max(1, p - 1))}
                   disabled={txPage <= 1}
-                  style={{
-                    height: 32, padding: '0 14px',
-                    background: 'transparent',
-                    border: '1px solid var(--line)',
-                    borderRadius: 6,
-                    color: txPage <= 1 ? 'var(--mute)' : 'var(--bone)',
-                    font: '600 11px/1 var(--font-mono)',
-                    letterSpacing: '0.06em',
-                    cursor: txPage <= 1 ? 'not-allowed' : 'pointer',
-                    opacity: txPage <= 1 ? 0.5 : 1,
-                  }}
+                  className={cn(
+                    'h-8 px-[14px] bg-transparent border border-line rounded-md font-mono text-[11px] leading-none font-semibold tracking-[0.06em]',
+                    txPage <= 1 ? 'text-mute cursor-not-allowed opacity-50' : 'text-bone cursor-pointer',
+                  )}
                 >
                   Prev
                 </button>
-                <span className="mono" style={{ fontSize: 11, color: 'var(--mute)' }}>
+                <span className="font-mono text-[11px] text-mute">
                   {txPage} / {txData.totalPages}
                 </span>
                 <button
                   onClick={() => setTxPage((p: number) => Math.min(txData.totalPages, p + 1))}
                   disabled={txPage >= txData.totalPages}
-                  style={{
-                    height: 32, padding: '0 14px',
-                    background: 'transparent',
-                    border: '1px solid var(--line)',
-                    borderRadius: 6,
-                    color: txPage >= txData.totalPages ? 'var(--mute)' : 'var(--bone)',
-                    font: '600 11px/1 var(--font-mono)',
-                    letterSpacing: '0.06em',
-                    cursor: txPage >= txData.totalPages ? 'not-allowed' : 'pointer',
-                    opacity: txPage >= txData.totalPages ? 0.5 : 1,
-                  }}
+                  className={cn(
+                    'h-8 px-[14px] bg-transparent border border-line rounded-md font-mono text-[11px] leading-none font-semibold tracking-[0.06em]',
+                    txPage >= txData.totalPages ? 'text-mute cursor-not-allowed opacity-50' : 'text-bone cursor-pointer',
+                  )}
                 >
                   Next
                 </button>
@@ -1171,7 +990,6 @@ function PortfolioContent() {
         </div>
       </div>
 
-      {/* Modal */}
       {showModal && <AddTransactionModal onClose={() => setShowModal(false)}/>}
       {editingTx && <EditTransactionModal tx={editingTx} onClose={() => setEditingTx(null)}/>}
     </>

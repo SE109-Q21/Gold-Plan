@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDigestArchive } from '@/lib/digest.api';
 import type { DigestDto } from '@gpls/shared';
+import { cn } from '@/lib/utils';
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString('vi-VN', {
@@ -18,13 +19,12 @@ function fmtVnd(n: number) {
 function PctBadge({ pct }: { pct: number }) {
   const isUp = pct >= 0;
   return (
-    <span style={{
-      font: '700 11px/1 var(--font-mono)', letterSpacing: '0.06em',
-      padding: '3px 8px', borderRadius: 4,
-      color: isUp ? 'var(--up)' : 'var(--down)',
-      background: isUp ? 'rgba(88,200,150,0.12)' : 'rgba(229,72,77,0.12)',
-      border: `1px solid ${isUp ? 'rgba(88,200,150,0.3)' : 'rgba(229,72,77,0.3)'}`,
-    }}>
+    <span className={cn(
+      'font-mono text-[11px] leading-none font-bold tracking-[0.06em] px-2 py-[3px] rounded border',
+      isUp
+        ? 'text-up bg-[rgba(88,200,150,0.12)] border-[rgba(88,200,150,0.3)]'
+        : 'text-down bg-[rgba(229,72,77,0.12)] border-[rgba(229,72,77,0.3)]',
+    )}>
       {isUp ? '+' : ''}{pct.toFixed(2)}%
     </span>
   );
@@ -36,50 +36,37 @@ function DigestCard({ item }: { item: DigestDto }) {
   return (
     <div
       onClick={() => setExpanded(p => !p)}
-      style={{
-        background: 'var(--ink-2)', border: '1px solid var(--line)',
-        borderRadius: 8, padding: '16px 20px', marginBottom: 8,
-        cursor: 'pointer',
-        transition: 'border-color 120ms',
-      }}
-      onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--mute)')}
-      onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--line)')}
+      className="bg-ink-2 border border-line hover:border-mute rounded-lg p-[16px_20px] mb-2 cursor-pointer transition-[border-color] duration-[120ms]"
     >
       {/* Header row */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-        <span style={{ font: '700 15px/1 var(--font-display)', color: 'var(--chalk)', flex: '1 1 auto' }}>
+      <div className="flex items-center gap-3 flex-wrap">
+        <span className="font-display text-[15px] leading-none font-bold text-chalk flex-[1_1_auto]">
           {fmtDate(item.date)}
         </span>
         <PctBadge pct={item.pctChangeSjc} />
-        <span style={{ font: '700 14px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums', color: 'var(--chalk)' }}>
+        <span className="font-display text-[14px] leading-none font-bold text-chalk [font-variant-numeric:tabular-nums]">
           {fmtVnd(item.sjcBuyVnd)}
         </span>
-        <span style={{ font: '700 14px/1 var(--font-mono)', color: expanded ? 'var(--gold)' : 'var(--mute)', marginLeft: 4 }}>
+        <span className={cn('font-mono text-[14px] leading-none font-bold ml-1', expanded ? 'text-gold' : 'text-mute')}>
           {expanded ? '▲' : '▼'}
         </span>
       </div>
 
       {/* Expanded details */}
       {expanded && (
-        <div
-          onClick={e => e.stopPropagation()}
-          style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 14 }}
-        >
+        <div onClick={e => e.stopPropagation()} className="mt-4 flex flex-col gap-[14px]">
           {/* Price grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+          <div className="grid grid-cols-3 gap-[10px]">
             {[
               { lbl: 'SJC Buy',  val: fmtVnd(item.sjcBuyVnd)  },
               { lbl: 'SJC Sell', val: fmtVnd(item.sjcSellVnd) },
               { lbl: 'XAU/USD',  val: `$${item.xauUsd.toFixed(2)}` },
             ].map(cell => (
-              <div key={cell.lbl} style={{
-                background: 'var(--ink-3)', borderRadius: 6, padding: '10px 12px',
-                border: '1px solid var(--hairline)',
-              }}>
-                <div style={{ font: '700 9px/1 var(--font-mono)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 6 }}>
+              <div key={cell.lbl} className="bg-ink-3 rounded-md p-[10px_12px] border border-hairline">
+                <div className="font-mono text-[9px] leading-none font-bold tracking-[0.14em] uppercase text-mute mb-[6px]">
                   {cell.lbl}
                 </div>
-                <div style={{ font: '700 15px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums', color: 'var(--chalk)' }}>
+                <div className="font-display text-[15px] leading-none font-bold text-chalk [font-variant-numeric:tabular-nums]">
                   {cell.val}
                 </div>
               </div>
@@ -88,31 +75,17 @@ function DigestCard({ item }: { item: DigestDto }) {
 
           {/* Highlight */}
           {item.highlight && (
-            <div style={{
-              background: 'rgba(212,175,55,0.07)', border: '1px solid rgba(212,175,55,0.2)',
-              borderRadius: 6, padding: '10px 14px',
-            }}>
-              <div style={{ font: '700 9px/1 var(--font-mono)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: 6 }}>
-                Highlight
-              </div>
-              <div style={{ font: '500 13px/1.5 var(--font-display)', color: 'var(--chalk)' }}>
-                {item.highlight}
-              </div>
+            <div className="bg-[rgba(212,175,55,0.07)] border border-[rgba(212,175,55,0.2)] rounded-md p-[10px_14px]">
+              <div className="font-mono text-[9px] leading-none font-bold tracking-[0.14em] uppercase text-gold mb-[6px]">Highlight</div>
+              <div className="font-sans text-[13px] leading-[1.5] font-medium text-chalk">{item.highlight}</div>
             </div>
           )}
 
           {/* AI Analysis */}
           {item.aiSummary && (
-            <div style={{
-              background: 'var(--ink-3)', border: '1px solid var(--line)',
-              borderRadius: 6, padding: '10px 14px',
-            }}>
-              <div style={{ font: '700 9px/1 var(--font-mono)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 6 }}>
-                AI Analysis
-              </div>
-              <div style={{ font: '400 13px/1.6 var(--font-display)', color: 'var(--bone)' }}>
-                {item.aiSummary}
-              </div>
+            <div className="bg-ink-3 border border-line rounded-md p-[10px_14px]">
+              <div className="font-mono text-[9px] leading-none font-bold tracking-[0.14em] uppercase text-mute mb-[6px]">AI Analysis</div>
+              <div className="font-sans text-[13px] leading-[1.6] text-bone">{item.aiSummary}</div>
             </div>
           )}
         </div>
@@ -123,16 +96,34 @@ function DigestCard({ item }: { item: DigestDto }) {
 
 function SkeletonCard() {
   return (
-    <div style={{
-      background: 'var(--ink-2)', border: '1px solid var(--line)',
-      borderRadius: 8, padding: '16px 20px', marginBottom: 8,
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div style={{ height: 15, width: 180, borderRadius: 4, background: 'var(--ink-3)', animation: 'pulse 1.5s ease-in-out infinite' }}/>
-        <div style={{ height: 20, width: 60, borderRadius: 4, background: 'var(--ink-3)', animation: 'pulse 1.5s ease-in-out infinite' }}/>
-        <div style={{ height: 14, width: 100, borderRadius: 4, background: 'var(--ink-3)', animation: 'pulse 1.5s ease-in-out infinite', marginLeft: 'auto' }}/>
+    <div className="bg-ink-2 border border-line rounded-lg p-[16px_20px] mb-2">
+      <div className="flex items-center gap-3">
+        <div className="h-[15px] w-[180px] rounded bg-ink-3 animate-pulse"/>
+        <div className="h-5 w-[60px] rounded bg-ink-3 animate-pulse"/>
+        <div className="h-[14px] w-[100px] rounded bg-ink-3 animate-pulse ml-auto"/>
       </div>
     </div>
+  );
+}
+
+function PaginationBtn({ disabled, onClick, children }: {
+  disabled: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      disabled={disabled}
+      onClick={onClick}
+      className={cn(
+        'h-[34px] px-4 rounded-lg font-mono text-[11px] leading-none font-bold tracking-[0.1em] uppercase border transition-opacity',
+        disabled
+          ? 'bg-ink-3 border-hairline text-mute cursor-default opacity-50'
+          : 'bg-ink-2 border-line text-chalk cursor-pointer',
+      )}
+    >
+      {children}
+    </button>
   );
 }
 
@@ -145,28 +136,13 @@ function DigestArchiveContent() {
   const totalPages = data?.totalPages ?? 1;
   const total = data?.total ?? 0;
 
-  const btnStyle = (disabled: boolean): React.CSSProperties => ({
-    height: 34, padding: '0 16px',
-    background: disabled ? 'var(--ink-3)' : 'var(--ink-2)',
-    border: `1px solid ${disabled ? 'var(--hairline)' : 'var(--line)'}`,
-    borderRadius: 8, cursor: disabled ? 'default' : 'pointer',
-    font: '700 11px/1 var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase',
-    color: disabled ? 'var(--mute)' : 'var(--chalk)',
-    opacity: disabled ? 0.5 : 1,
-  });
-
   return (
-    <div style={{ background: 'var(--ink)', minHeight: '100vh', color: 'var(--chalk)' }}>
-      <div style={{ padding: '32px 40px', maxWidth: 860, margin: '0 auto' }}>
+    <div className="bg-ink min-h-screen text-chalk">
+      <div className="p-[32px_40px] max-w-[860px] mx-auto">
         {/* Back button */}
         <button
           onClick={() => router.back()}
-          style={{
-            background: 'transparent', border: 'none', cursor: 'pointer',
-            color: 'var(--mute)', font: '500 13px/1 var(--font-display)',
-            display: 'inline-flex', alignItems: 'center', gap: 6,
-            padding: '0 0 24px', marginBottom: 0,
-          }}
+          className="bg-transparent border-0 cursor-pointer text-mute font-sans text-[13px] leading-none font-medium inline-flex items-center gap-[6px] pb-6"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M19 12H5M12 5l-7 7 7 7"/>
@@ -175,53 +151,31 @@ function DigestArchiveContent() {
         </button>
 
         {/* Header */}
-        <div style={{ marginBottom: 28 }}>
-          <h1 style={{ font: '800 36px/1 var(--font-display)', margin: '0 0 10px', letterSpacing: '-0.025em' }}>
+        <div className="mb-7">
+          <h1 className="font-display text-[36px] leading-none font-extrabold m-0 mb-[10px] tracking-[-0.025em]">
             Digest Archive
           </h1>
-          <p style={{ font: '400 14px/1.5 var(--font-display)', color: 'var(--mute)', margin: 0 }}>
+          <p className="font-sans text-[14px] leading-[1.5] text-mute m-0">
             Morning gold market digests, weekdays at 7:30 AM ICT
           </p>
         </div>
 
-        {/* Cards */}
-        {isLoading && [0, 1, 2, 3, 4].map(i => <SkeletonCard key={i} />)}
+        {isLoading && [0, 1, 2, 3, 4].map(i => <SkeletonCard key={i}/>)}
 
         {!isLoading && items.length === 0 && (
-          <div style={{
-            padding: '64px 0', textAlign: 'center',
-            font: '500 15px/1.5 var(--font-display)', color: 'var(--mute)',
-          }}>
+          <div className="py-16 text-center font-sans text-[15px] leading-[1.5] text-mute">
             No digests available yet.
           </div>
         )}
 
-        {!isLoading && items.map(item => (
-          <DigestCard key={item.id} item={item} />
-        ))}
+        {!isLoading && items.map(item => <DigestCard key={item.id} item={item}/>)}
 
         {/* Pagination */}
         {!isLoading && total > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 24 }}>
-            <button
-              style={btnStyle(page <= 1)}
-              disabled={page <= 1}
-              onClick={() => setPage(p => Math.max(1, p - 1))}
-            >
-              ← Prev
-            </button>
-
-            <span style={{ font: '500 13px/1 var(--font-display)', color: 'var(--mute)' }}>
-              Page {page} of {totalPages}
-            </span>
-
-            <button
-              style={btnStyle(page >= totalPages)}
-              disabled={page >= totalPages}
-              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-            >
-              Next →
-            </button>
+          <div className="flex items-center justify-between mt-6">
+            <PaginationBtn disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))}>← Prev</PaginationBtn>
+            <span className="font-sans text-[13px] leading-none text-mute">Page {page} of {totalPages}</span>
+            <PaginationBtn disabled={page >= totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))}>Next →</PaginationBtn>
           </div>
         )}
       </div>

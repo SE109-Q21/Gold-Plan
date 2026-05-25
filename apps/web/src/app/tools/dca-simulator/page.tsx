@@ -7,18 +7,10 @@ import { useAddTransaction } from '@/lib/portfolio.api';
 import { useAuth } from '@/contexts/auth-context';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import type { DcaDataPointDto } from '@gpls/shared';
-
-// ─── Constants ────────────────────────────────────────────────────────────────
+import { cn } from '@/lib/utils';
 
 type Brand = 'SJC' | 'DOJI' | 'PNJ' | 'BAO_TIN';
 type Frequency = 'weekly' | 'monthly';
-
-const BRAND_LABEL: Record<Brand, string> = {
-  SJC:     'SJC',
-  DOJI:    'DOJI',
-  PNJ:     'PNJ',
-  BAO_TIN: 'Bảo Tín',
-};
 
 const BRAND_GOLD_TYPE: Record<Brand, string> = {
   SJC:     'MIEN_SJC',
@@ -26,8 +18,6 @@ const BRAND_GOLD_TYPE: Record<Brand, string> = {
   PNJ:     'VANG_24K',
   BAO_TIN: 'VANG_24K',
 };
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function fmtMillions(v: number): string {
   return (v / 1_000_000).toFixed(2) + 'M₫';
@@ -43,99 +33,41 @@ function todayMinus14(): string {
   return d.toISOString().split('T')[0];
 }
 
-// ─── Chip ─────────────────────────────────────────────────────────────────────
+const CHIP_BASE = 'font-mono text-[12px] leading-none font-bold tracking-[0.08em] px-4 py-2 rounded-md border cursor-pointer transition-[border-color,background,color] duration-[140ms]';
 
-function Chip({
-  label,
-  selected,
-  onClick,
-}: {
-  label: string;
-  selected: boolean;
-  onClick: () => void;
-}) {
+function Chip({ label, selected, onClick }: { label: string; selected: boolean; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      style={{
-        border: `1px solid ${selected ? 'var(--gold)' : 'var(--line)'}`,
-        background: selected ? 'rgba(212,175,55,0.12)' : 'transparent',
-        color: selected ? 'var(--gold)' : 'var(--bone)',
-        font: '700 12px/1 var(--font-mono)',
-        letterSpacing: '0.08em',
-        padding: '8px 16px',
-        borderRadius: 6,
-        cursor: 'pointer',
-        transition: 'border-color 140ms, background 140ms, color 140ms',
-      }}
+      className={cn(CHIP_BASE, selected
+        ? 'border-gold bg-[rgba(212,175,55,0.12)] text-gold'
+        : 'border-line bg-transparent text-bone'
+      )}
     >
       {label}
     </button>
   );
 }
 
-// ─── Section label ────────────────────────────────────────────────────────────
-
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{
-      font: '700 9px/1 var(--font-mono)',
-      letterSpacing: '0.16em',
-      textTransform: 'uppercase',
-      color: 'var(--mute)',
-      marginBottom: 10,
-    }}>
+    <div className="font-mono text-[9px] leading-none font-bold tracking-[0.16em] uppercase text-mute mb-[10px]">
       {children}
     </div>
   );
 }
 
-// ─── Stat card ────────────────────────────────────────────────────────────────
-
-function StatCard({
-  label,
-  value,
-  valueStyle,
-  sub,
-}: {
-  label: string;
-  value: string;
-  valueStyle?: React.CSSProperties;
-  sub?: string;
-}) {
+function StatCard({ label, value, valueClass, sub }: { label: string; value: string; valueClass?: string; sub?: string }) {
   return (
-    <div style={{
-      background: 'var(--ink-2)',
-      border: '1px solid var(--line)',
-      borderRadius: 14,
-      padding: '16px 20px',
-      flex: '1 1 140px',
-      minWidth: 0,
-    }}>
-      <div style={{
-        font: '700 9px/1 var(--font-mono)',
-        letterSpacing: '0.14em',
-        textTransform: 'uppercase',
-        color: 'var(--mute)',
-        marginBottom: 10,
-      }}>
+    <div className="bg-ink-2 border border-line rounded-[14px] p-[16px_20px] flex-[1_1_140px] min-w-0">
+      <div className="font-mono text-[9px] leading-none font-bold tracking-[0.14em] uppercase text-mute mb-[10px]">
         {label}
       </div>
-      <div style={{
-        font: '700 20px/1 var(--font-display)',
-        fontVariantNumeric: 'tabular-nums',
-        letterSpacing: '-0.02em',
-        color: 'var(--chalk)',
-        ...valueStyle,
-      }}>
+      <div className={cn('font-display text-[20px] leading-none font-bold [font-variant-numeric:tabular-nums] tracking-[-0.02em] text-chalk', valueClass)}>
         {value}
       </div>
       {sub && (
-        <div style={{
-          font: '500 10px/1.4 var(--font-mono)',
-          color: 'var(--mute)',
-          marginTop: 6,
-        }}>
+        <div className="font-mono text-[10px] leading-[1.4] text-mute mt-[6px]">
           {sub}
         </div>
       )}
@@ -143,7 +75,26 @@ function StatCard({
   );
 }
 
-// ─── DCA Chart ───────────────────────────────────────────────────────────────
+function LumpSumDetail({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <div className="font-mono text-[9px] leading-none font-semibold tracking-[0.12em] uppercase text-mute mb-1">
+        {label}
+      </div>
+      <div className="font-mono text-[12px] leading-[1.4] font-semibold text-bone [font-variant-numeric:tabular-nums]">
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function IconArrowLeft({ s = 16 }: { s?: number }) {
+  return (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M19 12H5M5 12l7-7M5 12l7 7"/>
+    </svg>
+  );
+}
 
 function DcaChart({ points }: { points: DcaDataPointDto[] }) {
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
@@ -152,7 +103,6 @@ function DcaChart({ points }: { points: DcaDataPointDto[] }) {
   if (points.length < 2) return null;
 
   const W = 800, H = 240, PAD = 40;
-
   const maxVal = Math.max(...points.flatMap(p => [p.cumulativeValue, p.lumpSumValue]));
   const minVal = Math.min(...points.flatMap(p => [p.cumulativeValue, p.lumpSumValue]));
   const range = maxVal - minVal || 1;
@@ -160,18 +110,11 @@ function DcaChart({ points }: { points: DcaDataPointDto[] }) {
   const xFor = (i: number) => PAD + (i / (points.length - 1)) * (W - 2 * PAD);
   const yFor = (v: number) => H - PAD - ((v - minVal) / range) * (H - 2 * PAD);
 
-  const dcaPath = points
-    .map((p, i) => `${i === 0 ? 'M' : 'L'}${xFor(i).toFixed(1)},${yFor(p.cumulativeValue).toFixed(1)}`)
-    .join(' ');
-  const lsPath = points
-    .map((p, i) => `${i === 0 ? 'M' : 'L'}${xFor(i).toFixed(1)},${yFor(p.lumpSumValue).toFixed(1)}`)
-    .join(' ');
+  const dcaPath = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${xFor(i).toFixed(1)},${yFor(p.cumulativeValue).toFixed(1)}`).join(' ');
+  const lsPath = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${xFor(i).toFixed(1)},${yFor(p.lumpSumValue).toFixed(1)}`).join(' ');
 
-  // X-axis labels: show up to 6 evenly spaced
   const labelStep = Math.max(1, Math.floor(points.length / 6));
-  const xLabels = points
-    .map((p, i) => ({ i, date: p.date }))
-    .filter((_, i) => i % labelStep === 0 || i === points.length - 1);
+  const xLabels = points.map((p, i) => ({ i, date: p.date })).filter((_, i) => i % labelStep === 0 || i === points.length - 1);
 
   const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
     const svg = svgRef.current;
@@ -179,92 +122,58 @@ function DcaChart({ points }: { points: DcaDataPointDto[] }) {
     const rect = svg.getBoundingClientRect();
     const scaleX = W / rect.width;
     const xMouse = (e.clientX - rect.left) * scaleX;
-    const plotW = W - 2 * PAD;
-    const fraction = Math.min(1, Math.max(0, (xMouse - PAD) / plotW));
-    const idx = Math.round(fraction * (points.length - 1));
-    setHoverIdx(idx);
+    const fraction = Math.min(1, Math.max(0, (xMouse - PAD) / (W - 2 * PAD)));
+    setHoverIdx(Math.round(fraction * (points.length - 1)));
   };
 
   const hp = hoverIdx !== null ? points[hoverIdx] : null;
   const hx = hoverIdx !== null ? xFor(hoverIdx) : 0;
 
   return (
-    <div style={{ position: 'relative' }}>
-      {/* Legend */}
-      <div style={{ display: 'flex', gap: 20, marginBottom: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ width: 10, height: 10, borderRadius: 99, background: '#60A5FA', display: 'inline-block' }}/>
-          <span style={{ font: '600 10px/1 var(--font-mono)', color: 'var(--bone)', letterSpacing: '0.06em' }}>DCA Strategy</span>
+    <div className="relative">
+      <div className="flex gap-5 mb-3">
+        <div className="flex items-center gap-[6px]">
+          <span className="w-[10px] h-[10px] rounded-full bg-[#60A5FA] inline-block"/>
+          <span className="font-mono text-[10px] leading-none font-semibold text-bone tracking-[0.06em]">DCA Strategy</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ width: 10, height: 10, borderRadius: 99, background: '#F97316', display: 'inline-block' }}/>
-          <span style={{ font: '600 10px/1 var(--font-mono)', color: 'var(--bone)', letterSpacing: '0.06em' }}>Lump Sum</span>
+        <div className="flex items-center gap-[6px]">
+          <span className="w-[10px] h-[10px] rounded-full bg-[#F97316] inline-block"/>
+          <span className="font-mono text-[10px] leading-none font-semibold text-bone tracking-[0.06em]">Lump Sum</span>
         </div>
       </div>
-
       <svg
         ref={svgRef}
         viewBox={`0 0 ${W} ${H}`}
-        style={{ width: '100%', display: 'block', cursor: 'crosshair' }}
+        className="w-full block cursor-crosshair"
         onMouseMove={handleMouseMove}
         onMouseLeave={() => setHoverIdx(null)}
       >
-        {/* Grid lines */}
         {[0.25, 0.5, 0.75].map(f => {
           const y = yFor(minVal + f * range);
-          return (
-            <line key={f} x1={PAD} y1={y.toFixed(1)} x2={W - PAD} y2={y.toFixed(1)}
-              stroke="var(--line)" strokeWidth="0.5" strokeDasharray="4 4"/>
-          );
+          return <line key={f} x1={PAD} y1={y.toFixed(1)} x2={W - PAD} y2={y.toFixed(1)} stroke="var(--line)" strokeWidth="0.5" strokeDasharray="4 4"/>;
         })}
-
-        {/* Lump sum path */}
         <path d={lsPath} stroke="#F97316" strokeWidth="2" fill="none" strokeLinejoin="round"/>
-        {/* DCA path */}
         <path d={dcaPath} stroke="#60A5FA" strokeWidth="2" fill="none" strokeLinejoin="round"/>
-
-        {/* X-axis labels */}
         {xLabels.map(({ i, date }) => (
-          <text key={i} x={xFor(i).toFixed(1)} y={H - 8} textAnchor="middle"
-            style={{ font: '500 9px var(--font-mono)', fill: 'var(--mute)' }}>
-            {date.slice(5)} {/* MM-DD */}
+          <text key={i} x={xFor(i).toFixed(1)} y={H - 8} textAnchor="middle" style={{ font: '500 9px var(--font-mono)', fill: 'var(--mute)' }}>
+            {date.slice(5)}
           </text>
         ))}
-
-        {/* Hover crosshair */}
         {hoverIdx !== null && hp && (
           <>
-            <line
-              x1={hx.toFixed(1)} y1={PAD}
-              x2={hx.toFixed(1)} y2={H - PAD}
-              stroke="var(--line)" strokeWidth="1"
-            />
-            <circle cx={hx.toFixed(1)} cy={yFor(hp.cumulativeValue).toFixed(1)} r="4"
-              fill="#60A5FA" stroke="var(--ink-2)" strokeWidth="1.5"/>
-            <circle cx={hx.toFixed(1)} cy={yFor(hp.lumpSumValue).toFixed(1)} r="4"
-              fill="#F97316" stroke="var(--ink-2)" strokeWidth="1.5"/>
-
-            {/* Tooltip box */}
+            <line x1={hx.toFixed(1)} y1={PAD} x2={hx.toFixed(1)} y2={H - PAD} stroke="var(--line)" strokeWidth="1"/>
+            <circle cx={hx.toFixed(1)} cy={yFor(hp.cumulativeValue).toFixed(1)} r="4" fill="#60A5FA" stroke="var(--ink-2)" strokeWidth="1.5"/>
+            <circle cx={hx.toFixed(1)} cy={yFor(hp.lumpSumValue).toFixed(1)} r="4" fill="#F97316" stroke="var(--ink-2)" strokeWidth="1.5"/>
             {(() => {
               const tx = hx > W * 0.65 ? hx - 158 : hx + 12;
               return (
                 <g>
-                  <rect x={tx} y={PAD} width={148} height={72} rx={6}
-                    fill="var(--ink-3)" stroke="var(--line)" strokeWidth="0.75"/>
-                  <text x={tx + 10} y={PAD + 16}
-                    style={{ font: '600 10px var(--font-mono)', fill: 'var(--mute)' }}>
-                    {hp.date}
-                  </text>
+                  <rect x={tx} y={PAD} width={148} height={72} rx={6} fill="var(--ink-3)" stroke="var(--line)" strokeWidth="0.75"/>
+                  <text x={tx + 10} y={PAD + 16} style={{ font: '600 10px var(--font-mono)', fill: 'var(--mute)' }}>{hp.date}</text>
                   <circle cx={tx + 10} cy={PAD + 31} r="3" fill="#60A5FA"/>
-                  <text x={tx + 18} y={PAD + 34}
-                    style={{ font: '600 10px var(--font-mono)', fill: 'var(--bone)' }}>
-                    {fmtMillions(hp.cumulativeValue)}
-                  </text>
+                  <text x={tx + 18} y={PAD + 34} style={{ font: '600 10px var(--font-mono)', fill: 'var(--bone)' }}>{fmtMillions(hp.cumulativeValue)}</text>
                   <circle cx={tx + 10} cy={PAD + 50} r="3" fill="#F97316"/>
-                  <text x={tx + 18} y={PAD + 53}
-                    style={{ font: '600 10px var(--font-mono)', fill: 'var(--bone)' }}>
-                    {fmtMillions(hp.lumpSumValue)}
-                  </text>
+                  <text x={tx + 18} y={PAD + 53} style={{ font: '600 10px var(--font-mono)', fill: 'var(--bone)' }}>{fmtMillions(hp.lumpSumValue)}</text>
                 </g>
               );
             })()}
@@ -274,19 +183,6 @@ function DcaChart({ points }: { points: DcaDataPointDto[] }) {
     </div>
   );
 }
-
-// ─── Back arrow icon ──────────────────────────────────────────────────────────
-
-function IconArrowLeft({ s = 16 }: { s?: number }) {
-  return (
-    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M19 12H5M5 12l7-7M5 12l7 7"/>
-    </svg>
-  );
-}
-
-// ─── Main Page ────────────────────────────────────────────────────────────────
 
 function DcaSimulatorContent() {
   const router = useRouter();
@@ -316,26 +212,17 @@ function DcaSimulatorContent() {
     setSaveMsg(null);
   };
 
-  const isLoggedIn = !!user;
-
   const handleSaveToPortfolio = async () => {
     if (!data || !data.dataPoints.length) return;
-    const confirmed = window.confirm(
-      `Lưu ${data.dataPoints.length} giao dịch vào danh mục? Mỗi lần mua ${qty} tael ${brand}.`
-    );
+    const confirmed = window.confirm(`Lưu ${data.dataPoints.length} giao dịch vào danh mục? Mỗi lần mua ${qty} tael ${brand}.`);
     if (!confirmed) return;
     setSaving(true);
     setSaveMsg(null);
     try {
       for (const point of data.dataPoints) {
         await addTransaction.mutateAsync({
-          type: 'BUY',
-          brand,
-          goldType,
-          quantity: qty,
-          pricePerTael: point.price,
-          transactedAt: new Date(point.date).toISOString(),
-          note: `DCA simulation — ${frequency}`,
+          type: 'BUY', brand, goldType, quantity: qty, pricePerTael: point.price,
+          transactedAt: new Date(point.date).toISOString(), note: `DCA simulation — ${frequency}`,
         });
       }
       setSaveMsg(`${data.dataPoints.length} giao dịch đã được lưu vào danh mục`);
@@ -346,395 +233,211 @@ function DcaSimulatorContent() {
     }
   };
 
-  // P&L helpers
-  const pnlColor = (v: number) => v >= 0 ? 'var(--up)' : 'var(--down)';
+  const pnlClass = (v: number) => v >= 0 ? 'text-up' : 'text-down';
   const pnlArrow = (v: number) => v >= 0 ? '▲' : '▼';
-
-  // Strategy comparison
   const dcaWon = data ? data.dcaPnlPct >= data.lumpSumPnlPct : false;
 
   return (
-    <>
-      <style>{`
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .dca-input:focus { outline: none; border-color: var(--gold) !important; }
-        .dca-input::placeholder { color: var(--mute); }
-        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.5); cursor: pointer; }
-      `}</style>
+    <div className="min-h-full bg-[#0a0a0d] p-[32px_24px_60px] flex flex-col items-center">
+      <div className="w-full max-w-[860px]">
 
-      <div style={{
-        minHeight: '100%',
-        background: '#0a0a0d',
-        padding: '32px 24px 60px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-      }}>
-        <div style={{ width: '100%', maxWidth: 860 }}>
+        <button
+          onClick={() => router.push('/')}
+          className="bg-transparent border-0 cursor-pointer text-mute flex items-center gap-[6px] font-mono text-[12px] leading-none font-semibold tracking-[0.08em] p-0 pb-6"
+        >
+          <IconArrowLeft s={14}/> back to dashboard
+        </button>
 
-          {/* Back button */}
-          <button
-            onClick={() => router.push('/')}
-            style={{
-              background: 'transparent',
-              border: 0,
-              cursor: 'pointer',
-              color: 'var(--mute)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              font: '600 12px/1 var(--font-mono)',
-              letterSpacing: '0.08em',
-              padding: '0 0 24px',
-            }}
-          >
-            <IconArrowLeft s={14}/> back to dashboard
-          </button>
+        <div className="mb-8">
+          <h1 className="font-display text-[40px] leading-none font-extrabold tracking-[-0.03em] text-chalk m-0">
+            dca simulator
+          </h1>
+          <p className="font-display text-[14px] leading-[1.5] text-mute m-0 mt-2">
+            Compare Dollar-Cost Averaging vs Lump Sum investing in gold
+          </p>
+        </div>
 
-          {/* Page header */}
-          <div style={{ marginBottom: 32 }}>
-            <h1 style={{
-              font: '800 40px/1 var(--font-display)',
-              letterSpacing: '-0.03em',
-              color: 'var(--chalk)',
-              margin: 0,
-            }}>
-              dca simulator
-            </h1>
-            <p style={{
-              font: '400 14px/1.5 var(--font-display)',
-              color: 'var(--mute)',
-              margin: '8px 0 0',
-            }}>
-              Compare Dollar-Cost Averaging vs Lump Sum investing in gold
-            </p>
+        {/* Controls card */}
+        <div className="bg-ink-2 border border-line rounded-[14px] p-[24px_28px] mb-6">
+          <div className="mb-6">
+            <SectionLabel>Brand</SectionLabel>
+            <div className="flex gap-2">
+              {(['SJC', 'DOJI'] as Brand[]).map(b => (
+                <Chip key={b} label={b} selected={brand === b} onClick={() => { setBrand(b); setSubmitted(false); }}/>
+              ))}
+            </div>
           </div>
 
-          {/* Controls card */}
-          <div style={{
-            background: 'var(--ink-2)',
-            border: '1px solid var(--line)',
-            borderRadius: 14,
-            padding: '24px 28px',
-            marginBottom: 24,
-          }}>
+          <div className="mb-6">
+            <SectionLabel>Gold type (auto)</SectionLabel>
+            <div className="inline-block border border-line bg-ink-3 text-mute font-mono text-[12px] leading-none font-bold tracking-[0.08em] px-4 py-2 rounded-md">
+              {goldType}
+            </div>
+          </div>
 
-            {/* Brand */}
-            <div style={{ marginBottom: 24 }}>
-              <SectionLabel>Brand</SectionLabel>
-              <div style={{ display: 'flex', gap: 8 }}>
-                {(['SJC', 'DOJI'] as Brand[]).map(b => (
-                  <Chip
-                    key={b}
-                    label={b}
-                    selected={brand === b}
-                    onClick={() => { setBrand(b); setSubmitted(false); }}
-                  />
+          <div className="flex gap-8 flex-wrap items-start">
+            <div>
+              <SectionLabel>Start date</SectionLabel>
+              <input
+                type="date"
+                max={maxDate}
+                value={startDate}
+                onChange={e => { setStartDate(e.target.value); setSubmitted(false); }}
+                className="bg-ink-3 border border-line rounded-lg text-chalk font-mono text-[14px] leading-none font-semibold px-[14px] py-[10px] cursor-pointer outline-none focus:border-gold transition-[border-color] duration-[140ms]"
+              />
+            </div>
+
+            <div>
+              <SectionLabel>Purchase frequency</SectionLabel>
+              <div className="flex gap-2">
+                {(['weekly', 'monthly'] as Frequency[]).map(f => (
+                  <Chip key={f} label={f} selected={frequency === f} onClick={() => { setFrequency(f); setSubmitted(false); }}/>
                 ))}
               </div>
             </div>
 
-            {/* Gold type (auto) */}
-            <div style={{ marginBottom: 24 }}>
-              <SectionLabel>Gold type (auto)</SectionLabel>
-              <div style={{
-                display: 'inline-block',
-                border: '1px solid var(--line)',
-                background: 'var(--ink-3)',
-                color: 'var(--mute)',
-                font: '700 12px/1 var(--font-mono)',
-                letterSpacing: '0.08em',
-                padding: '8px 16px',
-                borderRadius: 6,
-              }}>
-                {goldType}
-              </div>
-            </div>
-
-            {/* Row: start date + frequency + qty */}
-            <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap', alignItems: 'flex-start' }}>
-
-              {/* Start date */}
-              <div>
-                <SectionLabel>Start date</SectionLabel>
+            <div>
+              <SectionLabel>Qty per purchase</SectionLabel>
+              <div className="flex items-center gap-2">
                 <input
-                  className="dca-input"
-                  type="date"
-                  max={maxDate}
-                  value={startDate}
-                  onChange={e => { setStartDate(e.target.value); setSubmitted(false); }}
-                  style={{
-                    background: 'var(--ink-3)',
-                    border: '1px solid var(--line)',
-                    borderRadius: 8,
-                    color: 'var(--chalk)',
-                    font: '600 14px/1 var(--font-mono)',
-                    padding: '10px 14px',
-                    cursor: 'pointer',
-                    transition: 'border-color 140ms',
-                  }}
+                  type="number"
+                  min={0.1}
+                  step={0.1}
+                  value={qty}
+                  onChange={e => { setQty(parseFloat(e.target.value) || 0.1); setSubmitted(false); }}
+                  className="bg-ink-3 border border-line rounded-lg text-chalk font-display text-[20px] leading-none font-bold px-[14px] py-[10px] w-[100px] text-right outline-none focus:border-gold transition-[border-color] duration-[140ms]"
                 />
+                <span className="font-mono text-[12px] leading-none font-semibold text-mute tracking-[0.08em]">tael</span>
               </div>
-
-              {/* Frequency */}
-              <div>
-                <SectionLabel>Purchase frequency</SectionLabel>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  {(['weekly', 'monthly'] as Frequency[]).map(f => (
-                    <Chip
-                      key={f}
-                      label={f}
-                      selected={frequency === f}
-                      onClick={() => { setFrequency(f); setSubmitted(false); }}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Quantity */}
-              <div>
-                <SectionLabel>Qty per purchase</SectionLabel>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <input
-                    className="dca-input"
-                    type="number"
-                    min={0.1}
-                    step={0.1}
-                    value={qty}
-                    onChange={e => { setQty(parseFloat(e.target.value) || 0.1); setSubmitted(false); }}
-                    style={{
-                      background: 'var(--ink-3)',
-                      border: '1px solid var(--line)',
-                      borderRadius: 8,
-                      color: 'var(--chalk)',
-                      font: '700 20px/1 var(--font-display)',
-                      padding: '10px 14px',
-                      width: 100,
-                      textAlign: 'right',
-                      transition: 'border-color 140ms',
-                    }}
-                  />
-                  <span style={{ font: '600 12px/1 var(--font-mono)', color: 'var(--mute)', letterSpacing: '0.08em' }}>
-                    tael
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Simulate button */}
-            <div style={{ marginTop: 28 }}>
-              <button
-                onClick={handleSimulate}
-                disabled={!startDate}
-                style={{
-                  background: startDate ? 'var(--gold)' : 'var(--ink-3)',
-                  border: 0,
-                  borderRadius: 8,
-                  cursor: startDate ? 'pointer' : 'not-allowed',
-                  font: '700 13px/1 var(--font-display)',
-                  color: startDate ? '#0B0B0F' : 'var(--mute)',
-                  letterSpacing: '0.04em',
-                  padding: '12px 28px',
-                  transition: 'background 140ms, color 140ms',
-                }}
-              >
-                {isLoading ? 'Simulating…' : 'Simulate'}
-              </button>
-              {!startDate && (
-                <span style={{ font: '500 11px/1 var(--font-mono)', color: 'var(--mute)', marginLeft: 14, letterSpacing: '0.06em' }}>
-                  pick a start date to begin
-                </span>
-              )}
             </div>
           </div>
 
-          {/* Loading spinner */}
-          {isLoading && (
-            <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--mute)' }}>
-              <div style={{
-                width: 28, height: 28, border: '2px solid var(--line)',
-                borderTopColor: 'var(--gold)', borderRadius: 99,
-                margin: '0 auto 12px',
-                animation: 'spin 0.8s linear infinite',
-              }}/>
-              <div style={{ font: '500 12px/1 var(--font-mono)', letterSpacing: '0.08em' }}>
-                running simulation…
-              </div>
-            </div>
-          )}
-
-          {/* Error state */}
-          {error && !isLoading && (
-            <div style={{
-              background: 'rgba(239,68,68,0.08)',
-              border: '1px solid rgba(239,68,68,0.3)',
-              borderRadius: 10,
-              padding: '16px 20px',
-              font: '500 13px/1.5 var(--font-display)',
-              color: 'var(--down)',
-              marginBottom: 24,
-            }}>
-              {(error as Error).message ?? 'Failed to run simulation. Please try again.'}
-            </div>
-          )}
-
-          {/* Results */}
-          {data && !isLoading && (
-            <>
-              {/* Stat cards */}
-              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
-                <StatCard
-                  label="Avg Cost"
-                  value={fmtMillions(data.averageCostVnd)}
-                  sub="per tael (DCA)"
-                />
-                <StatCard
-                  label="Total Gold"
-                  value={data.totalGoldTael.toFixed(2) + ' tael'}
-                />
-                <StatCard
-                  label="Total Spent"
-                  value={fmtMillions(data.totalSpentVnd)}
-                />
-                <StatCard
-                  label="Current Value"
-                  value={fmtMillions(data.currentValueVnd)}
-                />
-                <StatCard
-                  label="DCA P&L"
-                  value={`${pnlArrow(data.dcaPnlVnd)} ${fmtMillions(Math.abs(data.dcaPnlVnd))}`}
-                  valueStyle={{ color: pnlColor(data.dcaPnlVnd) }}
-                  sub={`${data.dcaPnlPct >= 0 ? '+' : ''}${data.dcaPnlPct.toFixed(2)}%`}
-                />
-              </div>
-
-              {/* Comparison card */}
-              <div style={{
-                background: 'var(--ink-2)',
-                border: `1px solid ${dcaWon ? 'rgba(157,204,110,0.3)' : 'rgba(249,115,22,0.3)'}`,
-                borderRadius: 14,
-                padding: '16px 24px',
-                marginBottom: 24,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 20,
-                flexWrap: 'wrap',
-              }}>
-                <div style={{ flex: 1, minWidth: 220 }}>
-                  <div style={{ font: '700 9px/1 var(--font-mono)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 8 }}>
-                    strategy comparison
-                  </div>
-                  <div style={{ font: '600 14px/1.4 var(--font-display)', color: 'var(--chalk)' }}>
-                    {dcaWon
-                      ? <><span style={{ color: 'var(--up)' }}>DCA wins</span> — higher return than lump sum</>
-                      : <><span style={{ color: 'var(--gold)' }}>Lump Sum wins</span> — higher return than DCA</>
-                    }
-                  </div>
-                </div>
-                <div style={{ display: 'flex', gap: 32 }}>
-                  <div>
-                    <div style={{ font: '700 9px/1 var(--font-mono)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 6 }}>DCA return</div>
-                    <div style={{ font: '700 20px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums', color: pnlColor(data.dcaPnlPct) }}>
-                      {data.dcaPnlPct >= 0 ? '+' : ''}{data.dcaPnlPct.toFixed(2)}%
-                    </div>
-                  </div>
-                  <div>
-                    <div style={{ font: '700 9px/1 var(--font-mono)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 6 }}>Lump Sum return</div>
-                    <div style={{ font: '700 20px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums', color: pnlColor(data.lumpSumPnlPct) }}>
-                      {data.lumpSumPnlPct >= 0 ? '+' : ''}{data.lumpSumPnlPct.toFixed(2)}%
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Chart card */}
-              {data.dataPoints && data.dataPoints.length >= 2 && (
-                <div style={{
-                  background: 'var(--ink-2)',
-                  border: '1px solid var(--line)',
-                  borderRadius: 14,
-                  padding: '20px 24px',
-                }}>
-                  <div style={{ marginBottom: 16 }}>
-                    <div style={{ font: '700 12px/1 var(--font-mono)', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--bone)' }}>
-                      Portfolio Value Over Time
-                    </div>
-                    <div style={{ font: '500 11px/1.5 var(--font-mono)', color: 'var(--mute)', marginTop: 4 }}>
-                      {data.dataPoints.length} data points · {data.dataPoints[0]?.date} → {data.dataPoints[data.dataPoints.length - 1]?.date}
-                    </div>
-                  </div>
-                  <DcaChart points={data.dataPoints}/>
-                </div>
+          <div className="mt-7">
+            <button
+              onClick={handleSimulate}
+              disabled={!startDate}
+              className={cn(
+                'border-0 rounded-lg font-display text-[13px] leading-none font-bold tracking-[0.04em] px-7 py-3 transition-[background,color] duration-[140ms]',
+                startDate ? 'bg-gold text-gold-ink cursor-pointer' : 'bg-ink-3 text-mute cursor-not-allowed',
               )}
-
-              {/* Lump sum detail */}
-              <div style={{
-                marginTop: 16,
-                padding: '14px 20px',
-                background: 'rgba(212,175,55,0.04)',
-                border: '1px solid rgba(212,175,55,0.12)',
-                borderRadius: 10,
-                display: 'flex',
-                gap: '8px 40px',
-                flexWrap: 'wrap',
-              }}>
-                <LumpSumDetail label="Lump Sum cost" value={fmtVnd(data.lumpSumCostVnd)}/>
-                <LumpSumDetail label="Lump Sum current value" value={fmtVnd(data.lumpSumCurrentValueVnd)}/>
-                <LumpSumDetail label="Lump Sum P&L" value={`${data.lumpSumPnlPct >= 0 ? '+' : ''}${data.lumpSumPnlPct.toFixed(2)}%`}/>
-              </div>
-
-              {/* Save to Portfolio */}
-              {isLoggedIn && (
-                <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-                  <button
-                    onClick={handleSaveToPortfolio}
-                    disabled={saving}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      height: 42,
-                      padding: '0 22px',
-                      background: saving ? 'rgba(212,175,55,0.4)' : 'var(--gold)',
-                      border: 0,
-                      borderRadius: 10,
-                      cursor: saving ? 'not-allowed' : 'pointer',
-                      font: '700 13px/1 var(--font-display)',
-                      color: '#0B0B0F',
-                      letterSpacing: '0.04em',
-                      transition: 'background 140ms',
-                    }}
-                  >
-                    {saving ? 'Đang lưu…' : 'Lưu vào danh mục'}
-                  </button>
-                  {saveMsg && (
-                    <span style={{
-                      font: '500 12px/1.4 var(--font-mono)',
-                      color: saveMsg.startsWith('Lỗi') ? 'var(--down)' : 'var(--up)',
-                      letterSpacing: '0.04em',
-                    }}>
-                      {saveMsg}
-                    </span>
-                  )}
-                </div>
-              )}
-            </>
-          )}
-
+            >
+              {isLoading ? 'Simulating…' : 'Simulate'}
+            </button>
+            {!startDate && (
+              <span className="font-mono text-[11px] leading-none text-mute ml-[14px] tracking-[0.06em]">
+                pick a start date to begin
+              </span>
+            )}
+          </div>
         </div>
-      </div>
-    </>
-  );
-}
 
-function LumpSumDetail({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <div style={{ font: '600 9px/1 var(--font-mono)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 4 }}>
-        {label}
-      </div>
-      <div style={{ font: '600 12px/1.4 var(--font-mono)', color: 'var(--bone)', fontVariantNumeric: 'tabular-nums' }}>
-        {value}
+        {/* Loading */}
+        {isLoading && (
+          <div className="text-center py-10 text-mute">
+            <div className="w-7 h-7 border-2 border-line border-t-gold rounded-full mx-auto mb-3 animate-spin"/>
+            <div className="font-mono text-[12px] leading-none tracking-[0.08em]">running simulation…</div>
+          </div>
+        )}
+
+        {/* Error */}
+        {error && !isLoading && (
+          <div className="bg-[rgba(239,68,68,0.08)] border border-[rgba(239,68,68,0.3)] rounded-[10px] p-[16px_20px] font-display text-[13px] leading-[1.5] text-down mb-6">
+            {(error as Error).message ?? 'Failed to run simulation. Please try again.'}
+          </div>
+        )}
+
+        {/* Results */}
+        {data && !isLoading && (
+          <>
+            <div className="flex gap-3 flex-wrap mb-4">
+              <StatCard label="Avg Cost" value={fmtMillions(data.averageCostVnd)} sub="per tael (DCA)"/>
+              <StatCard label="Total Gold" value={data.totalGoldTael.toFixed(2) + ' tael'}/>
+              <StatCard label="Total Spent" value={fmtMillions(data.totalSpentVnd)}/>
+              <StatCard label="Current Value" value={fmtMillions(data.currentValueVnd)}/>
+              <StatCard
+                label="DCA P&L"
+                value={`${pnlArrow(data.dcaPnlVnd)} ${fmtMillions(Math.abs(data.dcaPnlVnd))}`}
+                valueClass={pnlClass(data.dcaPnlVnd)}
+                sub={`${data.dcaPnlPct >= 0 ? '+' : ''}${data.dcaPnlPct.toFixed(2)}%`}
+              />
+            </div>
+
+            {/* Comparison card */}
+            <div className={cn(
+              'bg-ink-2 rounded-[14px] p-[16px_24px] mb-6 flex items-center gap-5 flex-wrap border',
+              dcaWon ? 'border-[rgba(157,204,110,0.3)]' : 'border-[rgba(249,115,22,0.3)]',
+            )}>
+              <div className="flex-1 min-w-[220px]">
+                <div className="font-mono text-[9px] leading-none font-bold tracking-[0.14em] uppercase text-mute mb-2">
+                  strategy comparison
+                </div>
+                <div className="font-display text-[14px] leading-[1.4] font-semibold text-chalk">
+                  {dcaWon
+                    ? <><span className="text-up">DCA wins</span> — higher return than lump sum</>
+                    : <><span className="text-gold">Lump Sum wins</span> — higher return than DCA</>
+                  }
+                </div>
+              </div>
+              <div className="flex gap-8">
+                <div>
+                  <div className="font-mono text-[9px] leading-none font-bold tracking-[0.12em] uppercase text-mute mb-[6px]">DCA return</div>
+                  <div className={cn('font-display text-[20px] leading-none font-bold [font-variant-numeric:tabular-nums]', pnlClass(data.dcaPnlPct))}>
+                    {data.dcaPnlPct >= 0 ? '+' : ''}{data.dcaPnlPct.toFixed(2)}%
+                  </div>
+                </div>
+                <div>
+                  <div className="font-mono text-[9px] leading-none font-bold tracking-[0.12em] uppercase text-mute mb-[6px]">Lump Sum return</div>
+                  <div className={cn('font-display text-[20px] leading-none font-bold [font-variant-numeric:tabular-nums]', pnlClass(data.lumpSumPnlPct))}>
+                    {data.lumpSumPnlPct >= 0 ? '+' : ''}{data.lumpSumPnlPct.toFixed(2)}%
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Chart */}
+            {data.dataPoints && data.dataPoints.length >= 2 && (
+              <div className="bg-ink-2 border border-line rounded-[14px] p-[20px_24px]">
+                <div className="mb-4">
+                  <div className="font-mono text-[12px] leading-none font-bold tracking-[0.08em] uppercase text-bone">
+                    Portfolio Value Over Time
+                  </div>
+                  <div className="font-mono text-[11px] leading-[1.5] text-mute mt-1">
+                    {data.dataPoints.length} data points · {data.dataPoints[0]?.date} → {data.dataPoints[data.dataPoints.length - 1]?.date}
+                  </div>
+                </div>
+                <DcaChart points={data.dataPoints}/>
+              </div>
+            )}
+
+            {/* Lump sum detail */}
+            <div className="mt-4 p-[14px_20px] bg-[rgba(212,175,55,0.04)] border border-[rgba(212,175,55,0.12)] rounded-[10px] flex gap-[8px_40px] flex-wrap">
+              <LumpSumDetail label="Lump Sum cost" value={fmtVnd(data.lumpSumCostVnd)}/>
+              <LumpSumDetail label="Lump Sum current value" value={fmtVnd(data.lumpSumCurrentValueVnd)}/>
+              <LumpSumDetail label="Lump Sum P&L" value={`${data.lumpSumPnlPct >= 0 ? '+' : ''}${data.lumpSumPnlPct.toFixed(2)}%`}/>
+            </div>
+
+            {/* Save to Portfolio */}
+            {!!user && (
+              <div className="mt-5 flex items-center gap-[14px] flex-wrap">
+                <button
+                  onClick={handleSaveToPortfolio}
+                  disabled={saving}
+                  className={cn(
+                    'flex items-center gap-2 h-[42px] px-[22px] border-0 rounded-[10px] font-display text-[13px] leading-none font-bold text-gold-ink tracking-[0.04em] transition-[background] duration-[140ms]',
+                    saving ? 'bg-[rgba(212,175,55,0.4)] cursor-not-allowed' : 'bg-gold cursor-pointer',
+                  )}
+                >
+                  {saving ? 'Đang lưu…' : 'Lưu vào danh mục'}
+                </button>
+                {saveMsg && (
+                  <span className={cn('font-mono text-[12px] leading-[1.4] tracking-[0.04em]', saveMsg.startsWith('Lỗi') ? 'text-down' : 'text-up')}>
+                    {saveMsg}
+                  </span>
+                )}
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

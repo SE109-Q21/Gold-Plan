@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useArbitrageOpportunities, useArbitrageHistory } from '@/lib/arbitrage.api';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import type { ArbitrageOpportunityDto } from '@gpls/shared';
+import { cn } from '@/lib/utils';
 
 const GOLD_TYPES = ['NHAN_9999', 'MIEN_SJC', 'VANG_24K', 'VANG_18K'] as const;
 
@@ -13,42 +14,28 @@ function fmt(n: number) {
 
 function OpportunityRow({ opp, quantity }: { opp: ArbitrageOpportunityDto; quantity: number }) {
   return (
-    <div style={{
-      background: 'var(--ink-2)',
-      border: '1px solid #9DCC6E44',
-      borderRadius: 10,
-      padding: 16,
-      marginBottom: 10,
-    }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+    <div className="bg-ink-2 border border-[rgba(157,204,110,0.27)] rounded-[10px] p-4 mb-[10px]">
+      <div className="flex justify-between flex-wrap gap-3">
         <div>
-          <div style={{ color: 'var(--chalk-3)', fontSize: 12, marginBottom: 6 }}>
-            {opp.goldType.replace('_', ' ')}
-          </div>
-          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+          <div className="text-mute text-[12px] mb-[6px]">{opp.goldType.replace('_', ' ')}</div>
+          <div className="flex gap-4 flex-wrap">
             <div>
-              <div style={{ color: 'var(--chalk-3)', fontSize: 11 }}>Mua từ</div>
-              <div style={{ color: '#58C896', fontWeight: 600 }}>{opp.buyFromBrand}</div>
-              <div style={{ fontSize: 12, color: 'var(--chalk-3)' }}>{fmt(opp.buyFromPrice)}₫</div>
+              <div className="text-mute text-[11px]">Mua từ</div>
+              <div className="text-[#58C896] font-semibold">{opp.buyFromBrand}</div>
+              <div className="text-[12px] text-mute">{fmt(opp.buyFromPrice)}₫</div>
             </div>
-            <div style={{ alignSelf: 'center', color: 'var(--chalk-3)', fontSize: 18 }}>→</div>
+            <div className="self-center text-mute text-[18px]">→</div>
             <div>
-              <div style={{ color: 'var(--chalk-3)', fontSize: 11 }}>Bán cho</div>
-              <div style={{ color: '#E5484D', fontWeight: 600 }}>{opp.sellToBrand}</div>
-              <div style={{ fontSize: 12, color: 'var(--chalk-3)' }}>{fmt(opp.sellToPrice)}₫</div>
+              <div className="text-mute text-[11px]">Bán cho</div>
+              <div className="text-[#E5484D] font-semibold">{opp.sellToBrand}</div>
+              <div className="text-[12px] text-mute">{fmt(opp.sellToPrice)}₫</div>
             </div>
           </div>
         </div>
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ color: '#9DCC6E', fontSize: 22, fontWeight: 700 }}>
-            +{fmt(opp.grossProfit * quantity)}₫
-          </div>
-          <div style={{ color: 'var(--chalk-3)', fontSize: 12 }}>
-            +{opp.profitPercent.toFixed(2)}% · {quantity} lượng
-          </div>
-          <div style={{ color: 'var(--chalk-3)', fontSize: 11, marginTop: 4 }}>
-            Cập nhật: {new Date(opp.updatedAt).toLocaleTimeString('vi-VN')}
-          </div>
+        <div className="text-right">
+          <div className="text-[#9DCC6E] text-[22px] font-bold">+{fmt(opp.grossProfit * quantity)}₫</div>
+          <div className="text-mute text-[12px]">+{opp.profitPercent.toFixed(2)}% · {quantity} lượng</div>
+          <div className="text-mute text-[11px] mt-1">Cập nhật: {new Date(opp.updatedAt).toLocaleTimeString('vi-VN')}</div>
         </div>
       </div>
     </div>
@@ -69,48 +56,44 @@ export default function ArbitragePage() {
     : [];
 
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: '24px 16px' }}>
-      <h1 style={{ color: 'var(--gold)', marginBottom: 4, fontSize: 24 }}>⚡ Chênh lệch giá vàng</h1>
-      <p style={{ color: 'var(--chalk-3)', fontSize: 14, marginBottom: 24 }}>
+    <div className="max-w-[800px] mx-auto p-[24px_16px]">
+      <h1 className="text-gold mb-1 text-[24px] font-bold">⚡ Chênh lệch giá vàng</h1>
+      <p className="text-mute text-[14px] mb-6">
         So sánh giá mua/bán giữa các thương hiệu real-time. Mua nơi rẻ nhất, bán nơi cao nhất.
       </p>
 
       {/* Filters */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
+      <div className="flex gap-2 mb-5 flex-wrap items-center">
         {(['', ...GOLD_TYPES] as const).map(gt => (
-          <button key={gt} onClick={() => setGoldTypeFilter(gt)} style={{
-            padding: '5px 14px', borderRadius: 6, fontSize: 12, cursor: 'pointer',
-            background: goldTypeFilter === gt ? 'var(--gold)' : 'var(--ink-2)',
-            color: goldTypeFilter === gt ? '#000' : 'var(--chalk-3)',
-            border: `1px solid ${goldTypeFilter === gt ? 'var(--gold)' : 'var(--line)'}`,
-          }}>
+          <button
+            key={gt}
+            onClick={() => setGoldTypeFilter(gt)}
+            className={cn(
+              'px-[14px] py-[5px] rounded-md text-[12px] cursor-pointer border',
+              goldTypeFilter === gt
+                ? 'bg-gold border-gold text-gold-ink'
+                : 'bg-ink-2 border-line text-mute',
+            )}
+          >
             {gt || 'Tất cả'}
           </button>
         ))}
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ color: 'var(--chalk-3)', fontSize: 13 }}>Số lượng:</span>
+        <div className="ml-auto flex items-center gap-2">
+          <span className="text-mute text-[13px]">Số lượng:</span>
           <input
             type="number" min={1} max={100} value={quantity}
             onChange={e => setQuantity(Math.max(1, Number(e.target.value)))}
-            style={{
-              width: 60, padding: '4px 8px', borderRadius: 6,
-              background: 'var(--ink-2)', border: '1px solid var(--line)',
-              color: 'var(--chalk)', fontSize: 13, textAlign: 'center',
-            }}
+            className="w-[60px] px-2 py-1 rounded-md bg-ink-2 border border-line text-chalk text-[13px] text-center outline-none"
           />
-          <span style={{ color: 'var(--chalk-3)', fontSize: 13 }}>lượng</span>
+          <span className="text-mute text-[13px]">lượng</span>
         </div>
       </div>
 
-      {/* Opportunities list */}
-      {isLoading && <p style={{ color: 'var(--chalk-3)' }}>Đang tải...</p>}
+      {isLoading && <p className="text-mute">Đang tải...</p>}
       {!isLoading && filtered.length === 0 && (
-        <div style={{
-          background: 'var(--ink-2)', border: '1px solid var(--line)',
-          borderRadius: 10, padding: 24, textAlign: 'center', color: 'var(--chalk-3)',
-        }}>
+        <div className="bg-ink-2 border border-line rounded-[10px] p-6 text-center text-mute">
           Không có cơ hội chênh lệch giá hiện tại.
-          <br /><span style={{ fontSize: 12 }}>Thị trường đang ở trạng thái cân bằng.</span>
+          <br /><span className="text-[12px]">Thị trường đang ở trạng thái cân bằng.</span>
         </div>
       )}
       {filtered.map((opp, i) => (
@@ -119,11 +102,8 @@ export default function ArbitragePage() {
 
       {/* 24h history chart */}
       {history && history.length > 1 && (
-        <div style={{
-          background: 'var(--ink-2)', border: '1px solid var(--line)',
-          borderRadius: 10, padding: 16, marginTop: 24,
-        }}>
-          <div style={{ color: 'var(--chalk-3)', fontSize: 13, marginBottom: 12 }}>
+        <div className="bg-ink-2 border border-line rounded-[10px] p-4 mt-6">
+          <div className="text-mute text-[13px] mb-3">
             Lịch sử chênh lệch 24h — {goldTypeFilter || opps?.[0]?.goldType}
           </div>
           <ResponsiveContainer width="100%" height={120}>
@@ -131,8 +111,8 @@ export default function ArbitragePage() {
               <XAxis dataKey="recordedAt" hide />
               <YAxis hide domain={['auto', 'auto']} />
               <Tooltip
-                formatter={(v: any) => [`${fmt(v)}₫`, 'Lợi nhuận']}
-                labelFormatter={(l: any) => new Date(l as string).toLocaleTimeString('vi-VN')}
+                formatter={(v: unknown) => [`${fmt(Number(v))}₫`, 'Lợi nhuận']}
+                labelFormatter={(l: unknown) => new Date(l as string).toLocaleTimeString('vi-VN')}
                 contentStyle={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 6 }}
               />
               <Line type="monotone" dataKey="grossProfit" stroke="#D4AF37" dot={false} strokeWidth={2} />
@@ -141,7 +121,7 @@ export default function ArbitragePage() {
         </div>
       )}
 
-      <p style={{ color: 'var(--chalk-3)', fontSize: 11, marginTop: 16, textAlign: 'center' }}>
+      <p className="text-mute text-[11px] mt-4 text-center">
         * Giá tham khảo, chưa tính phí giao dịch và thuế TNCN. Đơn vị có thể khác nhau giữa các thương hiệu.
       </p>
     </div>
