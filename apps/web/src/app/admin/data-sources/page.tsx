@@ -7,6 +7,9 @@ import {
 } from '@/lib/admin.api';
 import type { DataSourceAdminDto } from '@gpls/shared';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 const TH = 'text-left p-[10px_16px] font-mono text-[10px] leading-none font-bold text-mute tracking-[0.14em] uppercase whitespace-nowrap';
 const TD = 'p-[14px_16px]';
@@ -29,8 +32,8 @@ function EnabledBadge({ active }: { active: boolean }) {
   );
 }
 
-const INPUT_CLS = 'bg-ink border border-line rounded-md px-[10px] py-2 font-mono text-[12px] leading-none text-chalk outline-none w-full';
-const LABEL_CLS = 'block font-mono text-[9px] leading-none font-bold text-mute tracking-[0.12em] uppercase mb-[5px]';
+const INPUT_CLS = 'bg-ink border-line font-mono text-[12px] text-chalk placeholder:text-mute focus-visible:ring-gold h-[34px]';
+const LABEL_CLS = 'font-mono text-[9px] leading-none font-bold text-mute tracking-[0.12em] uppercase mb-[5px]';
 
 function SourceForm({ initial, mode, onClose }: { initial?: Partial<SourceFormValues & { id: string }>; mode: 'create' | 'edit'; onClose: () => void }) {
   const [form, setForm] = useState<SourceFormValues>({
@@ -59,12 +62,12 @@ function SourceForm({ initial, mode, onClose }: { initial?: Partial<SourceFormVa
       </div>
       <div className="grid gap-[14px] mb-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))' }}>
         <div>
-          <label className={LABEL_CLS}>Name</label>
-          <input type="text" value={form.name} onChange={e => set('name', e.target.value)} required placeholder="e.g. SJC HCM" className={INPUT_CLS}/>
+          <Label className={LABEL_CLS}>Name</Label>
+          <Input type="text" value={form.name} onChange={e => set('name', e.target.value)} required placeholder="e.g. SJC HCM" className={INPUT_CLS}/>
         </div>
         <div>
-          <label className={LABEL_CLS}>Brand</label>
-          <select value={form.brand} onChange={e => set('brand', e.target.value)} className={INPUT_CLS}>
+          <Label className={LABEL_CLS}>Brand</Label>
+          <select value={form.brand} onChange={e => set('brand', e.target.value)} className="bg-ink border border-line rounded-md px-[10px] py-2 font-mono text-[12px] leading-none text-bone cursor-pointer outline-none w-full h-[34px]">
             <option value="SJC">SJC</option>
             <option value="DOJI">DOJI</option>
             <option value="PNJ">PNJ</option>
@@ -72,37 +75,29 @@ function SourceForm({ initial, mode, onClose }: { initial?: Partial<SourceFormVa
           </select>
         </div>
         <div className="col-span-2">
-          <label className={LABEL_CLS}>URL</label>
-          <input type="url" value={form.url} onChange={e => set('url', e.target.value)} required placeholder="https://..." className={INPUT_CLS}/>
+          <Label className={LABEL_CLS}>URL</Label>
+          <Input type="url" value={form.url} onChange={e => set('url', e.target.value)} required placeholder="https://..." className={INPUT_CLS}/>
         </div>
         <div>
-          <label className={LABEL_CLS}>Crawl Type</label>
-          <select value={form.crawlType} onChange={e => set('crawlType', e.target.value)} className={INPUT_CLS}>
+          <Label className={LABEL_CLS}>Crawl Type</Label>
+          <select value={form.crawlType} onChange={e => set('crawlType', e.target.value)} className="bg-ink border border-line rounded-md px-[10px] py-2 font-mono text-[12px] leading-none text-bone cursor-pointer outline-none w-full h-[34px]">
             <option value="http">http</option>
             <option value="html">html</option>
             <option value="api">api</option>
           </select>
         </div>
         <div>
-          <label className={LABEL_CLS}>Frequency (min)</label>
-          <input type="number" value={form.frequencyMin} min={1} onChange={e => set('frequencyMin', parseInt(e.target.value, 10) || 5)} className={INPUT_CLS}/>
+          <Label className={LABEL_CLS}>Frequency (min)</Label>
+          <Input type="number" value={form.frequencyMin} min={1} onChange={e => set('frequencyMin', parseInt(e.target.value, 10) || 5)} className={INPUT_CLS}/>
         </div>
       </div>
       <div className="flex gap-2">
-        <button
-          type="submit"
-          disabled={isPending}
-          className={cn('px-[18px] py-2 bg-gold border-0 rounded-md font-mono text-[10px] leading-none font-bold text-gold-ink tracking-[0.08em] uppercase', isPending ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer')}
-        >
+        <Button type="submit" disabled={isPending} size="sm" className="px-[18px] font-mono text-[10px] font-bold tracking-[0.08em] uppercase">
           {isPending ? 'Saving…' : mode === 'create' ? 'Create' : 'Save'}
-        </button>
-        <button
-          type="button"
-          onClick={onClose}
-          className="px-[14px] py-2 bg-transparent border border-line rounded-md font-mono text-[10px] leading-none font-bold text-mute tracking-[0.08em] uppercase cursor-pointer"
-        >
+        </Button>
+        <Button type="button" variant="outline" size="sm" onClick={onClose} className="px-[14px] border-line bg-transparent text-mute hover:bg-ink-3 hover:text-bone font-mono text-[10px] font-bold tracking-[0.08em] uppercase">
           Cancel
-        </button>
+        </Button>
       </div>
     </form>
   );
@@ -126,17 +121,15 @@ export default function AdminDataSourcesPage() {
           <h1 className="font-display text-[28px] leading-none font-extrabold m-0 mb-[6px] tracking-[-0.02em]">Data Sources</h1>
           <div className="font-mono text-[12px] leading-none text-mute">Manage crawl sources for all gold brands</div>
         </div>
-        <button
+        <Button
           onClick={() => { setEditTarget(null); setFormMode('create'); }}
           className={cn(
-            'px-[18px] py-[9px] rounded-lg font-mono text-[11px] leading-none font-bold tracking-[0.08em] uppercase cursor-pointer',
-            formMode === 'create'
-              ? 'bg-[rgba(212,175,55,0.15)] border border-gold text-gold'
-              : 'bg-gold border-0 text-gold-ink',
+            'font-mono text-[11px] font-bold tracking-[0.08em] uppercase',
+            formMode === 'create' ? 'bg-[rgba(212,175,55,0.15)] border border-gold text-gold hover:bg-[rgba(212,175,55,0.25)] hover:text-gold' : '',
           )}
         >
           + New Source
-        </button>
+        </Button>
       </div>
 
       {formMode === 'create' && <SourceForm mode="create" onClose={closeForm}/>}
@@ -177,17 +170,17 @@ export default function AdminDataSourcesPage() {
                   </td>
                   <td className={TD}>
                     <div className="flex gap-[6px] items-center">
-                      <button onClick={() => openEdit(ds)} className="px-[11px] py-[6px] bg-transparent border border-line rounded-md font-mono text-[10px] leading-none font-bold text-bone tracking-[0.08em] uppercase cursor-pointer">
+                      <Button variant="outline" size="sm" onClick={() => openEdit(ds)} className="px-[11px] py-[6px] h-auto border-line bg-transparent text-bone hover:bg-ink-3 font-mono text-[10px] font-bold tracking-[0.08em] uppercase">
                         Edit
-                      </button>
+                      </Button>
                       {ds.isActive ? (
-                        <button onClick={() => disable(ds.id)} disabled={isDisabling} className={cn('px-[11px] py-[6px] bg-transparent border border-down rounded-md font-mono text-[10px] leading-none font-bold text-down tracking-[0.08em] uppercase', isDisabling ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer')}>
+                        <Button variant="outline" size="sm" onClick={() => disable(ds.id)} disabled={isDisabling} className="px-[11px] py-[6px] h-auto border-down bg-transparent text-down hover:bg-[rgba(229,72,77,0.08)] hover:text-down font-mono text-[10px] font-bold tracking-[0.08em] uppercase">
                           Disable
-                        </button>
+                        </Button>
                       ) : (
-                        <button onClick={() => enable(ds.id)} disabled={isEnabling} className={cn('px-[11px] py-[6px] bg-transparent border border-up rounded-md font-mono text-[10px] leading-none font-bold text-up tracking-[0.08em] uppercase', isEnabling ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer')}>
+                        <Button variant="outline" size="sm" onClick={() => enable(ds.id)} disabled={isEnabling} className="px-[11px] py-[6px] h-auto border-up bg-transparent text-up hover:bg-[rgba(88,200,150,0.08)] hover:text-up font-mono text-[10px] font-bold tracking-[0.08em] uppercase">
                           Enable
-                        </button>
+                        </Button>
                       )}
                     </div>
                   </td>

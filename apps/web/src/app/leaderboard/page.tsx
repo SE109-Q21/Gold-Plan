@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useLeaderboard } from '@/lib/forecast.api';
 import type { LeaderboardEntryDto } from '@gpls/shared';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 function prevMonth(ym: string): string {
   const [y, m] = ym.split('-').map(Number);
@@ -88,7 +89,6 @@ function buildMonthOptions(): { value: string; label: string }[] {
   return options;
 }
 
-const NAV_BTN = 'w-[34px] h-[34px] bg-ink-2 border border-line rounded-md cursor-pointer text-bone font-display text-[16px] leading-none font-bold flex items-center justify-center';
 
 function LeaderboardContent() {
   const [month, setMonth] = useState<string>(() => new Date().toISOString().slice(0, 7));
@@ -111,13 +111,9 @@ function LeaderboardContent() {
 
       {/* Month selector */}
       <div className="flex items-center gap-2 mb-6">
-        <button
-          onClick={() => setMonth(prev => prevMonth(prev))}
-          className={NAV_BTN}
-          aria-label="Tháng trước"
-        >
+        <Button variant="outline" onClick={() => setMonth(prev => prevMonth(prev))} aria-label="Tháng trước" className="w-[34px] h-[34px] p-0 bg-ink-2 border-line text-bone hover:bg-ink-3 font-display text-[16px] font-bold">
           ‹
-        </button>
+        </Button>
         <select
           value={month}
           onChange={e => setMonth(e.target.value)}
@@ -125,14 +121,9 @@ function LeaderboardContent() {
         >
           {monthOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
-        <button
-          onClick={() => setMonth(prev => nextMonth(prev))}
-          disabled={!canGoForward}
-          aria-label="Tháng sau"
-          className={cn(NAV_BTN, !canGoForward && 'opacity-40 cursor-not-allowed text-mute')}
-        >
+        <Button variant="outline" onClick={() => setMonth(prev => nextMonth(prev))} disabled={!canGoForward} aria-label="Tháng sau" className="w-[34px] h-[34px] p-0 bg-ink-2 border-line text-bone hover:bg-ink-3 font-display text-[16px] font-bold disabled:opacity-40">
           ›
-        </button>
+        </Button>
       </div>
 
       {/* Table */}

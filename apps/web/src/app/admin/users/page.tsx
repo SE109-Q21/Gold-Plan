@@ -3,25 +3,27 @@
 import { useState } from 'react';
 import { useAdminUsers, useLockUser, useUnlockUser, useChangeUserRole } from '@/lib/admin.api';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 
 const TH = 'text-left p-[10px_16px] font-mono text-[10px] leading-none font-bold text-mute tracking-[0.14em] uppercase whitespace-nowrap';
 const TD = 'p-[14px_16px]';
 
 function UserStatusBadge({ status }: { status: string }) {
   const cls =
-    status === 'active'  ? 'bg-[rgba(88,200,150,0.12)] text-up border-[rgba(88,200,150,0.3)]' :
-    status === 'locked'  ? 'bg-[rgba(200,80,80,0.12)] text-down border-[rgba(200,80,80,0.3)]' :
-    status === 'pending' ? 'bg-[rgba(212,175,55,0.12)] text-gold border-[rgba(212,175,55,0.3)]' :
-    'bg-[rgba(100,100,120,0.12)] text-mute border-line';
+    status === 'active'  ? 'bg-[rgba(88,200,150,0.12)] text-up border-[rgba(88,200,150,0.3)] hover:bg-[rgba(88,200,150,0.12)]' :
+    status === 'locked'  ? 'bg-[rgba(200,80,80,0.12)] text-down border-[rgba(200,80,80,0.3)] hover:bg-[rgba(200,80,80,0.12)]' :
+    status === 'pending' ? 'bg-[rgba(212,175,55,0.12)] text-gold border-[rgba(212,175,55,0.3)] hover:bg-[rgba(212,175,55,0.12)]' :
+    'bg-[rgba(100,100,120,0.12)] text-mute border-line hover:bg-[rgba(100,100,120,0.12)]';
 
   return (
-    <span className={cn('inline-block px-2 py-[3px] rounded font-mono text-[9px] leading-none font-bold tracking-[0.12em] uppercase border', cls)}>
+    <Badge className={cn('font-mono text-[9px] font-bold tracking-[0.12em] uppercase border', cls)}>
       {status}
-    </span>
+    </Badge>
   );
 }
 
-const FILTER_INPUT = 'h-[34px] px-3 bg-ink-3 border border-line rounded-md font-mono text-[12px] leading-none text-chalk outline-none';
 const FILTER_SELECT = 'h-[34px] px-[10px] bg-ink-3 border border-line rounded-md font-mono text-[12px] leading-none text-bone cursor-pointer outline-none';
 
 export default function AdminUsersPage() {
@@ -66,12 +68,12 @@ export default function AdminUsersPage() {
 
       {/* Filters */}
       <div className="flex gap-[10px] mb-4 flex-wrap">
-        <input
+        <Input
           type="text"
           placeholder="Search by email…"
           value={search}
           onChange={e => handleSearchChange(e.target.value)}
-          className={cn(FILTER_INPUT, 'flex-[1_1_200px] max-w-[300px] text-[13px]')}
+          className="flex-[1_1_200px] max-w-[300px] h-[34px] bg-ink-3 border-line text-chalk font-mono text-[13px] placeholder:text-mute focus-visible:ring-gold"
         />
         <select value={statusFilter} onChange={handleFilterChange(setStatusFilter)} className={FILTER_SELECT}>
           <option value="">All statuses</option>
@@ -85,12 +87,13 @@ export default function AdminUsersPage() {
           <option value="admin">Admin</option>
         </select>
         {(search || statusFilter || roleFilter) && (
-          <button
+          <Button
+            variant="outline"
             onClick={() => { setSearch(''); setStatusFilter(''); setRoleFilter(''); setPage(1); }}
-            className="h-[34px] px-[14px] bg-transparent border border-line rounded-md font-mono text-[11px] leading-none font-semibold text-mute cursor-pointer tracking-[0.06em]"
+            className="h-[34px] px-[14px] border-line bg-transparent text-mute hover:bg-ink-3 hover:text-bone font-mono text-[11px] font-semibold tracking-[0.06em]"
           >
             Clear
-          </button>
+          </Button>
         )}
       </div>
 
@@ -138,14 +141,14 @@ export default function AdminUsersPage() {
                     <td className="p-[10px_16px]">
                       <div className="flex gap-[6px] flex-wrap">
                         {u.status === 'locked' ? (
-                          <button onClick={() => unlock(u.id)} disabled={isMutating} className={actionBtn('up', isMutating)}>Unlock</button>
+                          <Button variant="outline" size="sm" onClick={() => unlock(u.id)} disabled={isMutating} className="px-[10px] py-[5px] h-auto border-up text-up hover:bg-[rgba(88,200,150,0.08)] hover:text-up font-mono text-[9px] font-bold tracking-[0.08em] uppercase">Unlock</Button>
                         ) : (u.status === 'active' || u.status === 'pending') ? (
-                          <button onClick={() => lock(u.id)} disabled={isMutating} className={actionBtn('down', isMutating)}>Lock</button>
+                          <Button variant="outline" size="sm" onClick={() => lock(u.id)} disabled={isMutating} className="px-[10px] py-[5px] h-auto border-down text-down hover:bg-[rgba(229,72,77,0.08)] hover:text-down font-mono text-[9px] font-bold tracking-[0.08em] uppercase">Lock</Button>
                         ) : null}
                         {u.role === 'user' ? (
-                          <button onClick={() => changeRole({ id: u.id, role: 'admin' })} disabled={isMutating} className={actionBtn('gold', isMutating)}>Promote</button>
+                          <Button variant="outline" size="sm" onClick={() => changeRole({ id: u.id, role: 'admin' })} disabled={isMutating} className="px-[10px] py-[5px] h-auto border-[rgba(212,175,55,0.5)] text-gold hover:bg-[rgba(212,175,55,0.08)] hover:text-gold font-mono text-[9px] font-bold tracking-[0.08em] uppercase">Promote</Button>
                         ) : u.role === 'admin' ? (
-                          <button onClick={() => changeRole({ id: u.id, role: 'user' })} disabled={isMutating} className={actionBtn('mute', isMutating)}>Demote</button>
+                          <Button variant="outline" size="sm" onClick={() => changeRole({ id: u.id, role: 'user' })} disabled={isMutating} className="px-[10px] py-[5px] h-auto border-line text-mute hover:bg-ink-3 hover:text-bone font-mono text-[9px] font-bold tracking-[0.08em] uppercase">Demote</Button>
                         ) : null}
                       </div>
                     </td>
@@ -160,20 +163,12 @@ export default function AdminUsersPage() {
                   Page {page} of {totalPages} · {total} total
                 </span>
                 <div className="flex gap-2">
-                  <button
-                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                    disabled={page <= 1}
-                    className={cn('px-[14px] py-[6px] bg-transparent border border-line rounded-md font-mono text-[10px] leading-none font-bold tracking-[0.08em]', page <= 1 ? 'text-mute cursor-not-allowed opacity-50' : 'text-bone cursor-pointer')}
-                  >
+                  <Button variant="outline" size="sm" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1} className="px-[14px] border-line bg-transparent text-bone hover:bg-ink-3 font-mono text-[10px] font-bold tracking-[0.08em]">
                     ← Prev
-                  </button>
-                  <button
-                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                    disabled={page >= totalPages}
-                    className={cn('px-[14px] py-[6px] bg-transparent border border-line rounded-md font-mono text-[10px] leading-none font-bold tracking-[0.08em]', page >= totalPages ? 'text-mute cursor-not-allowed opacity-50' : 'text-bone cursor-pointer')}
-                  >
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="px-[14px] border-line bg-transparent text-bone hover:bg-ink-3 font-mono text-[10px] font-bold tracking-[0.08em]">
                     Next →
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}

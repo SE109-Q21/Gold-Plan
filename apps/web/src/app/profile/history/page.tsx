@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useBrowsingHistory, useClearHistory, useLowestSeen } from '@/lib/browsing-history.api';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 function fmtDate(iso: string): string {
   const d = new Date(iso);
@@ -49,25 +50,14 @@ function BrowsingHistoryContent() {
       {/* Header */}
       <div className="flex items-center justify-between px-7 py-5 border-b border-line bg-ink-2">
         <div className="flex items-center gap-[14px]">
-          <button
-            onClick={() => router.back()}
-            className="bg-transparent border border-line rounded-md cursor-pointer px-[10px] py-[6px] text-bone font-mono text-[12px] leading-none font-bold tracking-[0.04em] flex items-center gap-[6px]"
-          >
+          <Button variant="outline" onClick={() => router.back()} className="h-[34px] px-[10px] border-line bg-transparent text-bone hover:bg-ink-3 font-mono text-[12px] font-bold tracking-[0.04em] flex items-center gap-[6px]">
             ← back
-          </button>
+          </Button>
           <h1 className="font-display text-[20px] leading-none font-bold m-0 tracking-[-0.015em]">browsing history</h1>
         </div>
-        <button
-          onClick={handleClearAll}
-          disabled={clearHistory.isPending}
-          className={cn(
-            'h-[34px] px-[14px] bg-transparent border border-[rgba(229,72,77,0.5)] rounded-md',
-            'font-mono text-[11px] leading-none font-bold text-down tracking-[0.04em] uppercase',
-            clearHistory.isPending ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer',
-          )}
-        >
+        <Button variant="outline" onClick={handleClearAll} disabled={clearHistory.isPending} className="h-[34px] px-[14px] border-[rgba(229,72,77,0.5)] bg-transparent text-down hover:bg-[rgba(229,72,77,0.08)] hover:text-down font-mono text-[11px] font-bold tracking-[0.04em] uppercase">
           {clearHistory.isPending ? '…' : 'clear all'}
-        </button>
+        </Button>
       </div>
 
       {/* Table */}
@@ -133,27 +123,13 @@ function BrowsingHistoryContent() {
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex items-center justify-center gap-4 mt-5">
-            <button
-              onClick={() => setPage(p => Math.max(1, p - 1))}
-              disabled={page <= 1}
-              className={cn(
-                'h-[34px] px-[14px] bg-ink-3 border border-line rounded-md font-mono text-[11px] leading-none font-bold tracking-[0.04em] uppercase',
-                page <= 1 ? 'text-mute cursor-not-allowed' : 'text-bone cursor-pointer',
-              )}
-            >
+            <Button variant="outline" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1} className="h-[34px] px-[14px] bg-ink-3 border-line text-bone hover:bg-ink-4 font-mono text-[11px] font-bold tracking-[0.04em] uppercase">
               ← prev
-            </button>
+            </Button>
             <span className="font-mono text-[12px] text-mute">page {page} of {totalPages}</span>
-            <button
-              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-              disabled={page >= totalPages}
-              className={cn(
-                'h-[34px] px-[14px] bg-ink-3 border border-line rounded-md font-mono text-[11px] leading-none font-bold tracking-[0.04em] uppercase',
-                page >= totalPages ? 'text-mute cursor-not-allowed' : 'text-bone cursor-pointer',
-              )}
-            >
+            <Button variant="outline" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="h-[34px] px-[14px] bg-ink-3 border-line text-bone hover:bg-ink-4 font-mono text-[11px] font-bold tracking-[0.04em] uppercase">
               next →
-            </button>
+            </Button>
           </div>
         )}
 

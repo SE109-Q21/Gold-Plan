@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useDigestArchive } from '@/lib/digest.api';
 import type { DigestDto } from '@gpls/shared';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString('vi-VN', {
@@ -106,26 +107,6 @@ function SkeletonCard() {
   );
 }
 
-function PaginationBtn({ disabled, onClick, children }: {
-  disabled: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      disabled={disabled}
-      onClick={onClick}
-      className={cn(
-        'h-[34px] px-4 rounded-lg font-mono text-[11px] leading-none font-bold tracking-[0.1em] uppercase border transition-opacity',
-        disabled
-          ? 'bg-ink-3 border-hairline text-mute cursor-default opacity-50'
-          : 'bg-ink-2 border-line text-chalk cursor-pointer',
-      )}
-    >
-      {children}
-    </button>
-  );
-}
 
 function DigestArchiveContent() {
   const router = useRouter();
@@ -140,15 +121,12 @@ function DigestArchiveContent() {
     <div className="bg-ink min-h-screen text-chalk">
       <div className="p-[32px_40px] max-w-[860px] mx-auto">
         {/* Back button */}
-        <button
-          onClick={() => router.back()}
-          className="bg-transparent border-0 cursor-pointer text-mute font-sans text-[13px] leading-none font-medium inline-flex items-center gap-[6px] pb-6"
-        >
+        <Button variant="ghost" onClick={() => router.back()} className="text-mute flex items-center gap-[6px] font-sans text-[13px] font-medium p-0 pb-6 h-auto hover:bg-transparent hover:text-bone">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M19 12H5M12 5l-7 7 7 7"/>
           </svg>
           back
-        </button>
+        </Button>
 
         {/* Header */}
         <div className="mb-7">
@@ -173,9 +151,9 @@ function DigestArchiveContent() {
         {/* Pagination */}
         {!isLoading && total > 0 && (
           <div className="flex items-center justify-between mt-6">
-            <PaginationBtn disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))}>← Prev</PaginationBtn>
+            <Button variant="outline" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1} className="h-[34px] px-4 border-line bg-ink-2 text-chalk hover:bg-ink-3 font-mono text-[11px] font-bold tracking-[0.1em] uppercase">← Prev</Button>
             <span className="font-sans text-[13px] leading-none text-mute">Page {page} of {totalPages}</span>
-            <PaginationBtn disabled={page >= totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))}>Next →</PaginationBtn>
+            <Button variant="outline" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="h-[34px] px-4 border-line bg-ink-2 text-chalk hover:bg-ink-3 font-mono text-[11px] font-bold tracking-[0.1em] uppercase">Next →</Button>
           </div>
         )}
       </div>

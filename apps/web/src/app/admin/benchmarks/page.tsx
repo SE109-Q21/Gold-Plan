@@ -2,8 +2,10 @@
 
 import React, { useState } from 'react';
 import { useBenchmarks, useUpsertBenchmark, useDeleteBenchmark } from '@/lib/assets-comparison.api';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
-const INPUT_CLS = 'bg-ink-3 border border-line rounded-md text-chalk text-[13px] px-[10px] py-[6px] outline-none';
+const INPUT_CLS = 'bg-ink-3 border-line text-chalk text-[13px] focus-visible:ring-gold h-[34px]';
 
 function BenchmarksSection() {
   const { data: items, isLoading } = useBenchmarks();
@@ -38,7 +40,7 @@ function BenchmarksSection() {
           <select
             value={form.assetType}
             onChange={e => setForm(f => ({ ...f, assetType: e.target.value }))}
-            className={INPUT_CLS}
+            className="bg-ink-3 border border-line rounded-md text-chalk text-[13px] px-[10px] py-[6px] outline-none h-[34px]"
           >
             <option value="VN_INDEX">VN-Index</option>
             <option value="BANK_DEPOSIT">Gửi ngân hàng</option>
@@ -46,7 +48,7 @@ function BenchmarksSection() {
         </div>
         <div>
           <div className="text-mute text-[12px] mb-1">Ngày</div>
-          <input
+          <Input
             type="date"
             value={form.date}
             onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
@@ -58,7 +60,7 @@ function BenchmarksSection() {
           <div className="text-mute text-[12px] mb-1">
             {form.assetType === 'VN_INDEX' ? 'Điểm chỉ số' : 'Lãi suất (%/năm)'}
           </div>
-          <input
+          <Input
             type="number"
             step="0.01"
             value={form.value}
@@ -68,13 +70,9 @@ function BenchmarksSection() {
             className={INPUT_CLS + ' w-[100px]'}
           />
         </div>
-        <button
-          type="submit"
-          disabled={upsert.isPending}
-          className="px-4 py-[7px] rounded-md bg-gold text-gold-ink border-0 cursor-pointer font-semibold text-[13px]"
-        >
+        <Button type="submit" disabled={upsert.isPending} className="h-[34px] px-4 font-semibold text-[13px]">
           {upsert.isPending ? 'Đang lưu...' : 'Lưu'}
-        </button>
+        </Button>
       </form>
 
       {isLoading ? (
@@ -98,12 +96,9 @@ function BenchmarksSection() {
                 <td className="p-[8px_12px] text-right text-chalk">{item.value}</td>
                 <td className="p-[8px_12px] text-mute">{item.note ?? '—'}</td>
                 <td className="p-[8px_12px]">
-                  <button
-                    onClick={() => del.mutate(item.id)}
-                    className="px-[10px] py-[3px] rounded bg-[#E5484D22] text-[#E5484D] border border-[#E5484D44] cursor-pointer text-[12px]"
-                  >
+                  <Button variant="outline" size="sm" onClick={() => del.mutate(item.id)} className="px-[10px] py-[3px] h-auto border-down bg-transparent text-down hover:bg-[rgba(229,72,77,0.08)] hover:text-down font-mono text-[11px] font-bold">
                     Xóa
-                  </button>
+                  </Button>
                 </td>
               </tr>
             ))}

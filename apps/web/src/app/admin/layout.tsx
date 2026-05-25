@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/auth-context';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 const NAV_LINKS = [
   { href: '/admin',              label: 'Overview'     },
@@ -41,17 +42,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         <nav className="py-4 flex-1">
           {NAV_LINKS.map(link => (
-            <button
+            <Button
               key={link.href}
+              variant="ghost"
               onClick={() => router.push(link.href)}
               className={cn(
-                'block w-full px-5 py-[10px] bg-transparent border-0 cursor-pointer',
-                'font-display text-[13px] leading-none font-medium text-bone text-left tracking-[0.01em]',
+                'w-full justify-start px-5 py-[10px] h-auto',
+                'font-display text-[13px] leading-none font-medium text-bone tracking-[0.01em]',
                 'transition-[color,background] duration-[120ms] hover:bg-ink-3 hover:text-chalk',
               )}
             >
               {link.label}
-            </button>
+            </Button>
           ))}
         </nav>
 
@@ -59,12 +61,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="font-mono text-[10px] leading-none text-mute overflow-hidden text-ellipsis whitespace-nowrap">
             {user.email}
           </div>
-          <button
+          <Button
+            variant="outline"
             onClick={() => router.push('/')}
-            className="mt-[10px] w-full py-[7px] bg-transparent border border-line rounded-md cursor-pointer font-mono text-[10px] leading-none font-semibold text-mute tracking-[0.08em]"
+            className="mt-[10px] w-full py-[7px] h-auto border-line font-mono text-[10px] leading-none font-semibold text-mute tracking-[0.08em] hover:bg-ink-3 hover:text-bone"
           >
             ← Dashboard
-          </button>
+          </Button>
         </div>
       </aside>
 

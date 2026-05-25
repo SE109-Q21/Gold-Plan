@@ -3,12 +3,14 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/auth-context';
-import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 const PAGE = 'min-h-screen bg-ink flex items-center justify-center px-4 py-6';
 const CARD = 'w-full max-w-[400px] bg-ink-2 border border-line rounded-2xl px-8 py-9 [clip-path:polygon(0_0,calc(100%-20px)_0,100%_20px,100%_100%,0_100%)]';
-const LABEL = 'block font-mono text-[11px] leading-none font-semibold tracking-[0.1em] uppercase text-mute mb-[6px]';
-const INPUT = 'w-full h-10 bg-ink-3 border border-line rounded-lg px-3 text-chalk text-[14px] leading-none font-medium font-sans outline-none box-border';
+const LABEL_CLS = 'block font-mono text-[11px] leading-none font-semibold tracking-[0.1em] uppercase text-mute mb-[6px]';
+const INPUT_CLS = 'bg-ink-3 border-line text-chalk text-[14px] font-medium placeholder:text-mute focus-visible:ring-gold';
 
 function validate(email: string, password: string, confirm: string): string | null {
   if (!email) return 'Email is required';
@@ -74,16 +76,16 @@ export default function RegisterPage() {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-[14px]">
           <div>
-            <label htmlFor="email" className={LABEL}>Email</label>
-            <input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" required className={INPUT} autoComplete="email"/>
+            <Label htmlFor="email" className={LABEL_CLS}>Email</Label>
+            <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" required className={INPUT_CLS} autoComplete="email"/>
           </div>
           <div>
-            <label htmlFor="password" className={LABEL}>Password</label>
-            <input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Min. 8 chars, 1 uppercase, 1 digit" required className={INPUT} autoComplete="new-password"/>
+            <Label htmlFor="password" className={LABEL_CLS}>Password</Label>
+            <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Min. 8 chars, 1 uppercase, 1 digit" required className={INPUT_CLS} autoComplete="new-password"/>
           </div>
           <div>
-            <label htmlFor="confirm-password" className={LABEL}>Confirm password</label>
-            <input id="confirm-password" type="password" value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Repeat password" required className={INPUT} autoComplete="new-password"/>
+            <Label htmlFor="confirm-password" className={LABEL_CLS}>Confirm password</Label>
+            <Input id="confirm-password" type="password" value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Repeat password" required className={INPUT_CLS} autoComplete="new-password"/>
           </div>
 
           {error && (
@@ -92,16 +94,13 @@ export default function RegisterPage() {
             </div>
           )}
 
-          <button
+          <Button
             type="submit"
             disabled={loading}
-            className={cn(
-              'h-[42px] bg-gold border-0 rounded-lg font-display text-[13px] leading-none font-bold text-gold-ink tracking-[0.02em] mt-1 transition-opacity',
-              loading ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer opacity-100',
-            )}
+            className="w-full h-[42px] mt-1 text-[13px] font-bold tracking-[0.02em]"
           >
             {loading ? 'Creating account…' : 'Create account'}
-          </button>
+          </Button>
         </form>
 
         <p className="text-center mt-5 text-[13px] text-mute m-0">

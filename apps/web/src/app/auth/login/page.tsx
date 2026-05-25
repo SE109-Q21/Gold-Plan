@@ -5,7 +5,9 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 import { ApiError } from '@/lib/auth.api';
-import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
 
@@ -45,7 +47,6 @@ function LoginForm() {
   return (
     <div className="min-h-screen bg-ink flex items-center justify-center px-4 py-6">
       <div className="w-full max-w-[400px] bg-ink-2 border border-line rounded-2xl px-8 py-9 [clip-path:polygon(0_0,calc(100%-20px)_0,100%_20px,100%_100%,0_100%)]">
-        {/* Logo + heading */}
         <div className="text-center mb-7">
           <div className="w-11 h-11 rounded-[10px] bg-[linear-gradient(135deg,#D4AF37,#8E7321)] flex items-center justify-center mx-auto mb-[14px] text-[18px] leading-none font-extrabold font-sans text-gold-ink">
             GT
@@ -56,10 +57,10 @@ function LoginForm() {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-[14px]">
           <div>
-            <label htmlFor="email" className="block font-mono text-[11px] leading-none font-semibold tracking-[0.1em] uppercase text-mute mb-[6px]">
+            <Label htmlFor="email" className="block font-mono text-[11px] leading-none font-semibold tracking-[0.1em] uppercase text-mute mb-[6px]">
               Email
-            </label>
-            <input
+            </Label>
+            <Input
               id="email"
               type="email"
               value={email}
@@ -67,15 +68,15 @@ function LoginForm() {
               placeholder="you@example.com"
               required
               autoComplete="email"
-              className="w-full h-10 bg-ink-3 border border-line rounded-lg px-3 text-chalk text-[14px] leading-none font-medium font-sans outline-none box-border"
+              className="bg-ink-3 border-line text-chalk text-[14px] font-medium placeholder:text-mute focus-visible:ring-gold"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block font-mono text-[11px] leading-none font-semibold tracking-[0.1em] uppercase text-mute mb-[6px]">
+            <Label htmlFor="password" className="block font-mono text-[11px] leading-none font-semibold tracking-[0.1em] uppercase text-mute mb-[6px]">
               Password
-            </label>
-            <input
+            </Label>
+            <Input
               id="password"
               type="password"
               value={password}
@@ -83,7 +84,7 @@ function LoginForm() {
               placeholder="Your password"
               required
               autoComplete="current-password"
-              className="w-full h-10 bg-ink-3 border border-line rounded-lg px-3 text-chalk text-[14px] leading-none font-medium font-sans outline-none box-border"
+              className="bg-ink-3 border-line text-chalk text-[14px] font-medium placeholder:text-mute focus-visible:ring-gold"
             />
           </div>
 
@@ -99,26 +100,21 @@ function LoginForm() {
             </div>
           )}
 
-          <button
+          <Button
             type="submit"
             disabled={loading}
-            className={cn(
-              'h-[42px] bg-gold border-0 rounded-lg text-[13px] leading-none font-bold font-sans text-gold-ink tracking-[0.02em] mt-1 cursor-pointer transition-opacity',
-              loading ? 'opacity-70 cursor-not-allowed' : 'opacity-100',
-            )}
+            className="w-full h-[42px] mt-1 text-[13px] font-bold tracking-[0.02em]"
           >
             {loading ? 'Signing in…' : 'Sign in'}
-          </button>
+          </Button>
         </form>
 
-        {/* Divider */}
         <div className="flex items-center gap-[10px] mt-5 mb-[14px]">
           <span className="flex-1 h-px bg-line"/>
           <span className="font-mono text-[12px] leading-none font-medium text-mute tracking-[0.05em] shrink-0">hoặc</span>
           <span className="flex-1 h-px bg-line"/>
         </div>
 
-        {/* Google OAuth */}
         <a
           href={googleHref}
           className="flex items-center justify-center gap-[10px] h-[42px] bg-ink-3 border border-line rounded-lg text-[13px] leading-none font-semibold font-sans text-chalk no-underline tracking-[0.01em] cursor-pointer"

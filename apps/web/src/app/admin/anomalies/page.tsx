@@ -2,6 +2,8 @@
 
 import { useAdminAnomalies, useReviewAnomaly } from '@/lib/admin.api';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 const TH = 'text-left p-[10px_16px] font-mono text-[10px] leading-none font-bold text-mute tracking-[0.14em] uppercase whitespace-nowrap';
 const TD = 'p-[14px_16px]';
@@ -9,21 +11,21 @@ const TD = 'p-[14px_16px]';
 function ReviewBadge({ review }: { review: { action: string } | null }) {
   if (!review) {
     return (
-      <span className="inline-block px-2 py-[3px] rounded font-mono text-[9px] leading-none font-bold tracking-[0.12em] uppercase bg-[rgba(100,100,120,0.18)] text-mute border border-line">
+      <Badge className="font-mono text-[9px] font-bold tracking-[0.12em] uppercase bg-[rgba(100,100,120,0.18)] text-mute border border-line hover:bg-[rgba(100,100,120,0.18)]">
         pending
-      </span>
+      </Badge>
     );
   }
   const isApproved = review.action === 'approved';
   return (
-    <span className={cn(
-      'inline-block px-2 py-[3px] rounded font-mono text-[9px] leading-none font-bold tracking-[0.12em] uppercase border',
+    <Badge className={cn(
+      'font-mono text-[9px] font-bold tracking-[0.12em] uppercase border',
       isApproved
-        ? 'bg-[rgba(88,200,150,0.12)] text-up border-[rgba(88,200,150,0.3)]'
-        : 'bg-[rgba(200,80,80,0.12)] text-down border-[rgba(200,80,80,0.3)]',
+        ? 'bg-[rgba(88,200,150,0.12)] text-up border-[rgba(88,200,150,0.3)] hover:bg-[rgba(88,200,150,0.12)]'
+        : 'bg-[rgba(200,80,80,0.12)] text-down border-[rgba(200,80,80,0.3)] hover:bg-[rgba(200,80,80,0.12)]',
     )}>
       {review.action}
-    </span>
+    </Badge>
   );
 }
 
@@ -88,20 +90,12 @@ export default function AdminAnomaliesPage() {
                   <td className={TD}>
                     {!record.anomalyReview ? (
                       <div className="flex gap-2">
-                        <button
-                          onClick={() => review({ id: record.id, action: 'approved' })}
-                          disabled={isReviewing}
-                          className={cn('px-[10px] py-[6px] bg-transparent border border-up rounded-md font-mono text-[9px] leading-none font-bold tracking-[0.08em] uppercase text-up', isReviewing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer')}
-                        >
+                        <Button variant="outline" size="sm" onClick={() => review({ id: record.id, action: 'approved' })} disabled={isReviewing} className="px-[10px] py-[6px] h-auto border-up bg-transparent text-up hover:bg-[rgba(88,200,150,0.08)] hover:text-up font-mono text-[9px] font-bold tracking-[0.08em] uppercase">
                           Approve
-                        </button>
-                        <button
-                          onClick={() => review({ id: record.id, action: 'rejected' })}
-                          disabled={isReviewing}
-                          className={cn('px-[10px] py-[6px] bg-transparent border border-down rounded-md font-mono text-[9px] leading-none font-bold tracking-[0.08em] uppercase text-down', isReviewing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer')}
-                        >
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => review({ id: record.id, action: 'rejected' })} disabled={isReviewing} className="px-[10px] py-[6px] h-auto border-down bg-transparent text-down hover:bg-[rgba(229,72,77,0.08)] hover:text-down font-mono text-[9px] font-bold tracking-[0.08em] uppercase">
                           Reject
-                        </button>
+                        </Button>
                       </div>
                     ) : (
                       <span className="font-mono text-[11px] leading-none text-mute">Reviewed</span>

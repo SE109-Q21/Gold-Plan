@@ -5,6 +5,8 @@ import { useAdminStats, useAdminPeriodStats, useTriggerCrawl, useAdminTimeSeries
 import type { AdminStatsPeriod } from '@gpls/shared';
 import type { TimeSeriesPoint } from '@/lib/admin.api';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 const TH = 'text-left p-[10px_16px] font-mono text-[10px] leading-none font-bold text-mute tracking-[0.14em] uppercase whitespace-nowrap';
 
@@ -218,19 +220,20 @@ function ChartsSection() {
         </h2>
         <div className="flex">
           {RANGES.map((r, i) => (
-            <button
+            <Button
               key={r}
+              variant="outline"
               onClick={() => setRange(r)}
               className={cn(
-                'px-[14px] py-[6px] font-mono text-[11px] leading-none font-bold tracking-[0.08em] uppercase border border-line cursor-pointer',
+                'px-[14px] py-[6px] h-auto font-mono text-[11px] font-bold tracking-[0.08em] uppercase border-line rounded-none',
                 i === 0 && 'rounded-l-[6px]',
                 i === RANGES.length - 1 && 'rounded-r-[6px]',
                 i < RANGES.length - 1 && 'border-r-0',
-                range === r ? 'bg-gold text-gold-ink' : 'bg-transparent text-bone',
+                range === r ? 'bg-gold text-gold-ink border-gold hover:bg-gold hover:text-gold-ink' : 'bg-transparent text-bone hover:bg-ink-3',
               )}
             >
               {r}d
-            </button>
+            </Button>
           ))}
         </div>
       </div>
@@ -326,14 +329,14 @@ function UserStatusCard({ totalUsers, activeUsers }: { totalUsers: number; activ
 
 function StatusBadge({ active }: { active: boolean }) {
   return (
-    <span className={cn(
-      'inline-block px-2 py-[3px] rounded font-mono text-[9px] leading-none font-bold tracking-[0.12em] uppercase border',
+    <Badge className={cn(
+      'font-mono text-[9px] font-bold tracking-[0.12em] uppercase border',
       active
-        ? 'bg-[rgba(88,200,150,0.12)] text-up border-[rgba(88,200,150,0.3)]'
-        : 'bg-[rgba(200,80,80,0.12)] text-down border-[rgba(200,80,80,0.3)]',
+        ? 'bg-[rgba(88,200,150,0.12)] text-up border-[rgba(88,200,150,0.3)] hover:bg-[rgba(88,200,150,0.12)]'
+        : 'bg-[rgba(200,80,80,0.12)] text-down border-[rgba(200,80,80,0.3)] hover:bg-[rgba(200,80,80,0.12)]',
     )}>
       {active ? 'active' : 'inactive'}
-    </span>
+    </Badge>
   );
 }
 
@@ -364,19 +367,20 @@ function PeriodStatsSection() {
         </h2>
         <div className="flex">
           {PERIOD_LABELS.map(({ key, label }, i) => (
-            <button
+            <Button
               key={key}
+              variant="outline"
               onClick={() => setPeriod(key)}
               className={cn(
-                'px-[14px] py-[6px] font-mono text-[11px] leading-none font-bold tracking-[0.08em] uppercase border border-line cursor-pointer',
+                'px-[14px] py-[6px] h-auto font-mono text-[11px] font-bold tracking-[0.08em] uppercase border-line rounded-none',
                 i === 0 && 'rounded-l-[6px]',
                 i === PERIOD_LABELS.length - 1 && 'rounded-r-[6px]',
                 i < PERIOD_LABELS.length - 1 && 'border-r-0',
-                period === key ? 'bg-gold text-gold-ink' : 'bg-transparent text-bone',
+                period === key ? 'bg-gold text-gold-ink border-gold hover:bg-gold hover:text-gold-ink' : 'bg-transparent text-bone hover:bg-ink-3',
               )}
             >
               {label}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
@@ -396,18 +400,16 @@ function TriggerCrawlButton() {
 
   return (
     <div className="flex items-center gap-3">
-      <button
+      <Button
         onClick={() => { reset(); mutate(); }}
         disabled={isPending}
         className={cn(
-          'h-9 px-[18px] border border-gold rounded-lg font-mono text-[11px] leading-none font-bold tracking-[0.08em] uppercase transition-all duration-[140ms] ease-in-out',
-          isPending
-            ? 'bg-[rgba(212,175,55,0.15)] text-gold cursor-not-allowed opacity-70'
-            : 'bg-gold text-gold-ink cursor-pointer',
+          'h-9 px-[18px] font-mono text-[11px] font-bold tracking-[0.08em] uppercase',
+          isPending && 'bg-[rgba(212,175,55,0.15)] border border-gold text-gold hover:bg-[rgba(212,175,55,0.15)] hover:text-gold',
         )}
       >
         {isPending ? '⟳ Triggering…' : 'Trigger Crawl'}
-      </button>
+      </Button>
       {isSuccess && data && (
         <span className="font-mono text-[11px] leading-none text-up tracking-[0.04em]">
           ✓ {data.triggered} source{data.triggered !== 1 ? 's' : ''} triggered

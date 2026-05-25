@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useAdminAuditLog } from '@/lib/admin.api';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 const TH = 'text-left p-[10px_16px] font-mono text-[10px] leading-none font-bold text-mute tracking-[0.14em] uppercase whitespace-nowrap';
 
@@ -42,10 +43,6 @@ export default function AdminAuditPage() {
 
   const totalPages: number = data?.total ? Math.ceil(data.total / (data.limit ?? 30)) : 1;
 
-  const paginationBtn = (disabled: boolean) => cn(
-    'px-4 py-[7px] bg-transparent border border-line rounded-md font-mono text-[10px] leading-none font-bold tracking-[0.08em] uppercase',
-    disabled ? 'text-mute cursor-not-allowed opacity-40' : 'text-bone cursor-pointer',
-  );
 
   return (
     <div className="p-[32px_36px]">
@@ -111,15 +108,15 @@ export default function AdminAuditPage() {
       </div>
 
       <div className="flex items-center gap-3 justify-end">
-        <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1} className={paginationBtn(page <= 1)}>
+        <Button variant="outline" size="sm" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1} className="px-4 border-line bg-transparent text-bone hover:bg-ink-3 font-mono text-[10px] font-bold tracking-[0.08em] uppercase">
           ← Prev
-        </button>
+        </Button>
         <span className="font-mono text-[12px] leading-none text-mute">
           Page {page}{totalPages > 1 ? ` / ${totalPages}` : ''}
         </span>
-        <button onClick={() => setPage(p => p + 1)} disabled={page >= totalPages} className={paginationBtn(page >= totalPages)}>
+        <Button variant="outline" size="sm" onClick={() => setPage(p => p + 1)} disabled={page >= totalPages} className="px-4 border-line bg-transparent text-bone hover:bg-ink-3 font-mono text-[10px] font-bold tracking-[0.08em] uppercase">
           Next →
-        </button>
+        </Button>
       </div>
     </div>
   );
