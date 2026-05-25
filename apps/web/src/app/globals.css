@@ -10,11 +10,11 @@
   --mute:       #6B6C77;
   --bone:       #C7C8D1;
   --chalk:      #F5F0E6;
-  --gold:        #D4AF37;
-  --gold-soft:   #E8C76B;
-  --gold-deep:   #8E7321;
-  --gold-glow:   rgba(212, 175, 55, 0.18);
-  --gold-ink:    #0B0B0F;
+  --gold:       #D4AF37;
+  --gold-soft:  #E8C76B;
+  --gold-deep:  #8E7321;
+  --gold-glow:  rgba(212, 175, 55, 0.18);
+  --gold-ink:   #0B0B0F;
   --up:    #58C896;
   --down:  #E5484D;
   --live:  #9DCC6E;
@@ -22,6 +22,7 @@
   --font-mono:    'JetBrains Mono', ui-monospace, monospace;
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
+
 * { box-sizing: border-box; }
 html, body { margin: 0; background: var(--ink); color: var(--chalk); font-family: var(--font-display); -webkit-font-smoothing: antialiased; }
 .display { font-family: var(--font-display); font-variant-numeric: tabular-nums; letter-spacing: -0.025em; }
@@ -35,8 +36,54 @@ html, body { margin: 0; background: var(--ink); color: var(--chalk); font-family
 @import "tailwindcss";
 
 @theme inline {
-  --color-background: var(--ink);
-  --color-foreground: var(--chalk);
+  /* ── Ink scale */
+  --color-ink:   var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-ink-4: var(--ink-4);
+
+  /* ── Structure */
+  --color-line:     var(--line);
+  --color-hairline: var(--hairline);
+
+  /* ── Text */
+  --color-mute:  var(--mute);
+  --color-bone:  var(--bone);
+  --color-chalk: var(--chalk);
+
+  /* ── Gold palette */
+  --color-gold:      var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --color-gold-deep: var(--gold-deep);
+  --color-gold-glow: var(--gold-glow);
+  --color-gold-ink:  var(--gold-ink);
+
+  /* ── Signal colors */
+  --color-up:   var(--up);
+  --color-down: var(--down);
+  --color-live: var(--live);
+
+  /* ── shadcn/ui semantic tokens */
+  --color-background:           var(--ink);
+  --color-foreground:           var(--chalk);
+  --color-card:                 var(--ink-2);
+  --color-card-foreground:      var(--chalk);
+  --color-popover:              var(--ink-2);
+  --color-popover-foreground:   var(--chalk);
+  --color-primary:              var(--gold);
+  --color-primary-foreground:   var(--gold-ink);
+  --color-secondary:            var(--ink-3);
+  --color-secondary-foreground: var(--bone);
+  --color-muted:                var(--ink-3);
+  --color-muted-foreground:     var(--mute);
+  --color-accent:               var(--ink-4);
+  --color-accent-foreground:    var(--chalk);
+  --color-destructive:          var(--down);
+  --color-border:               var(--line);
+  --color-input:                var(--line);
+  --color-ring:                 var(--gold);
+
+  /* ── Typography */
   --font-sans: var(--font-display);
   --font-mono: var(--font-mono);
 }

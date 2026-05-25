@@ -9,8 +9,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="vi" style={{ height: '100%', margin: 0 }}>
-      <body style={{ height: '100%', margin: 0, overflow: 'hidden' }}>
+    <html lang="vi" className="h-full">
+      <body className="h-full overflow-hidden">
         <Providers>{children}</Providers>
       </body>
     </html>
