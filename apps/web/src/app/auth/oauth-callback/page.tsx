@@ -20,19 +20,7 @@ export default function OAuthCallbackPage() {
   }, [params, router, loginWithToken]);
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: '#0B0B0F',
-        color: '#D4AF37',
-        fontFamily: 'monospace',
-        fontSize: 16,
-        letterSpacing: '0.05em',
-      }}
-    >
+    <div className="min-h-screen flex items-center justify-center bg-ink text-gold font-mono text-[16px] tracking-[0.05em]">
       Đang đăng nhập…
     </div>
   );

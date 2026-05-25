@@ -4,6 +4,13 @@ import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { apiResetPassword } from '@/lib/auth.api';
+import { cn } from '@/lib/utils';
+
+const PAGE = 'min-h-screen bg-ink flex items-center justify-center px-4 py-6';
+const CARD = 'w-full max-w-[400px] bg-ink-2 border border-line rounded-2xl px-8 py-9 [clip-path:polygon(0_0,calc(100%-20px)_0,100%_20px,100%_100%,0_100%)]';
+const LABEL = 'block font-mono text-[11px] leading-none font-semibold tracking-[0.1em] uppercase text-mute mb-[6px]';
+const INPUT = 'w-full h-10 bg-ink-3 border border-line rounded-lg px-3 text-chalk text-[14px] leading-none font-medium font-sans outline-none box-border';
+const BTN_LINK = 'inline-block mt-6 h-[42px] px-6 bg-gold rounded-lg font-display text-[13px] leading-[42px] font-bold text-gold-ink tracking-[0.02em] no-underline cursor-pointer';
 
 function validate(password: string, confirm: string): string | null {
   if (password.length < 8) return 'Password must be at least 8 characters';
@@ -24,17 +31,13 @@ function ResetPasswordContent() {
 
   if (!token) {
     return (
-      <div style={pageStyle}>
-        <div style={cardStyle}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={iconErr}>×</div>
-            <h1 style={headingStyle}>Invalid link</h1>
-            <p style={{ color: 'var(--mute)', marginTop: 8, fontSize: 14 }}>
-              This reset link is missing or malformed.
-            </p>
-            <Link href="/auth/forgot-password" style={{ ...btnLink, marginTop: 24, display: 'inline-block' }}>
-              Request a new link
-            </Link>
+      <div className={PAGE}>
+        <div className={CARD}>
+          <div className="text-center">
+            <div className="w-[52px] h-[52px] rounded-[12px] bg-[rgba(229,72,77,0.12)] border border-[rgba(229,72,77,0.3)] flex items-center justify-center mx-auto font-display text-[22px] leading-none font-extrabold text-down">×</div>
+            <h1 className="font-display text-[24px] leading-[1.1] font-extrabold tracking-[-0.02em] text-chalk mt-3 m-0">Invalid link</h1>
+            <p className="text-mute mt-2 text-[14px]">This reset link is missing or malformed.</p>
+            <Link href="/auth/forgot-password" className={BTN_LINK}>Request a new link</Link>
           </div>
         </div>
       </div>
@@ -43,17 +46,13 @@ function ResetPasswordContent() {
 
   if (success) {
     return (
-      <div style={pageStyle}>
-        <div style={cardStyle}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={iconSuccess}>✓</div>
-            <h1 style={headingStyle}>Password updated</h1>
-            <p style={{ color: 'var(--mute)', marginTop: 8, fontSize: 14 }}>
-              Your password has been reset successfully.
-            </p>
-            <Link href="/auth/login" style={{ ...btnLink, marginTop: 24, display: 'inline-block' }}>
-              Sign in
-            </Link>
+      <div className={PAGE}>
+        <div className={CARD}>
+          <div className="text-center">
+            <div className="w-[52px] h-[52px] rounded-[12px] bg-[linear-gradient(135deg,#D4AF37,#8E7321)] flex items-center justify-center mx-auto font-display text-[22px] leading-none font-extrabold text-gold-ink">✓</div>
+            <h1 className="font-display text-[24px] leading-[1.1] font-extrabold tracking-[-0.02em] text-chalk mt-3 m-0">Password updated</h1>
+            <p className="text-mute mt-2 text-[14px]">Your password has been reset successfully.</p>
+            <Link href="/auth/login" className={BTN_LINK}>Sign in</Link>
           </div>
         </div>
       </div>
@@ -77,53 +76,44 @@ function ResetPasswordContent() {
   }
 
   return (
-    <div style={pageStyle}>
-      <div style={cardStyle}>
-        <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'linear-gradient(135deg,#D4AF37,#8E7321)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', font: '800 18px/1 var(--font-display)', color: '#0B0B0F' }}>GT</div>
-          <h1 style={headingStyle}>New password</h1>
-          <p style={{ color: 'var(--mute)', fontSize: 13, marginTop: 6 }}>Choose a strong new password</p>
+    <div className={PAGE}>
+      <div className={CARD}>
+        <div className="text-center mb-7">
+          <div className="w-11 h-11 rounded-[10px] bg-[linear-gradient(135deg,#D4AF37,#8E7321)] flex items-center justify-center mx-auto mb-[14px] font-display text-[18px] leading-none font-extrabold text-gold-ink">GT</div>
+          <h1 className="font-display text-[24px] leading-[1.1] font-extrabold tracking-[-0.02em] text-chalk m-0">New password</h1>
+          <p className="text-mute text-[13px] mt-[6px] m-0">Choose a strong new password</p>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-[14px]">
           <div>
-            <label style={labelStyle}>New password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="Min. 8 chars, 1 uppercase, 1 digit"
-              required
-              style={inputStyle}
-              autoComplete="new-password"
-            />
+            <label className={LABEL}>New password</label>
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Min. 8 chars, 1 uppercase, 1 digit" required className={INPUT} autoComplete="new-password"/>
           </div>
           <div>
-            <label style={labelStyle}>Confirm password</label>
-            <input
-              type="password"
-              value={confirm}
-              onChange={e => setConfirm(e.target.value)}
-              placeholder="Repeat password"
-              required
-              style={inputStyle}
-              autoComplete="new-password"
-            />
+            <label className={LABEL}>Confirm password</label>
+            <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Repeat password" required className={INPUT} autoComplete="new-password"/>
           </div>
 
-          {error && <div style={errorStyle}>{error}</div>}
+          {error && (
+            <div className="bg-[rgba(229,72,77,0.12)] border border-[rgba(229,72,77,0.3)] rounded-lg px-[14px] py-[10px] font-sans text-[13px] leading-[1.4] font-medium text-down">
+              {error}
+            </div>
+          )}
 
           <button
             type="submit"
             disabled={loading}
-            style={{ ...submitBtnStyle, opacity: loading ? 0.7 : 1, cursor: loading ? 'not-allowed' : 'pointer' }}
+            className={cn(
+              'h-[42px] bg-gold border-0 rounded-lg font-display text-[13px] leading-none font-bold text-gold-ink tracking-[0.02em] mt-1 transition-opacity',
+              loading ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer opacity-100',
+            )}
           >
             {loading ? 'Updating…' : 'Update password'}
           </button>
         </form>
 
-        <p style={{ textAlign: 'center', marginTop: 20, fontSize: 13, color: 'var(--mute)' }}>
-          <Link href="/auth/login" style={linkStyle}>Back to login</Link>
+        <p className="text-center mt-5 text-[13px] text-mute m-0">
+          <Link href="/auth/login" className="text-gold font-semibold no-underline">Back to login</Link>
         </p>
       </div>
     </div>
@@ -133,10 +123,10 @@ function ResetPasswordContent() {
 export default function ResetPasswordPage() {
   return (
     <Suspense fallback={
-      <div style={pageStyle}>
-        <div style={cardStyle}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={spinnerStyle}/>
+      <div className={PAGE}>
+        <div className={CARD}>
+          <div className="text-center">
+            <div className="w-9 h-9 rounded-full border-[3px] border-line border-t-gold animate-spin mx-auto"/>
           </div>
         </div>
       </div>
@@ -145,113 +135,3 @@ export default function ResetPasswordPage() {
     </Suspense>
   );
 }
-
-const pageStyle: React.CSSProperties = {
-  minHeight: '100vh',
-  background: 'var(--ink)',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  padding: '24px 16px',
-};
-
-const cardStyle: React.CSSProperties = {
-  width: '100%',
-  maxWidth: 400,
-  background: 'var(--ink-2)',
-  border: '1px solid var(--line)',
-  borderRadius: 16,
-  padding: '36px 32px',
-  clipPath: 'polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%)',
-};
-
-const headingStyle: React.CSSProperties = {
-  font: '800 24px/1.1 var(--font-display)',
-  letterSpacing: '-0.02em',
-  color: 'var(--chalk)',
-  margin: '12px 0 0',
-};
-
-const labelStyle: React.CSSProperties = {
-  display: 'block',
-  font: '600 11px/1 var(--font-mono)',
-  letterSpacing: '0.1em',
-  textTransform: 'uppercase',
-  color: 'var(--mute)',
-  marginBottom: 6,
-};
-
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  height: 40,
-  background: 'var(--ink-3)',
-  border: '1px solid var(--line)',
-  borderRadius: 8,
-  padding: '0 12px',
-  color: 'var(--chalk)',
-  font: '500 14px/1 var(--font-display)',
-  outline: 'none',
-  boxSizing: 'border-box',
-};
-
-const errorStyle: React.CSSProperties = {
-  background: 'rgba(229,72,77,0.12)',
-  border: '1px solid rgba(229,72,77,0.3)',
-  borderRadius: 8,
-  padding: '10px 14px',
-  font: '500 13px/1.4 var(--font-display)',
-  color: 'var(--down)',
-};
-
-const submitBtnStyle: React.CSSProperties = {
-  height: 42,
-  background: 'var(--gold)',
-  border: 0,
-  borderRadius: 8,
-  font: '700 13px/1 var(--font-display)',
-  color: '#0B0B0F',
-  letterSpacing: '0.02em',
-  marginTop: 4,
-};
-
-const linkStyle: React.CSSProperties = {
-  color: 'var(--gold)',
-  textDecoration: 'none',
-  fontWeight: 600,
-};
-
-const btnLink: React.CSSProperties = {
-  height: 42,
-  padding: '0 24px',
-  background: 'var(--gold)',
-  border: 0,
-  borderRadius: 8,
-  font: '700 13px/42px var(--font-display)',
-  color: '#0B0B0F',
-  letterSpacing: '0.02em',
-  textDecoration: 'none',
-  cursor: 'pointer',
-};
-
-const iconBase: React.CSSProperties = {
-  width: 52,
-  height: 52,
-  borderRadius: 12,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  margin: '0 auto',
-  font: '800 22px/1 var(--font-display)',
-};
-const iconSuccess: React.CSSProperties = { ...iconBase, background: 'linear-gradient(135deg,#D4AF37,#8E7321)', color: '#0B0B0F' };
-const iconErr: React.CSSProperties = { ...iconBase, background: 'rgba(229,72,77,0.12)', border: '1px solid rgba(229,72,77,0.3)', color: 'var(--down)' };
-
-const spinnerStyle: React.CSSProperties = {
-  width: 36,
-  height: 36,
-  borderRadius: '50%',
-  border: '3px solid var(--line)',
-  borderTopColor: 'var(--gold)',
-  animation: 'spin 0.8s linear infinite',
-  margin: '0 auto',
-};

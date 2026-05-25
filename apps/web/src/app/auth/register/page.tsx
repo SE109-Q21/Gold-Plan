@@ -3,6 +3,12 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/auth-context';
+import { cn } from '@/lib/utils';
+
+const PAGE = 'min-h-screen bg-ink flex items-center justify-center px-4 py-6';
+const CARD = 'w-full max-w-[400px] bg-ink-2 border border-line rounded-2xl px-8 py-9 [clip-path:polygon(0_0,calc(100%-20px)_0,100%_20px,100%_100%,0_100%)]';
+const LABEL = 'block font-mono text-[11px] leading-none font-semibold tracking-[0.1em] uppercase text-mute mb-[6px]';
+const INPUT = 'w-full h-10 bg-ink-3 border border-line rounded-lg px-3 text-chalk text-[14px] leading-none font-medium font-sans outline-none box-border';
 
 function validate(email: string, password: string, confirm: string): string | null {
   if (!email) return 'Email is required';
@@ -41,164 +47,68 @@ export default function RegisterPage() {
 
   if (success) {
     return (
-      <div style={pageStyle}>
-        <div style={cardStyle}>
-          <div style={{ textAlign: 'center', marginBottom: 28 }}>
-            <div style={{ width: 52, height: 52, borderRadius: 12, background: 'linear-gradient(135deg,#D4AF37,#8E7321)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', font: '800 20px/1 var(--font-display)', color: '#0B0B0F' }}>✓</div>
-            <h1 style={headingStyle}>Check your email</h1>
-            <p style={{ color: 'var(--mute)', fontSize: 14, marginTop: 8, lineHeight: 1.6 }}>
-              We sent a verification link to <strong style={{ color: 'var(--bone)' }}>{email}</strong>.<br/>
+      <div className={PAGE}>
+        <div className={CARD}>
+          <div className="text-center mb-7">
+            <div className="w-[52px] h-[52px] rounded-[12px] bg-[linear-gradient(135deg,#D4AF37,#8E7321)] flex items-center justify-center mx-auto mb-4 font-display text-[20px] leading-none font-extrabold text-gold-ink">✓</div>
+            <h1 className="font-display text-[24px] leading-[1.1] font-extrabold tracking-[-0.02em] text-chalk m-0">Check your email</h1>
+            <p className="text-mute text-[14px] mt-2 leading-[1.6] m-0">
+              We sent a verification link to <strong className="text-bone">{email}</strong>.<br/>
               Click the link to activate your account.
             </p>
           </div>
-          <Link href="/auth/login" style={linkStyle}>Back to login</Link>
+          <Link href="/auth/login" className="text-gold font-semibold no-underline">Back to login</Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={pageStyle}>
-      <div style={cardStyle}>
-        <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'linear-gradient(135deg,#D4AF37,#8E7321)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', font: '800 18px/1 var(--font-display)', color: '#0B0B0F' }}>GT</div>
-          <h1 style={headingStyle}>Create account</h1>
-          <p style={{ color: 'var(--mute)', fontSize: 13, marginTop: 6 }}>Start tracking gold prices</p>
+    <div className={PAGE}>
+      <div className={CARD}>
+        <div className="text-center mb-7">
+          <div className="w-11 h-11 rounded-[10px] bg-[linear-gradient(135deg,#D4AF37,#8E7321)] flex items-center justify-center mx-auto mb-[14px] font-display text-[18px] leading-none font-extrabold text-gold-ink">GT</div>
+          <h1 className="font-display text-[24px] leading-[1.1] font-extrabold tracking-[-0.02em] text-chalk m-0">Create account</h1>
+          <p className="text-mute text-[13px] mt-[6px] m-0">Start tracking gold prices</p>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-[14px]">
           <div>
-            <label htmlFor="email" style={labelStyle}>Email</label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              required
-              style={inputStyle}
-              autoComplete="email"
-            />
+            <label htmlFor="email" className={LABEL}>Email</label>
+            <input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" required className={INPUT} autoComplete="email"/>
           </div>
           <div>
-            <label htmlFor="password" style={labelStyle}>Password</label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="Min. 8 chars, 1 uppercase, 1 digit"
-              required
-              style={inputStyle}
-              autoComplete="new-password"
-            />
+            <label htmlFor="password" className={LABEL}>Password</label>
+            <input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Min. 8 chars, 1 uppercase, 1 digit" required className={INPUT} autoComplete="new-password"/>
           </div>
           <div>
-            <label htmlFor="confirm-password" style={labelStyle}>Confirm password</label>
-            <input
-              id="confirm-password"
-              type="password"
-              value={confirm}
-              onChange={e => setConfirm(e.target.value)}
-              placeholder="Repeat password"
-              required
-              style={inputStyle}
-              autoComplete="new-password"
-            />
+            <label htmlFor="confirm-password" className={LABEL}>Confirm password</label>
+            <input id="confirm-password" type="password" value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Repeat password" required className={INPUT} autoComplete="new-password"/>
           </div>
 
           {error && (
-            <div style={errorStyle}>{error}</div>
+            <div className="bg-[rgba(229,72,77,0.12)] border border-[rgba(229,72,77,0.3)] rounded-lg px-[14px] py-[10px] font-sans text-[13px] leading-[1.4] font-medium text-down">
+              {error}
+            </div>
           )}
 
           <button
             type="submit"
             disabled={loading}
-            style={{ ...submitBtnStyle, opacity: loading ? 0.7 : 1, cursor: loading ? 'not-allowed' : 'pointer' }}
+            className={cn(
+              'h-[42px] bg-gold border-0 rounded-lg font-display text-[13px] leading-none font-bold text-gold-ink tracking-[0.02em] mt-1 transition-opacity',
+              loading ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer opacity-100',
+            )}
           >
             {loading ? 'Creating account…' : 'Create account'}
           </button>
         </form>
 
-        <p style={{ textAlign: 'center', marginTop: 20, fontSize: 13, color: 'var(--mute)' }}>
+        <p className="text-center mt-5 text-[13px] text-mute m-0">
           Already have an account?{' '}
-          <Link href="/auth/login" style={linkStyle}>Sign in</Link>
+          <Link href="/auth/login" className="text-gold font-semibold no-underline">Sign in</Link>
         </p>
       </div>
     </div>
   );
 }
-
-const pageStyle: React.CSSProperties = {
-  minHeight: '100vh',
-  background: 'var(--ink)',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  padding: '24px 16px',
-};
-
-const cardStyle: React.CSSProperties = {
-  width: '100%',
-  maxWidth: 400,
-  background: 'var(--ink-2)',
-  border: '1px solid var(--line)',
-  borderRadius: 16,
-  padding: '36px 32px',
-  clipPath: 'polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%)',
-};
-
-const headingStyle: React.CSSProperties = {
-  font: '800 24px/1.1 var(--font-display)',
-  letterSpacing: '-0.02em',
-  color: 'var(--chalk)',
-  margin: 0,
-};
-
-const labelStyle: React.CSSProperties = {
-  display: 'block',
-  font: '600 11px/1 var(--font-mono)',
-  letterSpacing: '0.1em',
-  textTransform: 'uppercase',
-  color: 'var(--mute)',
-  marginBottom: 6,
-};
-
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  height: 40,
-  background: 'var(--ink-3)',
-  border: '1px solid var(--line)',
-  borderRadius: 8,
-  padding: '0 12px',
-  color: 'var(--chalk)',
-  font: '500 14px/1 var(--font-display)',
-  outline: 'none',
-  boxSizing: 'border-box',
-};
-
-const errorStyle: React.CSSProperties = {
-  background: 'rgba(229,72,77,0.12)',
-  border: '1px solid rgba(229,72,77,0.3)',
-  borderRadius: 8,
-  padding: '10px 14px',
-  font: '500 13px/1.4 var(--font-display)',
-  color: 'var(--down)',
-};
-
-const submitBtnStyle: React.CSSProperties = {
-  height: 42,
-  background: 'var(--gold)',
-  border: 0,
-  borderRadius: 8,
-  font: '700 13px/1 var(--font-display)',
-  color: '#0B0B0F',
-  letterSpacing: '0.02em',
-  marginTop: 4,
-};
-
-const linkStyle: React.CSSProperties = {
-  color: 'var(--gold)',
-  textDecoration: 'none',
-  fontWeight: 600,
-};
