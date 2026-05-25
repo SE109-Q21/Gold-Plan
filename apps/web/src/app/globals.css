@@ -21,6 +21,7 @@
   --font-display: 'Bricolage Grotesque', ui-sans-serif, sans-serif;
   --font-mono:    'JetBrains Mono', ui-monospace, monospace;
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --radius: 0.5rem;
 }
 
 * { box-sizing: border-box; }
@@ -82,6 +83,7 @@ html, body { margin: 0; background: var(--ink); color: var(--chalk); font-family
   --color-border:               var(--line);
   --color-input:                var(--line);
   --color-ring:                 var(--gold);
+  --radius:                     0.5rem;
 
   /* ── Typography */
   --font-sans: var(--font-display);
