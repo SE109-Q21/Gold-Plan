@@ -4,20 +4,23 @@ import React, { useState } from 'react';
 import { useAdminStats, useAdminPeriodStats, useTriggerCrawl, useAdminTimeSeries } from '@/lib/admin.api';
 import type { AdminStatsPeriod } from '@gpls/shared';
 import type { TimeSeriesPoint } from '@/lib/admin.api';
+import { cn } from '@/lib/utils';
+
+const TH = 'text-left p-[10px_16px] font-mono text-[10px] leading-none font-bold text-mute tracking-[0.14em] uppercase whitespace-nowrap';
 
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 
 function StatCard({ label, value, unit, sub }: { label: string; value: string | number; unit?: string; sub?: string }) {
   return (
-    <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 12, padding: '20px 24px' }}>
-      <div style={{ font: '700 10px/1 var(--font-mono)', color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 8 }}>
+    <div className="bg-ink-2 border border-line rounded-[12px] p-[20px_24px]">
+      <div className="font-mono text-[10px] leading-none font-bold text-mute tracking-[0.14em] uppercase mb-2">
         {label}
       </div>
-      <div style={{ font: '800 36px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums', display: 'flex', alignItems: 'baseline', gap: 4 }}>
+      <div className="font-display text-[36px] leading-none font-extrabold tabular-nums flex items-baseline gap-1">
         {value}
-        {unit && <span style={{ font: '700 14px/1 var(--font-mono)', color: 'var(--mute)' }}>{unit}</span>}
+        {unit && <span className="font-mono text-[14px] leading-none font-bold text-mute">{unit}</span>}
       </div>
-      {sub && <div style={{ font: '500 10px/1 var(--font-mono)', color: 'var(--mute)', marginTop: 8 }}>{sub}</div>}
+      {sub && <div className="font-mono text-[10px] leading-none font-medium text-mute mt-2">{sub}</div>}
     </div>
   );
 }
@@ -33,7 +36,7 @@ function BarChart({ data, color }: { data: { label: string; value: number }[]; c
   const bw = (W - gap * (data.length - 1)) / data.length;
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: H, display: 'block' }} preserveAspectRatio="none">
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full block" style={{ height: H }} preserveAspectRatio="none">
       {data.map((d, i) => {
         const bh = Math.max((d.value / max) * (H - 2), d.value > 0 ? 2 : 0);
         const x = i * (bw + gap);
@@ -68,7 +71,7 @@ function LineChart({ data, color }: { data: { label: string; value: number }[]; 
   const gid = `lg-${color.replace(/[^a-z0-9]/gi, '')}`;
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: H, display: 'block' }} preserveAspectRatio="none">
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full block" style={{ height: H }} preserveAspectRatio="none">
       <defs>
         <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={color} stopOpacity="0.28" />
@@ -99,10 +102,8 @@ function DonutChart({ active, total }: { active: number; total: number }) {
   const inactiveDash = circ - activeDash;
 
   return (
-    <svg width={88} height={88} viewBox="0 0 88 88" style={{ flexShrink: 0 }}>
-      {/* Track */}
+    <svg width={88} height={88} viewBox="0 0 88 88" className="shrink-0">
       <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={sw} />
-      {/* Active segment */}
       {activeDash > 0 && (
         <circle
           cx={cx} cy={cy} r={r}
@@ -116,7 +117,6 @@ function DonutChart({ active, total }: { active: number; total: number }) {
           <title>Active: {active}</title>
         </circle>
       )}
-      {/* Inactive segment */}
       {inactiveDash > 0 && (
         <circle
           cx={cx} cy={cy} r={r}
@@ -130,7 +130,6 @@ function DonutChart({ active, total }: { active: number; total: number }) {
           <title>Inactive: {inactive}</title>
         </circle>
       )}
-      {/* Center label */}
       <text x={cx} y={cy - 6} textAnchor="middle" fill="var(--chalk)" fontSize={13} fontWeight={800} fontFamily="var(--font-display)">
         {total > 0 ? Math.round(activePct * 100) : 0}%
       </text>
@@ -157,24 +156,26 @@ function ChartCard({
   accent: string;
 }) {
   return (
-    <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 12, padding: '18px 20px 14px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
+    <div className="bg-ink-2 border border-line rounded-[12px] p-[18px_20px_14px]">
+      <div className="flex justify-between items-start mb-[14px]">
         <div>
-          <div style={{ font: '700 10px/1 var(--font-mono)', color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 6 }}>
+          <div className="font-mono text-[10px] leading-none font-bold text-mute tracking-[0.14em] uppercase mb-[6px]">
             {title}
           </div>
-          <div style={{ font: '800 26px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums', color: 'var(--chalk)' }}>
+          <div className="font-display text-[26px] leading-none font-extrabold tabular-nums text-chalk">
             {value}
           </div>
         </div>
         {delta !== undefined && (
-          <span style={{ font: '600 10px/1 var(--font-mono)', color: accent, background: `${accent}18`, border: `1px solid ${accent}40`, padding: '3px 8px', borderRadius: 4 }}>
+          <span
+            className="font-mono text-[10px] leading-none font-semibold px-2 py-[3px] rounded border"
+            style={{ color: accent, background: `${accent}18`, borderColor: `${accent}40` }}
+          >
             {delta}
           </span>
         )}
       </div>
       {chart}
-      {/* X-axis labels */}
     </div>
   );
 }
@@ -210,28 +211,23 @@ function ChartsSection() {
   const RANGES: Range[] = [7, 14, 30];
 
   return (
-    <div style={{ marginBottom: 36 }}>
-      {/* Section header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-        <h2 style={{ font: '700 16px/1 var(--font-display)', margin: 0, letterSpacing: '-0.01em' }}>
+    <div className="mb-9">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-display text-[16px] leading-none font-bold m-0 tracking-[-0.01em]">
           Activity
         </h2>
-        <div style={{ display: 'flex', gap: 0 }}>
+        <div className="flex">
           {RANGES.map((r, i) => (
             <button
               key={r}
               onClick={() => setRange(r)}
-              style={{
-                padding: '6px 14px',
-                font: '700 11px/1 var(--font-mono)',
-                letterSpacing: '0.08em',
-                border: '1px solid var(--line)',
-                borderRight: i < RANGES.length - 1 ? 'none' : '1px solid var(--line)',
-                borderRadius: i === 0 ? '6px 0 0 6px' : i === RANGES.length - 1 ? '0 6px 6px 0' : 0,
-                background: range === r ? 'var(--gold)' : 'transparent',
-                color: range === r ? '#0B0B0F' : 'var(--bone)',
-                cursor: 'pointer',
-              }}
+              className={cn(
+                'px-[14px] py-[6px] font-mono text-[11px] leading-none font-bold tracking-[0.08em] uppercase border border-line cursor-pointer',
+                i === 0 && 'rounded-l-[6px]',
+                i === RANGES.length - 1 && 'rounded-r-[6px]',
+                i < RANGES.length - 1 && 'border-r-0',
+                range === r ? 'bg-gold text-gold-ink' : 'bg-transparent text-bone',
+              )}
             >
               {r}d
             </button>
@@ -240,13 +236,12 @@ function ChartsSection() {
       </div>
 
       {isLoading ? (
-        <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 12, padding: '40px', textAlign: 'center', font: '500 12px/1 var(--font-mono)', color: 'var(--mute)' }}>
+        <div className="bg-ink-2 border border-line rounded-[12px] p-10 text-center font-mono text-[12px] leading-none text-mute">
           Loading charts…
         </div>
       ) : (
         <>
-          {/* 2×2 chart grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+          <div className="grid grid-cols-2 gap-4 mb-4">
             <ChartCard
               title="New Registrations"
               value={sum('newUsers')}
@@ -277,11 +272,10 @@ function ChartsSection() {
             />
           </div>
 
-          {/* Date range label */}
           {series.length > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 4px' }}>
-              <span style={{ font: '500 10px/1 var(--font-mono)', color: 'var(--mute)' }}>{firstDate}</span>
-              <span style={{ font: '500 10px/1 var(--font-mono)', color: 'var(--mute)' }}>{lastDate}</span>
+            <div className="flex justify-between px-1">
+              <span className="font-mono text-[10px] leading-none text-mute">{firstDate}</span>
+              <span className="font-mono text-[10px] leading-none text-mute">{lastDate}</span>
             </div>
           )}
         </>
@@ -300,30 +294,27 @@ function UserStatusCard({ totalUsers, activeUsers }: { totalUsers: number; activ
   ];
 
   return (
-    <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 12, padding: '20px 24px', display: 'flex', gap: 24, alignItems: 'center' }}>
+    <div className="bg-ink-2 border border-line rounded-[12px] p-[20px_24px] flex gap-6 items-center">
       <DonutChart active={activeUsers} total={totalUsers} />
-      <div style={{ flex: 1 }}>
-        <div style={{ font: '700 10px/1 var(--font-mono)', color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 14 }}>
+      <div className="flex-1">
+        <div className="font-mono text-[10px] leading-none font-bold text-mute tracking-[0.14em] uppercase mb-[14px]">
           User Breakdown
         </div>
         {rows.map(row => (
-          <div key={row.label} style={{ marginBottom: 10 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-              <span style={{ font: '600 11px/1 var(--font-display)', color: 'var(--bone)' }}>{row.label}</span>
-              <span style={{ font: '700 11px/1 var(--font-mono)', color: row.color }}>{row.value.toLocaleString()}</span>
+          <div key={row.label} className="mb-[10px]">
+            <div className="flex justify-between mb-1">
+              <span className="font-display text-[11px] leading-none font-semibold text-bone">{row.label}</span>
+              <span className="font-mono text-[11px] leading-none font-bold" style={{ color: row.color }}>{row.value.toLocaleString()}</span>
             </div>
-            <div style={{ height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
-              <div style={{
-                height: '100%',
-                width: `${totalUsers > 0 ? (row.value / totalUsers) * 100 : 0}%`,
-                background: row.color,
-                borderRadius: 2,
-                transition: 'width 600ms ease',
-              }} />
+            <div className="h-1 rounded-[2px] bg-[rgba(255,255,255,0.06)] overflow-hidden">
+              <div
+                className="h-full rounded-[2px] transition-[width] duration-[600ms] ease-in-out"
+                style={{ width: `${totalUsers > 0 ? (row.value / totalUsers) * 100 : 0}%`, background: row.color }}
+              />
             </div>
           </div>
         ))}
-        <div style={{ font: '500 10px/1 var(--font-mono)', color: 'var(--mute)', marginTop: 6 }}>
+        <div className="font-mono text-[10px] leading-none text-mute mt-[6px]">
           {totalUsers.toLocaleString()} total
         </div>
       </div>
@@ -335,13 +326,12 @@ function UserStatusCard({ totalUsers, activeUsers }: { totalUsers: number; activ
 
 function StatusBadge({ active }: { active: boolean }) {
   return (
-    <span style={{
-      display: 'inline-block', padding: '3px 8px', borderRadius: 4,
-      font: '700 9px/1 var(--font-mono)', letterSpacing: '0.12em', textTransform: 'uppercase',
-      background: active ? 'rgba(88,200,150,0.12)' : 'rgba(200,80,80,0.12)',
-      color: active ? 'var(--up)' : 'var(--down)',
-      border: `1px solid ${active ? 'rgba(88,200,150,0.3)' : 'rgba(200,80,80,0.3)'}`,
-    }}>
+    <span className={cn(
+      'inline-block px-2 py-[3px] rounded font-mono text-[9px] leading-none font-bold tracking-[0.12em] uppercase border',
+      active
+        ? 'bg-[rgba(88,200,150,0.12)] text-up border-[rgba(88,200,150,0.3)]'
+        : 'bg-[rgba(200,80,80,0.12)] text-down border-[rgba(200,80,80,0.3)]',
+    )}>
       {active ? 'active' : 'inactive'}
     </span>
   );
@@ -362,40 +352,35 @@ function PeriodStatsSection() {
   const cards = [
     { label: 'New Users',     value: isLoading ? '—' : (data?.newUsers ?? '—') },
     { label: 'Alerts Sent',   value: isLoading ? '—' : (data?.alertsSent ?? '—') },
-    { label: 'Crawl Success', value: isLoading ? '—' : (data?.crawlSuccessRate ?? '—'), unit: '%' },
+    { label: 'Crawl Success', value: isLoading ? '—' : (data?.crawlSuccessRate ?? '—'), unit: '%' as const },
     { label: 'Total Crawls',  value: isLoading ? '—' : (data?.totalCrawls ?? '—') },
   ];
 
   return (
-    <div style={{ marginBottom: 36 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-        <h2 style={{ font: '700 16px/1 var(--font-display)', margin: 0, letterSpacing: '-0.01em' }}>
+    <div className="mb-9">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-display text-[16px] leading-none font-bold m-0 tracking-[-0.01em]">
           Statistics
         </h2>
-        <div style={{ display: 'flex', gap: 0 }}>
+        <div className="flex">
           {PERIOD_LABELS.map(({ key, label }, i) => (
             <button
               key={key}
               onClick={() => setPeriod(key)}
-              style={{
-                padding: '6px 14px',
-                font: '700 11px/1 var(--font-mono)',
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase',
-                border: '1px solid var(--line)',
-                borderRight: i < PERIOD_LABELS.length - 1 ? 'none' : '1px solid var(--line)',
-                borderRadius: i === 0 ? '6px 0 0 6px' : i === PERIOD_LABELS.length - 1 ? '0 6px 6px 0' : 0,
-                background: period === key ? 'var(--gold)' : 'transparent',
-                color: period === key ? '#0B0B0F' : 'var(--bone)',
-                cursor: 'pointer',
-              }}
+              className={cn(
+                'px-[14px] py-[6px] font-mono text-[11px] leading-none font-bold tracking-[0.08em] uppercase border border-line cursor-pointer',
+                i === 0 && 'rounded-l-[6px]',
+                i === PERIOD_LABELS.length - 1 && 'rounded-r-[6px]',
+                i < PERIOD_LABELS.length - 1 && 'border-r-0',
+                period === key ? 'bg-gold text-gold-ink' : 'bg-transparent text-bone',
+              )}
             >
               {label}
             </button>
           ))}
         </div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+      <div className="grid grid-cols-4 gap-4">
         {cards.map(({ label, value, unit }) => (
           <StatCard key={label} label={label} value={value} unit={unit} />
         ))}
@@ -410,29 +395,26 @@ function TriggerCrawlButton() {
   const { mutate, isPending, isSuccess, isError, data, reset } = useTriggerCrawl();
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+    <div className="flex items-center gap-3">
       <button
         onClick={() => { reset(); mutate(); }}
         disabled={isPending}
-        style={{
-          height: 36, padding: '0 18px',
-          background: isPending ? 'rgba(212,175,55,0.15)' : 'var(--gold)',
-          border: '1px solid var(--gold)', borderRadius: 8,
-          cursor: isPending ? 'not-allowed' : 'pointer',
-          font: '700 11px/1 var(--font-mono)', color: isPending ? 'var(--gold)' : '#0B0B0F',
-          letterSpacing: '0.08em', textTransform: 'uppercase',
-          transition: 'all 140ms ease', opacity: isPending ? 0.7 : 1,
-        }}
+        className={cn(
+          'h-9 px-[18px] border border-gold rounded-lg font-mono text-[11px] leading-none font-bold tracking-[0.08em] uppercase transition-all duration-[140ms] ease-in-out',
+          isPending
+            ? 'bg-[rgba(212,175,55,0.15)] text-gold cursor-not-allowed opacity-70'
+            : 'bg-gold text-gold-ink cursor-pointer',
+        )}
       >
         {isPending ? '⟳ Triggering…' : 'Trigger Crawl'}
       </button>
       {isSuccess && data && (
-        <span style={{ font: '600 11px/1 var(--font-mono)', color: 'var(--up)', letterSpacing: '0.04em' }}>
+        <span className="font-mono text-[11px] leading-none text-up tracking-[0.04em]">
           ✓ {data.triggered} source{data.triggered !== 1 ? 's' : ''} triggered
         </span>
       )}
       {isError && (
-        <span style={{ font: '600 11px/1 var(--font-mono)', color: 'var(--down)', letterSpacing: '0.04em' }}>
+        <span className="font-mono text-[11px] leading-none text-down tracking-[0.04em]">
           ✗ Crawl failed
         </span>
       )}
@@ -446,86 +428,83 @@ export default function AdminOverviewPage() {
   const { data: stats, isLoading, isError } = useAdminStats();
 
   return (
-    <div style={{ padding: '32px 36px' }}>
-      {/* Header */}
-      <div style={{ marginBottom: 32, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+    <div className="p-[32px_36px]">
+      <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 style={{ font: '800 28px/1 var(--font-display)', margin: '0 0 6px', letterSpacing: '-0.02em' }}>
+          <h1 className="font-display text-[28px] leading-none font-extrabold m-0 mb-[6px] tracking-[-0.02em]">
             Overview
           </h1>
-          <div style={{ font: '500 12px/1 var(--font-mono)', color: 'var(--mute)' }}>
+          <div className="font-mono text-[12px] leading-none text-mute">
             System health and key metrics
           </div>
         </div>
         <TriggerCrawlButton />
       </div>
 
-      {/* Top stat cards + User Status donut */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 1.6fr', gap: 16, marginBottom: 36 }}>
-        <StatCard label="Total Users"         value={isLoading ? '—' : (stats?.totalUsers ?? '—')} />
-        <StatCard label="Active Users"        value={isLoading ? '—' : (stats?.activeUsers ?? '—')} />
-        <StatCard label="Alerts Sent Today"   value={isLoading ? '—' : (stats?.alertsSentToday ?? '—')} />
-        <StatCard label="Crawl Success Rate"  value={isLoading ? '—' : (stats?.crawlSuccessRate ?? '—')} unit="%" />
+      <div className="grid gap-4 mb-9" style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr 1.6fr' }}>
+        <StatCard label="Total Users"        value={isLoading ? '—' : (stats?.totalUsers ?? '—')} />
+        <StatCard label="Active Users"       value={isLoading ? '—' : (stats?.activeUsers ?? '—')} />
+        <StatCard label="Alerts Sent Today"  value={isLoading ? '—' : (stats?.alertsSentToday ?? '—')} />
+        <StatCard label="Crawl Success Rate" value={isLoading ? '—' : (stats?.crawlSuccessRate ?? '—')} unit="%" />
         {!isLoading && stats ? (
           <UserStatusCard totalUsers={stats.totalUsers} activeUsers={stats.activeUsers} />
         ) : (
-          <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 12 }} />
+          <div className="bg-ink-2 border border-line rounded-[12px]" />
         )}
       </div>
 
-      {/* Activity Charts */}
       <ChartsSection />
 
-      {/* Period Statistics */}
       <PeriodStatsSection />
 
-      {/* Data Sources Table */}
-      <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 12, overflow: 'hidden' }}>
-        <div style={{ padding: '18px 24px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <h2 style={{ font: '700 16px/1 var(--font-display)', margin: 0, letterSpacing: '-0.01em' }}>
+      <div className="bg-ink-2 border border-line rounded-[12px] overflow-hidden">
+        <div className="p-[18px_24px] border-b border-line flex items-center justify-between">
+          <h2 className="font-display text-[16px] leading-none font-bold m-0 tracking-[-0.01em]">
             Data Sources
           </h2>
-          <span style={{ font: '700 10px/1 var(--font-mono)', color: 'var(--mute)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+          <span className="font-mono text-[10px] leading-none text-mute tracking-[0.1em] uppercase">
             {stats?.dataSources?.length ?? 0} sources
           </span>
         </div>
 
-        {isLoading && <div style={{ padding: '24px', font: '500 13px/1 var(--font-mono)', color: 'var(--mute)' }}>Loading…</div>}
-        {isError  && <div style={{ padding: '24px', font: '500 13px/1 var(--font-mono)', color: 'var(--down)' }}>Failed to load data sources.</div>}
+        {isLoading && <div className="p-6 font-mono text-[13px] leading-none text-mute">Loading…</div>}
+        {isError  && <div className="p-6 font-mono text-[13px] leading-none text-down">Failed to load data sources.</div>}
 
         {!isLoading && !isError && (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <table className="w-full border-collapse">
             <thead>
-              <tr style={{ background: 'var(--ink-3)' }}>
+              <tr className="bg-ink-3">
                 {['Name', 'Brand', 'Status', 'Last Crawled', 'Latest Status'].map(col => (
-                  <th key={col} style={{ textAlign: 'left', padding: '10px 16px', font: '700 10px/1 var(--font-mono)', color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase' }}>
-                    {col}
-                  </th>
+                  <th key={col} className={TH}>{col}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {(stats?.dataSources ?? []).length === 0 ? (
                 <tr>
-                  <td colSpan={5} style={{ padding: '24px 16px', font: '500 13px/1 var(--font-mono)', color: 'var(--mute)', textAlign: 'center' }}>
+                  <td colSpan={5} className="p-[24px_16px] font-mono text-[13px] text-mute text-center">
                     No data sources found.
                   </td>
                 </tr>
               ) : (stats?.dataSources ?? []).map(ds => (
-                <tr key={ds.id} style={{ borderTop: '1px solid var(--hairline)' }}>
-                  <td style={{ padding: '14px 16px', font: '600 13px/1 var(--font-display)' }}>{ds.name}</td>
-                  <td style={{ padding: '14px 16px', font: '700 11px/1 var(--font-mono)', color: 'var(--gold)', letterSpacing: '0.06em' }}>{ds.brand}</td>
-                  <td style={{ padding: '14px 16px' }}><StatusBadge active={ds.isActive} /></td>
-                  <td style={{ padding: '14px 16px', font: '500 12px/1 var(--font-mono)', color: 'var(--mute)' }}>
+                <tr key={ds.id} className="border-t border-hairline">
+                  <td className="p-[14px_16px] font-display text-[13px] leading-none font-semibold">{ds.name}</td>
+                  <td className="p-[14px_16px] font-mono text-[11px] leading-none font-bold text-gold tracking-[0.06em]">{ds.brand}</td>
+                  <td className="p-[14px_16px]"><StatusBadge active={ds.isActive} /></td>
+                  <td className="p-[14px_16px] font-mono text-[12px] leading-none text-mute">
                     {ds.lastCrawledAt ? new Date(ds.lastCrawledAt).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) : '—'}
                   </td>
-                  <td style={{ padding: '14px 16px' }}>
+                  <td className="p-[14px_16px]">
                     {ds.lastStatus ? (
-                      <span style={{ font: '700 9px/1 var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', color: ds.lastStatus === 'completed' ? 'var(--up)' : ds.lastStatus === 'failed' ? 'var(--down)' : 'var(--gold)' }}>
+                      <span className={cn(
+                        'font-mono text-[9px] leading-none font-bold tracking-[0.1em] uppercase',
+                        ds.lastStatus === 'completed' ? 'text-up' :
+                        ds.lastStatus === 'failed' ? 'text-down' : 'text-gold',
+                      )}>
                         {ds.lastStatus}
                       </span>
                     ) : (
-                      <span style={{ font: '500 12px/1 var(--font-mono)', color: 'var(--mute)' }}>—</span>
+                      <span className="font-mono text-[12px] leading-none text-mute">—</span>
                     )}
                   </td>
                 </tr>

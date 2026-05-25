@@ -2,54 +2,27 @@
 
 import { useState } from 'react';
 import { useAdminUsers, useLockUser, useUnlockUser, useChangeUserRole } from '@/lib/admin.api';
+import { cn } from '@/lib/utils';
+
+const TH = 'text-left p-[10px_16px] font-mono text-[10px] leading-none font-bold text-mute tracking-[0.14em] uppercase whitespace-nowrap';
+const TD = 'p-[14px_16px]';
 
 function UserStatusBadge({ status }: { status: string }) {
-  const color =
-    status === 'active'  ? 'var(--up)' :
-    status === 'locked'  ? 'var(--down)' :
-    status === 'pending' ? 'var(--gold)' :
-    'var(--mute)';
-
-  const bg =
-    status === 'active'  ? 'rgba(88,200,150,0.12)' :
-    status === 'locked'  ? 'rgba(200,80,80,0.12)' :
-    status === 'pending' ? 'rgba(212,175,55,0.12)' :
-    'rgba(100,100,120,0.12)';
-
-  const border =
-    status === 'active'  ? 'rgba(88,200,150,0.3)' :
-    status === 'locked'  ? 'rgba(200,80,80,0.3)' :
-    status === 'pending' ? 'rgba(212,175,55,0.3)' :
-    'var(--line)';
+  const cls =
+    status === 'active'  ? 'bg-[rgba(88,200,150,0.12)] text-up border-[rgba(88,200,150,0.3)]' :
+    status === 'locked'  ? 'bg-[rgba(200,80,80,0.12)] text-down border-[rgba(200,80,80,0.3)]' :
+    status === 'pending' ? 'bg-[rgba(212,175,55,0.12)] text-gold border-[rgba(212,175,55,0.3)]' :
+    'bg-[rgba(100,100,120,0.12)] text-mute border-line';
 
   return (
-    <span style={{
-      display: 'inline-block',
-      padding: '3px 8px',
-      borderRadius: 4,
-      font: '700 9px/1 var(--font-mono)',
-      letterSpacing: '0.12em',
-      textTransform: 'uppercase',
-      background: bg,
-      color,
-      border: `1px solid ${border}`,
-    }}>
+    <span className={cn('inline-block px-2 py-[3px] rounded font-mono text-[9px] leading-none font-bold tracking-[0.12em] uppercase border', cls)}>
       {status}
     </span>
   );
 }
 
-const SELECT_STYLE: React.CSSProperties = {
-  height: 34,
-  padding: '0 10px',
-  background: 'var(--ink-3)',
-  border: '1px solid var(--line)',
-  borderRadius: 6,
-  font: '500 12px/1 var(--font-mono)',
-  color: 'var(--bone)',
-  cursor: 'pointer',
-  outline: 'none',
-};
+const FILTER_INPUT = 'h-[34px] px-3 bg-ink-3 border border-line rounded-md font-mono text-[12px] leading-none text-chalk outline-none';
+const FILTER_SELECT = 'h-[34px] px-[10px] bg-ink-3 border border-line rounded-md font-mono text-[12px] leading-none text-bone cursor-pointer outline-none';
 
 export default function AdminUsersPage() {
   const [page, setPage] = useState(1);
@@ -68,57 +41,45 @@ export default function AdminUsersPage() {
   const totalPages = Math.ceil(total / limit);
   const isMutating = isLocking || isUnlocking || isChangingRole;
 
-  function handleSearchChange(v: string) {
-    setSearch(v);
-    setPage(1);
+  function handleSearchChange(v: string) { setSearch(v); setPage(1); }
+  function handleFilterChange(setter: (v: string) => void) {
+    return (e: React.ChangeEvent<HTMLSelectElement>) => { setter(e.target.value); setPage(1); };
   }
 
-  function handleFilterChange(setter: (v: string) => void) {
-    return (e: React.ChangeEvent<HTMLSelectElement>) => {
-      setter(e.target.value);
-      setPage(1);
-    };
-  }
+  const actionBtn = (color: 'up' | 'down' | 'gold' | 'mute', disabled: boolean) => cn(
+    'px-[10px] py-[5px] bg-transparent rounded-[5px] font-mono text-[9px] leading-none font-bold tracking-[0.08em] uppercase border',
+    color === 'up'   ? 'border-up text-up' :
+    color === 'down' ? 'border-down text-down' :
+    color === 'gold' ? 'border-[rgba(212,175,55,0.5)] text-gold' :
+    'border-line text-mute',
+    disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
+  );
 
   return (
-    <div style={{ padding: '32px 36px' }}>
-      {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ font: '800 28px/1 var(--font-display)', margin: '0 0 6px', letterSpacing: '-0.02em' }}>
-          Users
-        </h1>
-        <div style={{ font: '500 12px/1 var(--font-mono)', color: 'var(--mute)' }}>
+    <div className="p-[32px_36px]">
+      <div className="mb-6">
+        <h1 className="font-display text-[28px] leading-none font-extrabold m-0 mb-[6px] tracking-[-0.02em]">Users</h1>
+        <div className="font-mono text-[12px] leading-none text-mute">
           {total > 0 ? `${total} registered accounts` : 'Manage user accounts'}
         </div>
       </div>
 
-      {/* Filters row */}
-      <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
+      {/* Filters */}
+      <div className="flex gap-[10px] mb-4 flex-wrap">
         <input
           type="text"
           placeholder="Search by email…"
           value={search}
           onChange={e => handleSearchChange(e.target.value)}
-          style={{
-            height: 34,
-            flex: '1 1 200px',
-            maxWidth: 300,
-            padding: '0 12px',
-            background: 'var(--ink-3)',
-            border: '1px solid var(--line)',
-            borderRadius: 6,
-            font: '500 12px/1 var(--font-mono)',
-            color: 'var(--chalk)',
-            outline: 'none',
-          }}
+          className={cn(FILTER_INPUT, 'flex-[1_1_200px] max-w-[300px] text-[13px]')}
         />
-        <select value={statusFilter} onChange={handleFilterChange(setStatusFilter)} style={SELECT_STYLE}>
+        <select value={statusFilter} onChange={handleFilterChange(setStatusFilter)} className={FILTER_SELECT}>
           <option value="">All statuses</option>
           <option value="active">Active</option>
           <option value="locked">Locked</option>
           <option value="pending">Pending</option>
         </select>
-        <select value={roleFilter} onChange={handleFilterChange(setRoleFilter)} style={SELECT_STYLE}>
+        <select value={roleFilter} onChange={handleFilterChange(setRoleFilter)} className={FILTER_SELECT}>
           <option value="">All roles</option>
           <option value="user">User</option>
           <option value="admin">Admin</option>
@@ -126,116 +87,65 @@ export default function AdminUsersPage() {
         {(search || statusFilter || roleFilter) && (
           <button
             onClick={() => { setSearch(''); setStatusFilter(''); setRoleFilter(''); setPage(1); }}
-            style={{ height: 34, padding: '0 14px', background: 'transparent', border: '1px solid var(--line)', borderRadius: 6, font: '600 11px/1 var(--font-mono)', color: 'var(--mute)', cursor: 'pointer', letterSpacing: '0.06em' }}
+            className="h-[34px] px-[14px] bg-transparent border border-line rounded-md font-mono text-[11px] leading-none font-semibold text-mute cursor-pointer tracking-[0.06em]"
           >
             Clear
           </button>
         )}
       </div>
 
-      {/* Table card */}
-      <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 12, overflow: 'hidden' }}>
-        {isLoading && (
-          <div style={{ padding: '24px', font: '500 13px/1 var(--font-mono)', color: 'var(--mute)' }}>Loading…</div>
-        )}
-
-        {isError && (
-          <div style={{ padding: '24px', font: '500 13px/1 var(--font-mono)', color: 'var(--down)' }}>Failed to load users.</div>
-        )}
+      <div className="bg-ink-2 border border-line rounded-[12px] overflow-hidden">
+        {isLoading && <div className="p-6 font-mono text-[13px] leading-none text-mute">Loading…</div>}
+        {isError  && <div className="p-6 font-mono text-[13px] leading-none text-down">Failed to load users.</div>}
 
         {!isLoading && !isError && (
           <>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <table className="w-full border-collapse">
               <thead>
-                <tr style={{ background: 'var(--ink-3)' }}>
+                <tr className="bg-ink-3">
                   {['Email', 'Display Name', 'Role', 'Status', 'Alerts', 'Created At', 'Actions'].map(col => (
-                    <th key={col} style={{
-                      textAlign: 'left',
-                      padding: '10px 16px',
-                      font: '700 10px/1 var(--font-mono)',
-                      color: 'var(--mute)',
-                      letterSpacing: '0.14em',
-                      textTransform: 'uppercase',
-                      whiteSpace: 'nowrap',
-                    }}>
-                      {col}
-                    </th>
+                    <th key={col} className={TH}>{col}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {users.length === 0 ? (
                   <tr>
-                    <td colSpan={7} style={{ padding: '24px 16px', font: '500 13px/1 var(--font-mono)', color: 'var(--mute)', textAlign: 'center' }}>
-                      No users found.
-                    </td>
+                    <td colSpan={7} className="p-[24px_16px] font-mono text-[13px] text-mute text-center">No users found.</td>
                   </tr>
                 ) : users.map(u => (
-                  <tr key={u.id} style={{ borderTop: '1px solid var(--hairline)' }}>
-                    <td style={{ padding: '14px 16px', font: '500 13px/1 var(--font-mono)', color: 'var(--bone)' }}>
-                      {u.email}
+                  <tr key={u.id} className="border-t border-hairline">
+                    <td className={cn(TD, 'font-mono text-[13px] leading-none text-bone')}>{u.email}</td>
+                    <td className={cn(TD, 'font-display text-[13px] leading-none text-chalk')}>
+                      {u.displayName ?? <span className="text-mute">—</span>}
                     </td>
-                    <td style={{ padding: '14px 16px', font: '500 13px/1 var(--font-display)', color: 'var(--chalk)' }}>
-                      {u.displayName ?? <span style={{ color: 'var(--mute)' }}>—</span>}
-                    </td>
-                    <td style={{ padding: '14px 16px' }}>
+                    <td className={TD}>
                       {u.role === 'admin' ? (
-                        <span style={{ display: 'inline-block', background: 'var(--gold)', color: '#0B0B0F', font: '800 8px/1 var(--font-mono)', letterSpacing: '0.14em', padding: '3px 6px', borderRadius: 3, textTransform: 'uppercase' }}>
+                        <span className="inline-block bg-gold text-gold-ink font-mono text-[8px] leading-none font-extrabold tracking-[0.14em] uppercase px-[6px] py-[3px] rounded-[3px]">
                           ADMIN
                         </span>
                       ) : (
-                        <span style={{ font: '700 10px/1 var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--mute)' }}>
+                        <span className="font-mono text-[10px] leading-none font-bold tracking-[0.1em] uppercase text-mute">
                           {u.role}
                         </span>
                       )}
                     </td>
-                    <td style={{ padding: '14px 16px' }}>
-                      <UserStatusBadge status={u.status} />
-                    </td>
-                    <td style={{ padding: '14px 16px', font: '500 12px/1 var(--font-mono)', color: 'var(--mute)', textAlign: 'center' }}>
-                      {u.alertCount}
-                    </td>
-                    <td style={{ padding: '14px 16px', font: '500 12px/1 var(--font-mono)', color: 'var(--mute)', whiteSpace: 'nowrap' }}>
+                    <td className={TD}><UserStatusBadge status={u.status}/></td>
+                    <td className={cn(TD, 'font-mono text-[12px] leading-none text-mute text-center')}>{u.alertCount}</td>
+                    <td className={cn(TD, 'font-mono text-[12px] leading-none text-mute whitespace-nowrap')}>
                       {new Date(u.createdAt).toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}
                     </td>
-                    <td style={{ padding: '10px 16px' }}>
-                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                        {/* Lock / Unlock */}
+                    <td className="p-[10px_16px]">
+                      <div className="flex gap-[6px] flex-wrap">
                         {u.status === 'locked' ? (
-                          <button
-                            onClick={() => unlock(u.id)}
-                            disabled={isMutating}
-                            style={{ padding: '5px 10px', background: 'transparent', border: '1px solid var(--up)', borderRadius: 5, cursor: isMutating ? 'not-allowed' : 'pointer', font: '700 9px/1 var(--font-mono)', color: 'var(--up)', letterSpacing: '0.08em', textTransform: 'uppercase', opacity: isMutating ? 0.5 : 1 }}
-                          >
-                            Unlock
-                          </button>
+                          <button onClick={() => unlock(u.id)} disabled={isMutating} className={actionBtn('up', isMutating)}>Unlock</button>
                         ) : (u.status === 'active' || u.status === 'pending') ? (
-                          <button
-                            onClick={() => lock(u.id)}
-                            disabled={isMutating}
-                            style={{ padding: '5px 10px', background: 'transparent', border: '1px solid var(--down)', borderRadius: 5, cursor: isMutating ? 'not-allowed' : 'pointer', font: '700 9px/1 var(--font-mono)', color: 'var(--down)', letterSpacing: '0.08em', textTransform: 'uppercase', opacity: isMutating ? 0.5 : 1 }}
-                          >
-                            Lock
-                          </button>
+                          <button onClick={() => lock(u.id)} disabled={isMutating} className={actionBtn('down', isMutating)}>Lock</button>
                         ) : null}
-
-                        {/* Promote / Demote */}
                         {u.role === 'user' ? (
-                          <button
-                            onClick={() => changeRole({ id: u.id, role: 'admin' })}
-                            disabled={isMutating}
-                            style={{ padding: '5px 10px', background: 'transparent', border: '1px solid rgba(212,175,55,0.5)', borderRadius: 5, cursor: isMutating ? 'not-allowed' : 'pointer', font: '700 9px/1 var(--font-mono)', color: 'var(--gold)', letterSpacing: '0.08em', textTransform: 'uppercase', opacity: isMutating ? 0.5 : 1 }}
-                          >
-                            Promote
-                          </button>
+                          <button onClick={() => changeRole({ id: u.id, role: 'admin' })} disabled={isMutating} className={actionBtn('gold', isMutating)}>Promote</button>
                         ) : u.role === 'admin' ? (
-                          <button
-                            onClick={() => changeRole({ id: u.id, role: 'user' })}
-                            disabled={isMutating}
-                            style={{ padding: '5px 10px', background: 'transparent', border: '1px solid var(--line)', borderRadius: 5, cursor: isMutating ? 'not-allowed' : 'pointer', font: '700 9px/1 var(--font-mono)', color: 'var(--mute)', letterSpacing: '0.08em', textTransform: 'uppercase', opacity: isMutating ? 0.5 : 1 }}
-                          >
-                            Demote
-                          </button>
+                          <button onClick={() => changeRole({ id: u.id, role: 'user' })} disabled={isMutating} className={actionBtn('mute', isMutating)}>Demote</button>
                         ) : null}
                       </div>
                     </td>
@@ -244,24 +154,23 @@ export default function AdminUsersPage() {
               </tbody>
             </table>
 
-            {/* Pagination */}
             {totalPages > 1 && (
-              <div style={{ padding: '16px 20px', borderTop: '1px solid var(--hairline)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ font: '500 11px/1 var(--font-mono)', color: 'var(--mute)' }}>
+              <div className="p-[16px_20px] border-t border-hairline flex items-center justify-between">
+                <span className="font-mono text-[11px] leading-none text-mute">
                   Page {page} of {totalPages} · {total} total
                 </span>
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div className="flex gap-2">
                   <button
                     onClick={() => setPage(p => Math.max(1, p - 1))}
                     disabled={page <= 1}
-                    style={{ padding: '6px 14px', background: 'transparent', border: '1px solid var(--line)', borderRadius: 6, cursor: page <= 1 ? 'not-allowed' : 'pointer', font: '700 10px/1 var(--font-mono)', color: page <= 1 ? 'var(--mute)' : 'var(--bone)', letterSpacing: '0.08em', opacity: page <= 1 ? 0.5 : 1 }}
+                    className={cn('px-[14px] py-[6px] bg-transparent border border-line rounded-md font-mono text-[10px] leading-none font-bold tracking-[0.08em]', page <= 1 ? 'text-mute cursor-not-allowed opacity-50' : 'text-bone cursor-pointer')}
                   >
                     ← Prev
                   </button>
                   <button
                     onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                     disabled={page >= totalPages}
-                    style={{ padding: '6px 14px', background: 'transparent', border: '1px solid var(--line)', borderRadius: 6, cursor: page >= totalPages ? 'not-allowed' : 'pointer', font: '700 10px/1 var(--font-mono)', color: page >= totalPages ? 'var(--mute)' : 'var(--bone)', letterSpacing: '0.08em', opacity: page >= totalPages ? 0.5 : 1 }}
+                    className={cn('px-[14px] py-[6px] bg-transparent border border-line rounded-md font-mono text-[10px] leading-none font-bold tracking-[0.08em]', page >= totalPages ? 'text-mute cursor-not-allowed opacity-50' : 'text-bone cursor-pointer')}
                   >
                     Next →
                   </button>
