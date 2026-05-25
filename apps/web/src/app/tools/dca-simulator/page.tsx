@@ -8,6 +8,8 @@ import { useAuth } from '@/contexts/auth-context';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import type { DcaDataPointDto } from '@gpls/shared';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 type Brand = 'SJC' | 'DOJI' | 'PNJ' | 'BAO_TIN';
 type Frequency = 'weekly' | 'monthly';
@@ -37,15 +39,16 @@ const CHIP_BASE = 'font-mono text-[12px] leading-none font-bold tracking-[0.08em
 
 function Chip({ label, selected, onClick }: { label: string; selected: boolean; onClick: () => void }) {
   return (
-    <button
+    <Button
+      variant="outline"
       onClick={onClick}
-      className={cn(CHIP_BASE, selected
-        ? 'border-gold bg-[rgba(212,175,55,0.12)] text-gold'
-        : 'border-line bg-transparent text-bone'
+      className={cn(CHIP_BASE, 'h-auto', selected
+        ? 'border-gold bg-[rgba(212,175,55,0.12)] text-gold hover:bg-[rgba(212,175,55,0.18)] hover:text-gold'
+        : 'border-line bg-transparent text-bone hover:bg-ink-3 hover:text-bone'
       )}
     >
       {label}
-    </button>
+    </Button>
   );
 }
 
@@ -241,12 +244,13 @@ function DcaSimulatorContent() {
     <div className="min-h-full bg-[#0a0a0d] p-[32px_24px_60px] flex flex-col items-center">
       <div className="w-full max-w-[860px]">
 
-        <button
+        <Button
+          variant="ghost"
           onClick={() => router.push('/')}
-          className="bg-transparent border-0 cursor-pointer text-mute flex items-center gap-[6px] font-mono text-[12px] leading-none font-semibold tracking-[0.08em] p-0 pb-6"
+          className="text-mute flex items-center gap-[6px] font-mono text-[12px] font-semibold tracking-[0.08em] p-0 pb-6 h-auto hover:bg-transparent hover:text-bone"
         >
           <IconArrowLeft s={14}/> back to dashboard
-        </button>
+        </Button>
 
         <div className="mb-8">
           <h1 className="font-display text-[40px] leading-none font-extrabold tracking-[-0.03em] text-chalk m-0">
@@ -278,12 +282,12 @@ function DcaSimulatorContent() {
           <div className="flex gap-8 flex-wrap items-start">
             <div>
               <SectionLabel>Start date</SectionLabel>
-              <input
+              <Input
                 type="date"
                 max={maxDate}
                 value={startDate}
                 onChange={e => { setStartDate(e.target.value); setSubmitted(false); }}
-                className="bg-ink-3 border border-line rounded-lg text-chalk font-mono text-[14px] leading-none font-semibold px-[14px] py-[10px] cursor-pointer outline-none focus:border-gold transition-[border-color] duration-[140ms]"
+                className="bg-ink-3 border-line text-chalk font-mono text-[14px] font-semibold px-[14px] cursor-pointer focus-visible:ring-gold h-[42px] placeholder:text-mute"
               />
             </div>
 
@@ -299,32 +303,29 @@ function DcaSimulatorContent() {
             <div>
               <SectionLabel>Qty per purchase</SectionLabel>
               <div className="flex items-center gap-2">
-                <input
+                <Input
                   type="number"
                   min={0.1}
                   step={0.1}
                   value={qty}
                   onChange={e => { setQty(parseFloat(e.target.value) || 0.1); setSubmitted(false); }}
-                  className="bg-ink-3 border border-line rounded-lg text-chalk font-display text-[20px] leading-none font-bold px-[14px] py-[10px] w-[100px] text-right outline-none focus:border-gold transition-[border-color] duration-[140ms]"
+                  className="bg-ink-3 border-line text-chalk font-display text-[20px] font-bold px-[14px] w-[100px] text-right h-[42px] focus-visible:ring-gold placeholder:text-mute"
                 />
                 <span className="font-mono text-[12px] leading-none font-semibold text-mute tracking-[0.08em]">tael</span>
               </div>
             </div>
           </div>
 
-          <div className="mt-7">
-            <button
+          <div className="mt-7 flex items-center gap-[14px]">
+            <Button
               onClick={handleSimulate}
               disabled={!startDate}
-              className={cn(
-                'border-0 rounded-lg font-display text-[13px] leading-none font-bold tracking-[0.04em] px-7 py-3 transition-[background,color] duration-[140ms]',
-                startDate ? 'bg-gold text-gold-ink cursor-pointer' : 'bg-ink-3 text-mute cursor-not-allowed',
-              )}
+              className="font-display text-[13px] font-bold tracking-[0.04em] px-7 py-3 h-auto"
             >
               {isLoading ? 'Simulating…' : 'Simulate'}
-            </button>
+            </Button>
             {!startDate && (
-              <span className="font-mono text-[11px] leading-none text-mute ml-[14px] tracking-[0.06em]">
+              <span className="font-mono text-[11px] leading-none text-mute tracking-[0.06em]">
                 pick a start date to begin
               </span>
             )}
@@ -419,16 +420,13 @@ function DcaSimulatorContent() {
             {/* Save to Portfolio */}
             {!!user && (
               <div className="mt-5 flex items-center gap-[14px] flex-wrap">
-                <button
+                <Button
                   onClick={handleSaveToPortfolio}
                   disabled={saving}
-                  className={cn(
-                    'flex items-center gap-2 h-[42px] px-[22px] border-0 rounded-[10px] font-display text-[13px] leading-none font-bold text-gold-ink tracking-[0.04em] transition-[background] duration-[140ms]',
-                    saving ? 'bg-[rgba(212,175,55,0.4)] cursor-not-allowed' : 'bg-gold cursor-pointer',
-                  )}
+                  className="h-[42px] px-[22px] font-display text-[13px] font-bold tracking-[0.04em]"
                 >
                   {saving ? 'Đang lưu…' : 'Lưu vào danh mục'}
-                </button>
+                </Button>
                 {saveMsg && (
                   <span className={cn('font-mono text-[12px] leading-[1.4] tracking-[0.04em]', saveMsg.startsWith('Lỗi') ? 'text-down' : 'text-up')}>
                     {saveMsg}

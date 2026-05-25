@@ -14,6 +14,11 @@ import {
 } from '@/lib/portfolio.api';
 import type { AddTransactionPayload } from '@/lib/portfolio.api';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -336,7 +341,7 @@ function AllocationGroup({
 
 // ─── Shared modal input style ─────────────────────────────────────────────────
 
-const INPUT_CLS = 'w-full bg-ink-3 border border-line rounded-lg text-chalk font-display text-[14px] leading-none font-semibold px-[14px] py-[10px] outline-none appearance-none';
+const INPUT_CLS = 'bg-ink-3 border-line text-chalk font-display text-[14px] font-semibold placeholder:text-mute focus-visible:ring-gold appearance-none';
 
 // ─── ChipSel ─────────────────────────────────────────────────────────────────
 
@@ -350,19 +355,20 @@ function ChipSel<T extends string>({
   return (
     <div className="flex flex-wrap gap-[6px]">
       {options.map(opt => (
-        <button
+        <Button
           key={opt}
+          variant="outline"
           type="button"
           onClick={() => onChange(opt)}
           className={cn(
-            'font-mono text-[11px] leading-none font-bold tracking-[0.08em] px-[13px] py-[7px] rounded-md border cursor-pointer transition-[border-color,background,color] duration-[120ms]',
+            'font-mono text-[11px] leading-none font-bold tracking-[0.08em] px-[13px] py-[7px] h-auto rounded-md transition-[border-color,background,color] duration-[120ms]',
             value === opt
-              ? 'border-gold bg-[rgba(212,175,55,0.12)] text-gold'
-              : 'border-line bg-transparent text-bone',
+              ? 'border-gold bg-[rgba(212,175,55,0.12)] text-gold hover:bg-[rgba(212,175,55,0.18)] hover:text-gold'
+              : 'border-line bg-transparent text-bone hover:bg-ink-3',
           )}
         >
           {opt}
-        </button>
+        </Button>
       ))}
     </div>
   );
@@ -416,26 +422,16 @@ function AddTransactionModal({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 z-[999] bg-[rgba(11,11,15,0.85)] backdrop-blur-[6px] flex items-center justify-center p-5">
-      <div className="w-[480px] max-w-full bg-ink-2 border border-line rounded-2xl p-[28px_28px_24px] relative max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <div className="font-display text-[18px] leading-none font-extrabold tracking-[-0.02em]">
-              add transaction
-            </div>
-            <div className="font-mono text-[12px] leading-none font-medium text-mute mt-1 tracking-[0.04em]">
-              record a buy or sell
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="bg-transparent border border-line rounded-lg text-mute w-[34px] h-[34px] cursor-pointer flex items-center justify-center"
-          >
-            <IconX s={14}/>
-          </button>
-        </div>
+    <Dialog open onOpenChange={o => !o && onClose()}>
+      <DialogContent className="w-[480px] bg-ink-2 border-line text-chalk p-[28px_28px_24px] max-h-[90vh] overflow-y-auto gap-6">
+        <DialogHeader>
+          <DialogTitle className="font-display text-[18px] leading-none font-extrabold tracking-[-0.02em] text-chalk">
+            add transaction
+          </DialogTitle>
+          <DialogDescription className="font-mono text-[12px] leading-none font-medium text-mute tracking-[0.04em]">
+            record a buy or sell
+          </DialogDescription>
+        </DialogHeader>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-[18px]">
           {/* Type */}
@@ -443,21 +439,22 @@ function AddTransactionModal({ onClose }: { onClose: () => void }) {
             <SectionLabel>Type</SectionLabel>
             <div className="flex gap-[6px]">
               {(['BUY', 'SELL'] as const).map(t => (
-                <button
+                <Button
                   key={t}
                   type="button"
+                  variant="outline"
                   onClick={() => setTxType(t)}
                   className={cn(
-                    'flex-1 py-[10px] font-mono text-[12px] leading-none font-bold tracking-[0.1em] rounded-lg border cursor-pointer transition-[border-color,background,color] duration-[120ms]',
+                    'flex-1 py-[10px] h-auto font-mono text-[12px] leading-none font-bold tracking-[0.1em] rounded-lg transition-[border-color,background,color] duration-[120ms]',
                     txType === t
                       ? t === 'BUY'
-                        ? 'border-up bg-[rgba(88,200,150,0.12)] text-up'
-                        : 'border-down bg-[rgba(229,72,77,0.12)] text-down'
-                      : 'border-line bg-transparent text-bone',
+                        ? 'border-up bg-[rgba(88,200,150,0.12)] text-up hover:bg-[rgba(88,200,150,0.18)] hover:text-up'
+                        : 'border-down bg-[rgba(229,72,77,0.12)] text-down hover:bg-[rgba(229,72,77,0.18)] hover:text-down'
+                      : 'border-line bg-transparent text-bone hover:bg-ink-3',
                   )}
                 >
                   {t}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -478,7 +475,7 @@ function AddTransactionModal({ onClose }: { onClose: () => void }) {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <SectionLabel>Quantity (tael)</SectionLabel>
-              <input
+              <Input
                 type="number"
                 min="0.01"
                 step="0.01"
@@ -491,7 +488,7 @@ function AddTransactionModal({ onClose }: { onClose: () => void }) {
             </div>
             <div>
               <SectionLabel>Price / Tael (VND)</SectionLabel>
-              <input
+              <Input
                 type="number"
                 min="1"
                 step="1"
@@ -507,7 +504,7 @@ function AddTransactionModal({ onClose }: { onClose: () => void }) {
           {/* Date */}
           <div>
             <SectionLabel>Date</SectionLabel>
-            <input
+            <Input
               type="date"
               value={date}
               max={today}
@@ -520,7 +517,7 @@ function AddTransactionModal({ onClose }: { onClose: () => void }) {
           {/* Note */}
           <div>
             <SectionLabel>Note (optional)</SectionLabel>
-            <input
+            <Input
               type="text"
               value={note}
               onChange={(e: { target: { value: string } }) => setNote(e.target.value)}
@@ -537,19 +534,16 @@ function AddTransactionModal({ onClose }: { onClose: () => void }) {
           )}
 
           {/* Submit */}
-          <button
+          <Button
             type="submit"
             disabled={submitting}
-            className={cn(
-              'w-full h-11 border-0 rounded-[10px] font-display text-[13px] leading-none font-bold text-gold-ink tracking-[0.04em] transition-[background] duration-[140ms]',
-              submitting ? 'bg-[rgba(212,175,55,0.4)] cursor-not-allowed' : 'bg-gold cursor-pointer',
-            )}
+            className="w-full h-11 font-display text-[13px] font-bold tracking-[0.04em]"
           >
             {submitting ? 'Saving…' : `Record ${txType}`}
-          </button>
+          </Button>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -609,42 +603,38 @@ function EditTransactionModal({ tx, onClose }: { tx: EditableTx; onClose: () => 
   }
 
   return (
-    <div className="fixed inset-0 z-[999] bg-[rgba(11,11,15,0.85)] backdrop-blur-[6px] flex items-center justify-center p-5">
-      <div className="w-[480px] max-w-full bg-ink-2 border border-line rounded-2xl p-[28px_28px_24px] relative max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <div className="font-display text-[18px] leading-none font-extrabold tracking-[-0.02em]">edit transaction</div>
-            <div className="font-mono text-[12px] leading-none font-medium text-mute mt-1 tracking-[0.04em]">modify the details below</div>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="bg-transparent border border-line rounded-lg text-mute w-[34px] h-[34px] cursor-pointer flex items-center justify-center"
-          >
-            <IconX s={14}/>
-          </button>
-        </div>
+    <Dialog open onOpenChange={o => !o && onClose()}>
+      <DialogContent className="w-[480px] bg-ink-2 border-line text-chalk p-[28px_28px_24px] max-h-[90vh] overflow-y-auto gap-6">
+        <DialogHeader>
+          <DialogTitle className="font-display text-[18px] leading-none font-extrabold tracking-[-0.02em] text-chalk">
+            edit transaction
+          </DialogTitle>
+          <DialogDescription className="font-mono text-[12px] leading-none font-medium text-mute tracking-[0.04em]">
+            modify the details below
+          </DialogDescription>
+        </DialogHeader>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-[18px]">
           <div>
             <SectionLabel>Type</SectionLabel>
             <div className="flex gap-[6px]">
               {(['BUY', 'SELL'] as const).map(t => (
-                <button
+                <Button
                   key={t}
                   type="button"
+                  variant="outline"
                   onClick={() => setTxType(t)}
                   className={cn(
-                    'flex-1 py-[10px] font-mono text-[12px] leading-none font-bold tracking-[0.1em] rounded-lg border cursor-pointer transition-[border-color,background,color] duration-[120ms]',
+                    'flex-1 py-[10px] h-auto font-mono text-[12px] leading-none font-bold tracking-[0.1em] rounded-lg transition-[border-color,background,color] duration-[120ms]',
                     txType === t
                       ? t === 'BUY'
-                        ? 'border-up bg-[rgba(88,200,150,0.12)] text-up'
-                        : 'border-down bg-[rgba(229,72,77,0.12)] text-down'
-                      : 'border-line bg-transparent text-bone',
+                        ? 'border-up bg-[rgba(88,200,150,0.12)] text-up hover:bg-[rgba(88,200,150,0.18)] hover:text-up'
+                        : 'border-down bg-[rgba(229,72,77,0.12)] text-down hover:bg-[rgba(229,72,77,0.18)] hover:text-down'
+                      : 'border-line bg-transparent text-bone hover:bg-ink-3',
                   )}
                 >
                   {t}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -662,13 +652,13 @@ function EditTransactionModal({ tx, onClose }: { tx: EditableTx; onClose: () => 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <SectionLabel>Quantity (tael)</SectionLabel>
-              <input type="number" min="0.01" step="0.01" value={qty}
+              <Input type="number" min="0.01" step="0.01" value={qty}
                 onChange={(e: { target: { value: string } }) => setQty(e.target.value)}
                 placeholder="e.g. 1.5" required className={INPUT_CLS}/>
             </div>
             <div>
               <SectionLabel>Price / Tael (VND)</SectionLabel>
-              <input type="number" min="1" step="1" value={price}
+              <Input type="number" min="1" step="1" value={price}
                 onChange={(e: { target: { value: string } }) => setPrice(e.target.value)}
                 placeholder="e.g. 79000000" required className={INPUT_CLS}/>
             </div>
@@ -676,14 +666,14 @@ function EditTransactionModal({ tx, onClose }: { tx: EditableTx; onClose: () => 
 
           <div>
             <SectionLabel>Date</SectionLabel>
-            <input type="date" value={date} max={today}
+            <Input type="date" value={date} max={today}
               onChange={(e: { target: { value: string } }) => setDate(e.target.value)}
               required className={INPUT_CLS}/>
           </div>
 
           <div>
             <SectionLabel>Note (optional)</SectionLabel>
-            <input type="text" value={note}
+            <Input type="text" value={note}
               onChange={(e: { target: { value: string } }) => setNote(e.target.value)}
               placeholder="e.g. Bought at SJC Hà Nội" className={INPUT_CLS}/>
           </div>
@@ -694,19 +684,16 @@ function EditTransactionModal({ tx, onClose }: { tx: EditableTx; onClose: () => 
             </div>
           )}
 
-          <button
+          <Button
             type="submit"
             disabled={submitting}
-            className={cn(
-              'w-full h-11 border-0 rounded-[10px] font-display text-[13px] leading-none font-bold text-gold-ink tracking-[0.04em] transition-[background] duration-[140ms]',
-              submitting ? 'bg-[rgba(212,175,55,0.4)] cursor-not-allowed' : 'bg-gold cursor-pointer',
-            )}
+            className="w-full h-11 font-display text-[13px] font-bold tracking-[0.04em]"
           >
             {submitting ? 'Saving…' : 'Save Changes'}
-          </button>
+          </Button>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -745,12 +732,13 @@ function PortfolioContent() {
           {/* ── Header bar ── */}
           <div className="flex items-start justify-between mb-8 gap-4">
             <div>
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => router.back()}
-                className="bg-transparent border-0 cursor-pointer text-mute flex items-center gap-[6px] font-mono text-[12px] leading-none font-semibold tracking-[0.08em] p-0 pb-[14px]"
+                className="text-mute flex items-center gap-[6px] font-mono text-[12px] leading-none font-semibold tracking-[0.08em] p-0 pb-[14px] h-auto hover:bg-transparent hover:text-bone"
               >
                 <IconArrowLeft s={13}/> portfolio
-              </button>
+              </Button>
               <h1 className="font-display text-[40px] leading-none font-extrabold tracking-[-0.035em] m-0">
                 my portfolio
               </h1>
@@ -758,12 +746,12 @@ function PortfolioContent() {
                 Track your gold holdings, P&amp;L, and transaction history
               </p>
             </div>
-            <button
+            <Button
               onClick={() => setShowModal(true)}
-              className="flex items-center gap-[7px] h-10 bg-gold border-0 rounded-[10px] cursor-pointer font-display text-[13px] leading-none font-bold text-gold-ink px-[18px] tracking-[0.02em] shrink-0 mt-[6px]"
+              className="flex items-center gap-[7px] h-10 font-display text-[13px] font-bold px-[18px] tracking-[0.02em] shrink-0 mt-[6px]"
             >
               <IconPlus s={14}/> add transaction
-            </button>
+            </Button>
           </div>
 
           {/* ── Summary cards ── */}
@@ -914,14 +902,14 @@ function PortfolioContent() {
                           {dateStr}
                         </td>
                         <td className="px-[10px] py-[13px] border-b border-hairline">
-                          <span className={cn(
-                            'inline-block px-2 py-[3px] rounded font-mono text-[10px] leading-none font-bold tracking-[0.1em] border',
+                          <Badge className={cn(
+                            'font-mono text-[10px] font-bold tracking-[0.1em] border rounded',
                             isBuy
-                              ? 'bg-[rgba(88,200,150,0.12)] text-up border-[rgba(88,200,150,0.3)]'
-                              : 'bg-[rgba(229,72,77,0.12)] text-down border-[rgba(229,72,77,0.3)]',
+                              ? 'bg-[rgba(88,200,150,0.12)] text-up border-[rgba(88,200,150,0.3)] hover:bg-[rgba(88,200,150,0.12)]'
+                              : 'bg-[rgba(229,72,77,0.12)] text-down border-[rgba(229,72,77,0.3)] hover:bg-[rgba(229,72,77,0.12)]',
                           )}>
                             {tx.type}
-                          </span>
+                          </Badge>
                         </td>
                         <td className="px-[10px] py-[13px] border-b border-hairline font-display text-[12px] leading-none font-semibold text-chalk">{tx.brand}</td>
                         <td className="px-[10px] py-[13px] border-b border-hairline font-mono text-[11px] text-bone tracking-[0.04em]">{tx.goldType}</td>
@@ -936,18 +924,22 @@ function PortfolioContent() {
                         </td>
                         <td className="px-[10px] py-[13px] border-b border-hairline text-right">
                           <div className="inline-flex gap-[6px]">
-                            <button
+                            <Button
+                              variant="outline"
+                              size="icon"
                               onClick={() => setEditingTx(tx)}
-                              className="bg-transparent border border-line rounded-md text-mute w-7 h-7 cursor-pointer inline-flex items-center justify-center"
+                              className="border-line text-mute w-7 h-7 bg-transparent hover:bg-ink-3 hover:text-bone"
                             >
                               <IconPencil s={12}/>
-                            </button>
-                            <button
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="icon"
                               onClick={() => deleteTx.mutateAsync(tx.id)}
-                              className="bg-transparent border border-line rounded-md text-mute w-7 h-7 cursor-pointer inline-flex items-center justify-center"
+                              className="border-line text-mute w-7 h-7 bg-transparent hover:bg-[rgba(229,72,77,0.08)] hover:text-down hover:border-[rgba(229,72,77,0.3)]"
                             >
                               <IconTrash s={12}/>
-                            </button>
+                            </Button>
                           </div>
                         </td>
                       </tr>
@@ -960,29 +952,27 @@ function PortfolioContent() {
             {/* Pagination */}
             {txData && txData.totalPages > 1 && (
               <div className="flex items-center justify-end gap-2 mt-4">
-                <button
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => setTxPage((p: number) => Math.max(1, p - 1))}
                   disabled={txPage <= 1}
-                  className={cn(
-                    'h-8 px-[14px] bg-transparent border border-line rounded-md font-mono text-[11px] leading-none font-semibold tracking-[0.06em]',
-                    txPage <= 1 ? 'text-mute cursor-not-allowed opacity-50' : 'text-bone cursor-pointer',
-                  )}
+                  className="h-8 px-[14px] border-line bg-transparent text-bone hover:bg-ink-3 font-mono text-[11px] font-semibold tracking-[0.06em]"
                 >
                   Prev
-                </button>
+                </Button>
                 <span className="font-mono text-[11px] text-mute">
                   {txPage} / {txData.totalPages}
                 </span>
-                <button
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => setTxPage((p: number) => Math.min(txData.totalPages, p + 1))}
                   disabled={txPage >= txData.totalPages}
-                  className={cn(
-                    'h-8 px-[14px] bg-transparent border border-line rounded-md font-mono text-[11px] leading-none font-semibold tracking-[0.06em]',
-                    txPage >= txData.totalPages ? 'text-mute cursor-not-allowed opacity-50' : 'text-bone cursor-pointer',
-                  )}
+                  className="h-8 px-[14px] border-line bg-transparent text-bone hover:bg-ink-3 font-mono text-[11px] font-semibold tracking-[0.06em]"
                 >
                   Next
-                </button>
+                </Button>
               </div>
             )}
           </div>

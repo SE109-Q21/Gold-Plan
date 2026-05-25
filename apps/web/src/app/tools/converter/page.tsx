@@ -8,6 +8,8 @@ import { useExchangeRates } from '@/lib/exchange-rate.api';
 import { calculateConversion, WEIGHT_TO_GRAMS } from '@/lib/converter.api';
 import type { GoldBrand, GoldType } from '@gpls/shared';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 type WeightUnit = 'TAEL' | 'CHI' | 'PHAN' | 'TROY_OZ' | 'GRAM' | 'KILOGRAM';
 type Purity = '24K' | '22K' | '18K' | '14K';
@@ -34,17 +36,20 @@ const CHIP_BASE = 'font-mono text-[12px] leading-none font-bold tracking-[0.08em
 
 function Chip({ label, sub, selected, onClick }: { label: string; sub?: string; selected: boolean; onClick: () => void }) {
   return (
-    <button
+    <Button
+      variant="outline"
       onClick={onClick}
       className={cn(
-        CHIP_BASE,
+        CHIP_BASE, 'h-auto',
         sub ? 'px-4 pt-2 pb-[10px]' : 'px-4 py-2',
-        selected ? 'border-gold bg-[rgba(212,175,55,0.12)] text-gold' : 'border-line bg-transparent text-bone',
+        selected
+          ? 'border-gold bg-[rgba(212,175,55,0.12)] text-gold hover:bg-[rgba(212,175,55,0.18)] hover:text-gold'
+          : 'border-line bg-transparent text-bone hover:bg-ink-3 hover:text-bone',
       )}
     >
       <span>{label}</span>
       {sub && <span className="font-mono text-[9px] leading-none tracking-[0.06em] opacity-65">{sub}</span>}
-    </button>
+    </Button>
   );
 }
 
@@ -70,15 +75,16 @@ function CopyButton({ text }: { text: string }) {
   }, [text]);
 
   return (
-    <button
+    <Button
+      variant="outline"
       onClick={handleCopy}
       className={cn(
-        'bg-transparent border rounded px-[10px] py-1 cursor-pointer font-mono text-[10px] leading-none font-bold tracking-[0.08em] shrink-0 transition-[color,border-color] duration-[140ms]',
-        copied ? 'border-gold text-up' : 'border-line text-gold',
+        'px-[10px] py-1 h-auto font-mono text-[10px] leading-none font-bold tracking-[0.08em] shrink-0 transition-[color,border-color] duration-[140ms]',
+        copied ? 'border-gold text-up hover:border-gold hover:text-up' : 'border-line text-gold hover:border-gold hover:text-gold',
       )}
     >
       {copied ? 'Copied!' : 'Copy'}
-    </button>
+    </Button>
   );
 }
 
@@ -158,12 +164,13 @@ function ConverterContent() {
     <div className="min-h-full bg-[#0a0a0d] p-[32px_24px_60px] flex flex-col items-center">
       <div className="w-full max-w-[800px]">
 
-        <button
+        <Button
+          variant="ghost"
           onClick={() => router.push('/')}
-          className="bg-transparent border-0 cursor-pointer text-mute flex items-center gap-[6px] font-mono text-[12px] leading-none font-semibold tracking-[0.08em] p-0 pb-6"
+          className="text-mute flex items-center gap-[6px] font-mono text-[12px] font-semibold tracking-[0.08em] p-0 pb-6 h-auto hover:bg-transparent hover:text-bone"
         >
           <IconArrowLeft s={14}/> back to dashboard
-        </button>
+        </Button>
 
         <div className="mb-8">
           <h1 className="font-display text-[40px] leading-none font-extrabold tracking-[-0.03em] text-chalk m-0">
@@ -187,13 +194,13 @@ function ConverterContent() {
 
           <div className="mb-6">
             <SectionLabel>Quantity</SectionLabel>
-            <input
+            <Input
               type="number"
               min="0"
               step="any"
               value={qtyStr}
               onChange={e => setQtyStr(e.target.value)}
-              className="bg-ink-3 border border-line rounded-lg text-chalk font-display text-[28px] leading-none font-bold p-[12px_16px] w-[160px] text-right outline-none focus:border-gold"
+              className="bg-ink-3 border-line text-chalk font-display text-[28px] leading-none font-bold p-[12px_16px] w-[160px] text-right h-auto focus-visible:ring-gold placeholder:text-mute"
             />
           </div>
 

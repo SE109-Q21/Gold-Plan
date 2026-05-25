@@ -2,9 +2,12 @@
 
 import { useState } from 'react';
 import { useAssetsComparison, ComparisonRange } from '@/lib/assets-comparison.api';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, Legend } from 'recharts';
 import type { DataSeriesDto } from '@gpls/shared';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
 
 const RANGES: ComparisonRange[] = ['1M', '3M', '6M', '1Y'];
 const RANGE_LABELS: Record<ComparisonRange, string> = {
@@ -78,26 +81,27 @@ export default function GoldVsAssetsPage() {
       <div className="flex gap-2 mb-6 flex-wrap items-center">
         <div className="flex gap-2">
           {RANGES.map(r => (
-            <button
+            <Button
               key={r}
+              variant="outline"
               onClick={() => setRange(r)}
               className={cn(
-                'px-[14px] py-[5px] rounded-md text-[12px] cursor-pointer border',
-                range === r ? 'bg-gold border-gold text-gold-ink' : 'bg-ink-2 border-line text-mute',
+                'px-[14px] py-[5px] h-auto rounded-md font-mono text-[12px]',
+                range === r ? 'bg-gold border-gold text-gold-ink hover:bg-gold hover:text-gold-ink' : 'bg-ink-2 border-line text-mute hover:bg-ink-3',
               )}
             >
               {RANGE_LABELS[r]}
-            </button>
+            </Button>
           ))}
         </div>
         <div className="ml-auto flex items-center gap-2">
           <span className="text-mute text-[13px]">Vốn:</span>
-          <input
+          <Input
             type="number"
             value={capital}
             step={10_000_000}
             onChange={e => setCapital(Math.max(0, Number(e.target.value)))}
-            className="w-[130px] px-2 py-1 rounded-md bg-ink-2 border border-line text-chalk text-[13px] text-right outline-none"
+            className="w-[130px] bg-ink-2 border-line text-chalk text-[13px] text-right focus-visible:ring-gold h-[34px] px-2"
           />
           <span className="text-mute text-[13px]">₫</span>
         </div>
@@ -118,24 +122,26 @@ export default function GoldVsAssetsPage() {
             <div className="text-mute text-[13px] mb-3">
               Hiệu suất chuẩn hoá (gốc = 100) — {RANGE_LABELS[range]}
             </div>
-            <ResponsiveContainer width="100%" height={200}>
+            <ChartContainer config={{
+              gold:        { label: 'Vàng SJC', color: COLORS.gold },
+              usd:         { label: 'USD/VND',  color: COLORS.usd },
+              bankDeposit: { label: 'Gửi NH',   color: COLORS.bankDeposit },
+              vnIndex:     { label: 'VN-Index', color: COLORS.vnIndex },
+            } satisfies ChartConfig} className="h-[200px] w-full">
               <LineChart data={chartData}>
                 <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#888' }} tickLine={false}
                   tickFormatter={d => d.slice(5)} interval="preserveStartEnd"/>
                 <YAxis domain={['auto', 'auto']} tick={{ fontSize: 10, fill: '#888' }} tickLine={false} axisLine={false}/>
-                <Tooltip
-                  formatter={(v: unknown, name: unknown) => [(v as number).toFixed(2), name as string]}
-                  contentStyle={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 6 }}
-                />
+                <ChartTooltip content={<ChartTooltipContent formatter={(v, name) => [(v as number).toFixed(2), name as string]}/>}/>
                 <Legend wrapperStyle={{ fontSize: 12 }}/>
-                <Line type="monotone" dataKey="gold" name="Vàng SJC" stroke={COLORS.gold} dot={false} strokeWidth={2}/>
-                <Line type="monotone" dataKey="usd" name="USD/VND" stroke={COLORS.usd} dot={false} strokeWidth={1.5}/>
-                <Line type="monotone" dataKey="bankDeposit" name="Gửi NH" stroke={COLORS.bankDeposit} dot={false} strokeWidth={1.5} strokeDasharray="4 4"/>
+                <Line type="monotone" dataKey="gold" name="Vàng SJC" stroke="var(--color-gold)" dot={false} strokeWidth={2}/>
+                <Line type="monotone" dataKey="usd" name="USD/VND" stroke="var(--color-usd)" dot={false} strokeWidth={1.5}/>
+                <Line type="monotone" dataKey="bankDeposit" name="Gửi NH" stroke="var(--color-bankDeposit)" dot={false} strokeWidth={1.5} strokeDasharray="4 4"/>
                 {data.vnIndex && (
-                  <Line type="monotone" dataKey="vnIndex" name="VN-Index" stroke={COLORS.vnIndex} dot={false} strokeWidth={1.5}/>
+                  <Line type="monotone" dataKey="vnIndex" name="VN-Index" stroke="var(--color-vnIndex)" dot={false} strokeWidth={1.5}/>
                 )}
               </LineChart>
-            </ResponsiveContainer>
+            </ChartContainer>
           </div>
 
           <div className="bg-[#D4AF3710] border border-[#D4AF3730] rounded-lg p-[14px]">

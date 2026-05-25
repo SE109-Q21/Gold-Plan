@@ -2,9 +2,12 @@
 
 import { useState } from 'react';
 import { useArbitrageOpportunities, useArbitrageHistory } from '@/lib/arbitrage.api';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis } from 'recharts';
 import type { ArbitrageOpportunityDto } from '@gpls/shared';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
 
 const GOLD_TYPES = ['NHAN_9999', 'MIEN_SJC', 'VANG_24K', 'VANG_18K'] as const;
 
@@ -65,25 +68,26 @@ export default function ArbitragePage() {
       {/* Filters */}
       <div className="flex gap-2 mb-5 flex-wrap items-center">
         {(['', ...GOLD_TYPES] as const).map(gt => (
-          <button
+          <Button
             key={gt}
+            variant="outline"
             onClick={() => setGoldTypeFilter(gt)}
             className={cn(
-              'px-[14px] py-[5px] rounded-md text-[12px] cursor-pointer border',
+              'px-[14px] py-[5px] h-auto rounded-md font-mono text-[12px]',
               goldTypeFilter === gt
-                ? 'bg-gold border-gold text-gold-ink'
-                : 'bg-ink-2 border-line text-mute',
+                ? 'bg-gold border-gold text-gold-ink hover:bg-gold hover:text-gold-ink'
+                : 'bg-ink-2 border-line text-mute hover:bg-ink-3',
             )}
           >
             {gt || 'Tất cả'}
-          </button>
+          </Button>
         ))}
         <div className="ml-auto flex items-center gap-2">
           <span className="text-mute text-[13px]">Số lượng:</span>
-          <input
+          <Input
             type="number" min={1} max={100} value={quantity}
             onChange={e => setQuantity(Math.max(1, Number(e.target.value)))}
-            className="w-[60px] px-2 py-1 rounded-md bg-ink-2 border border-line text-chalk text-[13px] text-center outline-none"
+            className="w-[60px] bg-ink-2 border-line text-chalk text-[13px] text-center focus-visible:ring-gold h-[34px] px-2"
           />
           <span className="text-mute text-[13px]">lượng</span>
         </div>
@@ -106,18 +110,14 @@ export default function ArbitragePage() {
           <div className="text-mute text-[13px] mb-3">
             Lịch sử chênh lệch 24h — {goldTypeFilter || opps?.[0]?.goldType}
           </div>
-          <ResponsiveContainer width="100%" height={120}>
+          <ChartContainer config={{ grossProfit: { label: 'Lợi nhuận', color: '#D4AF37' } } satisfies ChartConfig} className="h-[120px] w-full">
             <LineChart data={history}>
               <XAxis dataKey="recordedAt" hide />
               <YAxis hide domain={['auto', 'auto']} />
-              <Tooltip
-                formatter={(v: unknown) => [`${fmt(Number(v))}₫`, 'Lợi nhuận']}
-                labelFormatter={(l: unknown) => new Date(l as string).toLocaleTimeString('vi-VN')}
-                contentStyle={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 6 }}
-              />
-              <Line type="monotone" dataKey="grossProfit" stroke="#D4AF37" dot={false} strokeWidth={2} />
+              <ChartTooltip content={<ChartTooltipContent formatter={(v) => [`${fmt(Number(v))}₫`, 'Lợi nhuận']} labelFormatter={(l) => new Date(l as string).toLocaleTimeString('vi-VN')}/>}/>
+              <Line type="monotone" dataKey="grossProfit" stroke="var(--color-grossProfit)" dot={false} strokeWidth={2} />
             </LineChart>
-          </ResponsiveContainer>
+          </ChartContainer>
         </div>
       )}
 

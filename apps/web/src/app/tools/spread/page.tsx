@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useSpreadRanking, useSpreadHistory } from '@/lib/spread.api';
 import type { GoldType, GoldBrand, SpreadRankingDto } from '@gpls/shared';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 const GOLD_TYPES: { value: GoldType; label: string }[] = [
   { value: 'MIEN_SJC' as GoldType, label: 'Miếng SJC' },
@@ -160,12 +161,9 @@ export default function SpreadPage() {
         {/* Header */}
         <div className="flex items-start justify-between">
           <div>
-            <button
-              onClick={() => router.back()}
-              className="bg-transparent border-0 cursor-pointer text-mute font-mono text-[12px] leading-none font-medium mb-3 p-0 flex items-center gap-1"
-            >
+            <Button variant="ghost" onClick={() => router.back()} className="text-mute flex items-center gap-1 font-mono text-[12px] font-medium mb-3 p-0 h-auto hover:bg-transparent hover:text-bone">
               ← Back
-            </button>
+            </Button>
             <h1 className="font-display text-[36px] leading-none font-extrabold m-0 tracking-[-0.025em]">spread ranking</h1>
             <p className="font-display text-[14px] leading-[1.5] text-mute m-0 mt-2 max-w-[480px]">
               Compare buy/sell spreads across brands — lower spread = cheaper to trade.
@@ -177,25 +175,27 @@ export default function SpreadPage() {
         <div className="flex gap-4 flex-wrap items-center">
           <div className="flex gap-[6px] flex-wrap">
             {GOLD_TYPES.map(g => (
-              <button
+              <Button
                 key={g.value}
+                variant="outline"
                 onClick={() => setGoldType(g.value)}
-                className={cn(CHIP, goldType === g.value ? 'bg-gold border-gold text-gold-ink' : 'bg-ink-3 border-line text-bone')}
+                className={cn(CHIP, goldType === g.value ? 'bg-gold border-gold text-gold-ink hover:bg-gold hover:text-gold-ink' : 'bg-ink-3 border-line text-bone hover:bg-ink-3 hover:text-bone')}
               >
                 {g.label}
-              </button>
+              </Button>
             ))}
           </div>
           <div className="h-5 w-px bg-hairline"/>
           <div className="flex gap-[6px]">
             {DAY_OPTIONS.map(d => (
-              <button
+              <Button
                 key={d}
+                variant="outline"
                 onClick={() => setDays(d)}
-                className={cn(CHIP, days === d ? 'bg-gold border-gold text-gold-ink' : 'bg-ink-3 border-line text-bone')}
+                className={cn(CHIP, days === d ? 'bg-gold border-gold text-gold-ink hover:bg-gold hover:text-gold-ink' : 'bg-ink-3 border-line text-bone hover:bg-ink-3 hover:text-bone')}
               >
                 {d}D
-              </button>
+              </Button>
             ))}
           </div>
         </div>
