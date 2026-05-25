@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { streamAiChat, getRemainingQuestions, incrementQuestionCount } from '@/lib/ai.api';
 import { useAuth } from '@/contexts/auth-context';
+import { cn } from '@/lib/utils';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -28,15 +29,7 @@ function DotsIndicator() {
   }, []);
   const dots = '●'.repeat(step + 1) + '○'.repeat(3 - step);
   return (
-    <div style={{
-      alignSelf: 'flex-start',
-      background: 'var(--ink-3)',
-      borderRadius: '10px 10px 10px 2px',
-      padding: '8px 12px',
-      font: '500 13px/1 var(--font-mono)',
-      color: 'var(--mute)',
-      letterSpacing: '0.1em',
-    }}>
+    <div className="self-start bg-ink-3 rounded-[10px_10px_10px_2px] px-3 py-2 font-mono text-[13px] leading-none font-medium text-mute tracking-[0.1em]">
       {dots}
     </div>
   );
@@ -52,12 +45,10 @@ export function AiChatWidget() {
   const [limitReached, setLimitReached] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Load remaining on mount / open
   useEffect(() => {
     setRemaining(getRemainingQuestions());
   }, [open]);
 
-  // Auto-scroll to bottom
   useEffect(() => {
     if (listRef.current) {
       listRef.current.scrollTop = listRef.current.scrollHeight;
@@ -99,178 +90,71 @@ export function AiChatWidget() {
     }
   }
 
-  function handleSend() {
-    submit(input);
-  }
+  function handleSend() { submit(input); }
 
   function handleKey(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      submit(input);
-    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit(input); }
   }
 
-  function handleChip(q: string) {
-    submit(q);
-  }
-
-  // Closed button
   if (!open) {
     return (
       <button
         onClick={() => setOpen(true)}
         aria-label="Open AI Assistant"
-        style={{
-          position: 'fixed',
-          bottom: 28,
-          right: 28,
-          zIndex: 1000,
-          width: 56,
-          height: 56,
-          borderRadius: '50%',
-          background: 'var(--gold)',
-          border: 'none',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 4px 20px rgba(212,175,55,0.4)',
-          transition: 'box-shadow 0.2s var(--ease)',
-        }}
+        className="fixed bottom-7 right-7 z-[1000] w-14 h-14 rounded-full bg-gold border-0 cursor-pointer flex items-center justify-center shadow-[0_4px_20px_rgba(212,175,55,0.4)] transition-shadow"
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <path
-            d="M4 4h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H8l-4 4V5a1 1 0 0 1 1-1z"
-            fill="white"
-          />
+          <path d="M4 4h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H8l-4 4V5a1 1 0 0 1 1-1z" fill="white"/>
         </svg>
       </button>
     );
   }
 
-  // Open panel
+  const sendDisabled = streaming || !input.trim();
+
   return (
-    <div
-      style={{
-        position: 'fixed',
-        bottom: 100,
-        right: 28,
-        width: 340,
-        height: 480,
-        zIndex: 1000,
-        background: 'var(--ink-2)',
-        border: '1px solid var(--line)',
-        borderRadius: 12,
-        boxShadow: '0 8px 40px rgba(0,0,0,0.6)',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-      }}
-    >
+    <div className="fixed bottom-[100px] right-7 w-[340px] h-[480px] z-[1000] bg-ink-2 border border-line rounded-[12px] shadow-[0_8px_40px_rgba(0,0,0,0.6)] flex flex-col overflow-hidden">
       {/* Header */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '12px 16px',
-        borderBottom: '1px solid var(--line)',
-        flexShrink: 0,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{
-            width: 28,
-            height: 28,
-            borderRadius: '50%',
-            background: 'var(--gold)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-line shrink-0">
+        <div className="flex items-center gap-[10px]">
+          <div className="w-7 h-7 rounded-full bg-gold flex items-center justify-center">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M4 4h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H8l-4 4V5a1 1 0 0 1 1-1z"
-                fill="white"
-              />
+              <path d="M4 4h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H8l-4 4V5a1 1 0 0 1 1-1z" fill="white"/>
             </svg>
           </div>
-          <span style={{
-            font: '700 13px/1 var(--font-display)',
-            color: 'var(--chalk)',
-            letterSpacing: '-0.01em',
-          }}>
+          <span className="font-display text-[13px] leading-none font-bold text-chalk tracking-[-0.01em]">
             AI Assistant
           </span>
         </div>
         <button
           onClick={() => setOpen(false)}
           aria-label="Close"
-          style={{
-            background: 'transparent',
-            border: 'none',
-            cursor: 'pointer',
-            color: 'var(--mute)',
-            font: '500 16px/1 var(--font-mono)',
-            padding: '2px 6px',
-            borderRadius: 4,
-          }}
+          className="bg-transparent border-0 cursor-pointer text-mute font-mono text-[16px] leading-none font-medium px-[6px] py-[2px] rounded"
         >
           ✕
         </button>
       </div>
 
       {/* Guest counter */}
-      <div style={{
-        padding: '6px 16px',
-        borderBottom: '1px solid var(--hairline)',
-        flexShrink: 0,
-      }}>
-        <span className="mono" style={{
-          fontSize: 10,
-          color: user ? 'var(--up)' : 'var(--gold)',
-          letterSpacing: '0.08em',
-        }}>
+      <div className="px-4 py-[6px] border-b border-hairline shrink-0">
+        <span className={cn('font-mono text-[10px] tracking-[0.08em]', user ? 'text-up' : 'text-gold')}>
           {user ? 'unlimited questions' : `${remaining} / 10 questions today`}
         </span>
       </div>
 
       {/* Message list */}
-      <div
-        ref={listRef}
-        style={{
-          flex: 1,
-          overflowY: 'auto',
-          padding: '12px 14px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 10,
-        }}
-      >
-        {/* Suggestions — show only when no messages */}
+      <div ref={listRef} className="flex-1 overflow-y-auto p-[12px_14px] flex flex-col gap-[10px]">
         {messages.length === 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 24, paddingTop: 8 }}>
-            <div style={{
-              textAlign: 'center',
-              font: '500 12px/1.5 var(--font-display)',
-              color: 'var(--mute)',
-            }}>
+          <div className="flex flex-col gap-6 pt-2">
+            <div className="text-center font-sans text-[12px] leading-[1.5] font-medium text-mute">
               Hỏi về giá vàng, xu hướng thị trường…
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center' }}>
+            <div className="flex flex-wrap gap-2 justify-center">
               {SUGGESTIONS.map(s => (
                 <button
                   key={s}
-                  onClick={() => handleChip(s)}
-                  style={{
-                    background: 'var(--ink-3)',
-                    border: '1px solid var(--line)',
-                    borderRadius: 20,
-                    padding: '6px 12px',
-                    font: '500 11px/1.3 var(--font-display)',
-                    color: 'var(--bone)',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    transition: 'border-color 0.15s',
-                  }}
+                  onClick={() => submit(s)}
+                  className="bg-ink-3 border border-line rounded-[20px] px-3 py-[6px] font-sans text-[11px] leading-[1.3] font-medium text-bone cursor-pointer text-left transition-[border-color] duration-150"
                 >
                   {s}
                 </button>
@@ -279,42 +163,21 @@ export function AiChatWidget() {
           </div>
         )}
 
-        {/* Messages */}
         {messages.map((m, i) => {
           const isUser = m.role === 'user';
           const showDisclaimer = !isUser && hasFinancialContent(m.content);
           return (
-            <div key={i} style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: isUser ? 'flex-end' : 'flex-start',
-              gap: 4,
-            }}>
-              <div style={{
-                maxWidth: '85%',
-                background: isUser
-                  ? 'rgba(212,175,55,0.15)'
-                  : 'var(--ink-3)',
-                border: isUser
-                  ? '1px solid rgba(212,175,55,0.3)'
-                  : '1px solid var(--line)',
-                borderRadius: isUser
-                  ? '10px 10px 2px 10px'
-                  : '10px 10px 10px 2px',
-                padding: '8px 12px',
-                font: '500 13px/1.5 var(--font-display)',
-                color: 'var(--chalk)',
-                wordBreak: 'break-word',
-              }}>
+            <div key={i} className={cn('flex flex-col gap-1', isUser ? 'items-end' : 'items-start')}>
+              <div className={cn(
+                'max-w-[85%] px-3 py-2 font-sans text-[13px] leading-[1.5] font-medium text-chalk break-words',
+                isUser
+                  ? 'bg-[rgba(212,175,55,0.15)] border border-[rgba(212,175,55,0.3)] rounded-[10px_10px_2px_10px]'
+                  : 'bg-ink-3 border border-line rounded-[10px_10px_10px_2px]',
+              )}>
                 {m.content}
               </div>
               {showDisclaimer && (
-                <div style={{
-                  font: 'italic 500 10px/1.4 var(--font-display)',
-                  color: 'var(--mute)',
-                  maxWidth: '85%',
-                  paddingLeft: 4,
-                }}>
+                <div className="italic font-sans text-[10px] leading-[1.4] font-medium text-mute max-w-[85%] pl-1">
                   For reference only — not financial advice.
                 </div>
               )}
@@ -322,75 +185,38 @@ export function AiChatWidget() {
           );
         })}
 
-        {/* Streaming dots */}
-        {streaming && messages[messages.length - 1]?.content === '' && (
-          <DotsIndicator />
-        )}
+        {streaming && messages[messages.length - 1]?.content === '' && <DotsIndicator />}
       </div>
 
       {/* Limit reached banner */}
       {limitReached && !user && (
-        <div style={{
-          padding: '8px 14px',
-          background: 'rgba(212,175,55,0.08)',
-          borderTop: '1px solid rgba(212,175,55,0.2)',
-          font: '500 11px/1.4 var(--font-display)',
-          color: 'var(--gold)',
-          textAlign: 'center',
-          flexShrink: 0,
-        }}>
+        <div className="px-[14px] py-2 bg-[rgba(212,175,55,0.08)] border-t border-[rgba(212,175,55,0.2)] font-sans text-[11px] leading-[1.4] font-medium text-gold text-center shrink-0">
           Register for unlimited questions
         </div>
       )}
 
       {/* Input row */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 8,
-        padding: '10px 12px',
-        borderTop: '1px solid var(--line)',
-        flexShrink: 0,
-      }}>
+      <div className="flex items-center gap-2 px-3 py-[10px] border-t border-line shrink-0">
         <input
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={handleKey}
           placeholder="Hỏi về giá vàng…"
           disabled={streaming}
-          style={{
-            flex: 1,
-            background: 'var(--ink-3)',
-            border: '1px solid var(--line)',
-            borderRadius: 8,
-            padding: '8px 12px',
-            font: '500 13px/1 var(--font-display)',
-            color: 'var(--chalk)',
-            outline: 'none',
-          }}
+          className="flex-1 bg-ink-3 border border-line rounded-lg px-3 py-2 font-sans text-[13px] leading-none font-medium text-chalk outline-none disabled:opacity-60"
         />
         <button
           onClick={handleSend}
-          disabled={streaming || !input.trim()}
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: 8,
-            background: streaming || !input.trim() ? 'var(--ink-3)' : 'var(--gold)',
-            border: `1px solid ${streaming || !input.trim() ? 'var(--line)' : 'var(--gold)'}`,
-            cursor: streaming || !input.trim() ? 'not-allowed' : 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-            transition: 'background 0.15s',
-          }}
+          disabled={sendDisabled}
+          className={cn(
+            'w-9 h-9 rounded-lg border flex items-center justify-center shrink-0 transition-[background] duration-150',
+            sendDisabled
+              ? 'bg-ink-3 border-line cursor-not-allowed'
+              : 'bg-gold border-gold cursor-pointer',
+          )}
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path
-              d="M2 8l12-6-5 6 5 6-12-6z"
-              fill={streaming || !input.trim() ? 'var(--mute)' : '#0B0B0F'}
-            />
+            <path d="M2 8l12-6-5 6 5 6-12-6z" fill={sendDisabled ? 'var(--mute)' : '#0B0B0F'}/>
           </svg>
         </button>
       </div>

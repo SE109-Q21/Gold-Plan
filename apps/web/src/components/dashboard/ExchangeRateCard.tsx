@@ -1,6 +1,7 @@
 'use client';
 
 import { useExchangeRates } from '@/lib/exchange-rate.api';
+import { cn } from '@/lib/utils';
 
 function timeAgo(isoString: string): string {
   const diffMs = Date.now() - new Date(isoString).getTime();
@@ -10,80 +11,56 @@ function timeAgo(isoString: string): string {
   return `${Math.floor(mins / 60)}h ago`;
 }
 
-const SOURCE_COLOR: Record<string, string> = {
-  live: 'var(--up)',
-  stale: 'var(--gold)',
-  fallback: 'var(--mute)',
+const SOURCE_BADGE_CLS: Record<string, string> = {
+  live:     'bg-up',
+  stale:    'bg-gold',
+  fallback: 'bg-[rgba(100,100,120,0.5)]',
 };
 
 export function ExchangeRateCard() {
   const { data, isLoading } = useExchangeRates();
 
-  const sourceColor = data ? (SOURCE_COLOR[data.source] ?? 'var(--mute)') : 'var(--mute)';
-
   return (
-    <div style={{
-      background: 'var(--ink-2)',
-      border: '1px solid var(--line)',
-      borderRadius: 14,
-      padding: '18px 24px',
-    }}>
-      {/* Header row */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <span className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase' }}>
+    <div className="bg-ink-2 border border-line rounded-[14px] p-[18px_24px]">
+      <div className="flex justify-between items-center mb-4">
+        <span className="font-mono text-[10px] leading-none text-mute tracking-[0.14em] uppercase">
           exchange rates
         </span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div className="flex items-center gap-[10px]">
           {data && (
-            <span style={{
-              font: '700 9px/1 var(--font-mono)',
-              letterSpacing: '0.14em',
-              textTransform: 'uppercase',
-              color: '#0B0B0F',
-              background: sourceColor,
-              padding: '3px 6px',
-              borderRadius: 3,
-            }}>
+            <span className={cn(
+              'font-mono text-[9px] leading-none font-bold tracking-[0.14em] uppercase px-[6px] py-[3px] rounded-[3px] text-gold-ink',
+              SOURCE_BADGE_CLS[data.source] ?? 'bg-[rgba(100,100,120,0.5)]',
+            )}>
               {data.source}
             </span>
           )}
-          <span className="mono" style={{ fontSize: 10, color: 'var(--mute)' }}>
+          <span className="font-mono text-[10px] leading-none text-mute">
             {isLoading ? 'loading…' : data ? `Updated ${timeAgo(data.updatedAt)}` : '—'}
           </span>
         </div>
       </div>
 
-      {/* Rate cells */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-        {/* USD / VND */}
-        <div style={{ padding: 14, background: 'var(--ink-3)', border: '1px solid var(--line)', borderRadius: 10 }}>
-          <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 6 }}>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="p-[14px] bg-ink-3 border border-line rounded-[10px]">
+          <div className="font-mono text-[9px] leading-none text-mute tracking-[0.14em] uppercase mb-[6px]">
             usd / vnd
           </div>
-          <div style={{ font: '700 22px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>
-            {isLoading ? (
-              <span style={{ color: 'var(--mute)' }}>—</span>
-            ) : data ? (
-              data.usdVnd.toLocaleString('en-US', { maximumFractionDigits: 0 })
-            ) : (
-              <span style={{ color: 'var(--mute)' }}>—</span>
-            )}
+          <div className="font-display text-[22px] leading-none font-bold tabular-nums">
+            {isLoading || !data
+              ? <span className="text-mute">—</span>
+              : data.usdVnd.toLocaleString('en-US', { maximumFractionDigits: 0 })}
           </div>
         </div>
 
-        {/* EUR / VND */}
-        <div style={{ padding: 14, background: 'var(--ink-3)', border: '1px solid var(--line)', borderRadius: 10 }}>
-          <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 6 }}>
+        <div className="p-[14px] bg-ink-3 border border-line rounded-[10px]">
+          <div className="font-mono text-[9px] leading-none text-mute tracking-[0.14em] uppercase mb-[6px]">
             eur / vnd
           </div>
-          <div style={{ font: '700 22px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>
-            {isLoading ? (
-              <span style={{ color: 'var(--mute)' }}>—</span>
-            ) : data ? (
-              data.eurVnd.toLocaleString('en-US', { maximumFractionDigits: 0 })
-            ) : (
-              <span style={{ color: 'var(--mute)' }}>—</span>
-            )}
+          <div className="font-display text-[22px] leading-none font-bold tabular-nums">
+            {isLoading || !data
+              ? <span className="text-mute">—</span>
+              : data.eurVnd.toLocaleString('en-US', { maximumFractionDigits: 0 })}
           </div>
         </div>
       </div>

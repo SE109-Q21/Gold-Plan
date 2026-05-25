@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useActiveSession, useCastVote } from '@/lib/forecast.api';
 import { useAuth } from '@/contexts/auth-context';
+import { cn } from '@/lib/utils';
 
 function pad2(n: number) { return String(n).padStart(2, '0'); }
 function fmtTime(iso: string) {
@@ -13,10 +14,10 @@ function fmtTime(iso: string) {
 
 type Direction = 'up' | 'flat' | 'down';
 
-const DIRECTION_CONFIG: Record<Direction, { label: string; arrow: string; color: string; bg: string }> = {
-  up:   { label: 'Up',   arrow: '↑', color: '#22c55e', bg: 'rgba(34,197,94,0.12)' },
-  flat: { label: 'Flat', arrow: '→', color: '#D4AF37', bg: 'rgba(212,175,55,0.12)' },
-  down: { label: 'Down', arrow: '↓', color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
+const DIRECTION_CONFIG: Record<Direction, { label: string; arrow: string; color: string; bg: string; borderAlpha: string }> = {
+  up:   { label: 'Up',   arrow: '↑', color: '#22c55e', bg: 'rgba(34,197,94,0.12)',   borderAlpha: 'rgba(34,197,94,0.25)' },
+  flat: { label: 'Flat', arrow: '→', color: '#D4AF37', bg: 'rgba(212,175,55,0.12)',  borderAlpha: 'rgba(212,175,55,0.25)' },
+  down: { label: 'Down', arrow: '↓', color: '#ef4444', bg: 'rgba(239,68,68,0.12)',   borderAlpha: 'rgba(239,68,68,0.25)' },
 };
 
 const RESULT_COLOR: Record<Direction, string> = {
@@ -41,66 +42,64 @@ export function ForecastVoteWidget() {
   const ratios = session?.ratios;
 
   return (
-    <div style={{
-      background: 'var(--ink-2)',
-      border: '1px solid rgba(212,175,55,0.2)',
-      borderRadius: 12,
-      padding: 20,
-    }}>
+    <div className="bg-ink-2 border border-[rgba(212,175,55,0.2)] rounded-[12px] p-5">
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 16 }}>
-        <h3 style={{ font: '700 16px/1 var(--font-display)', margin: 0 }}>
-          Community forecast
-        </h3>
+      <div className="flex justify-between items-baseline mb-4">
+        <h3 className="font-display text-[16px] leading-none font-bold m-0">Community forecast</h3>
         {session && !session.sessionClosed && (
-          <span className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '0.08em' }}>
+          <span className="font-mono text-[10px] text-mute tracking-[0.08em]">
             Closes at {fmtTime(session.closesAt)}
           </span>
         )}
       </div>
 
-      {/* Loading */}
       {isLoading && (
-        <div style={{ font: '500 13px/1 var(--font-mono)', color: 'var(--mute)', padding: '12px 0' }}>
-          Loading…
-        </div>
+        <div className="font-mono text-[13px] leading-none font-medium text-mute py-3">Loading…</div>
       )}
 
-      {/* No session */}
       {!isLoading && !session && (
-        <div style={{ font: '500 13px/1.5 var(--font-mono)', color: 'var(--mute)', padding: '8px 0' }}>
+        <div className="font-mono text-[13px] leading-[1.5] font-medium text-mute py-2">
           No forecast session today
         </div>
       )}
 
-      {/* Active session — closed with result */}
+      {/* Closed with result */}
       {!isLoading && session?.sessionClosed && session.actualResult && (
-        <div style={{ padding: '12px 0' }}>
-          <div style={{ font: '700 11px/1 var(--font-mono)', color: 'var(--mute)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>
+        <div className="py-3">
+          <div className="font-mono text-[11px] text-mute tracking-[0.12em] uppercase mb-2">
             Today&apos;s result
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ font: '800 32px/1 var(--font-display)', color: RESULT_COLOR[session.actualResult] }}>
+          <div className="flex items-center gap-[10px]">
+            <span
+              className="font-display text-[32px] leading-none font-extrabold"
+              style={{ color: RESULT_COLOR[session.actualResult] }}
+            >
               {DIRECTION_CONFIG[session.actualResult].arrow}
             </span>
-            <span style={{ font: '700 18px/1 var(--font-display)', color: RESULT_COLOR[session.actualResult] }}>
+            <span
+              className="font-display text-[18px] leading-none font-bold"
+              style={{ color: RESULT_COLOR[session.actualResult] }}
+            >
               {DIRECTION_CONFIG[session.actualResult].label}
             </span>
           </div>
           {session.userVote && (
-            <div style={{ marginTop: 10, font: '500 12px/1 var(--font-mono)', color: session.userVote === session.actualResult ? '#22c55e' : '#ef4444' }}>
+            <div
+              className="mt-[10px] font-mono text-[12px] leading-none font-medium"
+              style={{ color: session.userVote === session.actualResult ? '#22c55e' : '#ef4444' }}
+            >
               {session.userVote === session.actualResult ? '✓ You got it right!' : '✗ You got it wrong.'}
             </div>
           )}
         </div>
       )}
 
-      {/* Active session — voting or results */}
+      {/* Active session */}
       {!isLoading && session && !session.sessionClosed && (
         <>
-          {/* Vote buttons (pre-vote) */}
+          {/* Vote buttons */}
           {!hasVoted && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div className="flex flex-col gap-2">
               {(['up', 'flat', 'down'] as Direction[]).map(dir => {
                 const cfg = DIRECTION_CONFIG[dir];
                 return (
@@ -108,23 +107,17 @@ export function ForecastVoteWidget() {
                     key={dir}
                     onClick={() => handleVote(dir)}
                     disabled={castVote.isPending || !user}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 10,
-                      padding: '12px 16px',
-                      background: cfg.bg,
-                      border: `1px solid ${cfg.color}40`,
-                      borderRadius: 8,
-                      cursor: castVote.isPending || !user ? 'not-allowed' : 'pointer',
-                      opacity: castVote.isPending ? 0.6 : 1,
-                      transition: 'opacity 140ms ease, border-color 140ms ease',
-                    }}
+                    className={cn(
+                      'flex items-center gap-[10px] px-4 py-3 rounded-lg border transition-opacity duration-[140ms]',
+                      (castVote.isPending || !user) ? 'cursor-not-allowed' : 'cursor-pointer',
+                      castVote.isPending && 'opacity-60',
+                    )}
+                    style={{ background: cfg.bg, borderColor: cfg.borderAlpha }}
                   >
-                    <span style={{ font: '800 22px/1 var(--font-display)', color: cfg.color, width: 24, textAlign: 'center' }}>
+                    <span className="font-display text-[22px] leading-none font-extrabold w-6 text-center" style={{ color: cfg.color }}>
                       {cfg.arrow}
                     </span>
-                    <span style={{ font: '700 14px/1 var(--font-display)', color: cfg.color }}>
+                    <span className="font-display text-[14px] leading-none font-bold" style={{ color: cfg.color }}>
                       {cfg.label}
                     </span>
                   </button>
@@ -133,7 +126,7 @@ export function ForecastVoteWidget() {
               {!user && (
                 <button
                   onClick={() => router.push('/auth/login?from=%2F')}
-                  style={{ background: 'transparent', border: 0, padding: 0, cursor: 'pointer', font: '500 11px/1.4 var(--font-mono)', color: 'var(--gold)', margin: '8px 0 0', textDecoration: 'underline' }}
+                  className="bg-transparent border-0 p-0 cursor-pointer font-mono text-[11px] leading-[1.4] text-gold mt-2 underline text-left"
                 >
                   Sign in to vote →
                 </button>
@@ -141,51 +134,48 @@ export function ForecastVoteWidget() {
             </div>
           )}
 
-          {/* Ratio bars (post-vote) */}
+          {/* Ratio bars */}
           {hasVoted && ratios && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div className="flex flex-col gap-[10px]">
               {(['up', 'flat', 'down'] as Direction[]).map(dir => {
                 const cfg = DIRECTION_CONFIG[dir];
                 const pct = Math.round((ratios[dir] ?? 0) * 100);
                 const isChosen = session.userVote === dir;
                 return (
                   <div key={dir}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ font: '700 16px/1 var(--font-display)', color: cfg.color }}>{cfg.arrow}</span>
-                        <span style={{ font: '600 13px/1 var(--font-display)', color: isChosen ? cfg.color : 'var(--bone)' }}>
+                    <div className="flex justify-between items-center mb-1">
+                      <div className="flex items-center gap-[6px]">
+                        <span className="font-display text-[16px] leading-none font-bold" style={{ color: cfg.color }}>{cfg.arrow}</span>
+                        <span
+                          className="font-display text-[13px] leading-none font-semibold"
+                          style={{ color: isChosen ? cfg.color : 'var(--bone)' }}
+                        >
                           {cfg.label}
                         </span>
                         {isChosen && (
-                          <span style={{ font: '700 11px/1 var(--font-mono)', color: cfg.color }}>✓</span>
+                          <span className="font-mono text-[11px] leading-none font-bold" style={{ color: cfg.color }}>✓</span>
                         )}
                       </div>
-                      <span className="mono" style={{ fontSize: 12, fontWeight: 700, color: cfg.color }}>
-                        {pct}%
-                      </span>
+                      <span className="font-mono text-[12px] font-bold" style={{ color: cfg.color }}>{pct}%</span>
                     </div>
-                    <div style={{ height: 6, borderRadius: 4, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
-                      <div style={{
-                        height: '100%',
-                        width: `${pct}%`,
-                        background: cfg.color,
-                        borderRadius: 4,
-                        transition: 'width 500ms ease',
-                      }} />
+                    <div className="h-[6px] rounded bg-[rgba(255,255,255,0.06)] overflow-hidden">
+                      <div
+                        className="h-full rounded transition-[width] duration-500"
+                        style={{ width: `${pct}%`, background: cfg.color }}
+                      />
                     </div>
                   </div>
                 );
               })}
-              <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', marginTop: 4 }}>
-                {session.totalVotes} votes
-              </div>
+              <div className="font-mono text-[10px] text-mute mt-1">{session.totalVotes} votes</div>
             </div>
           )}
 
-          {/* Voted but no ratios yet */}
+          {/* Voted but no ratios */}
           {hasVoted && !ratios && (
-            <div style={{ font: '500 13px/1.5 var(--font-mono)', color: 'var(--mute)', padding: '8px 0' }}>
-              Voted: <strong style={{ color: (DIRECTION_CONFIG[session.userVote as Direction] ?? DIRECTION_CONFIG['flat']).color }}>
+            <div className="font-mono text-[13px] leading-[1.5] font-medium text-mute py-2">
+              Voted:{' '}
+              <strong style={{ color: (DIRECTION_CONFIG[session.userVote as Direction] ?? DIRECTION_CONFIG['flat']).color }}>
                 {(DIRECTION_CONFIG[session.userVote as Direction] ?? DIRECTION_CONFIG['flat']).label}
               </strong>
             </div>

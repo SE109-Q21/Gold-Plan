@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useCreateAlert } from '@/lib/alerts.api';
+import { cn } from '@/lib/utils';
 import type { GoldBrand, GoldType } from '@gpls/shared';
 
 interface Props { open: boolean; onClose: () => void; }
@@ -20,6 +21,22 @@ const GOLD_TYPES: { label: string; value: GoldType }[] = [
   { label: 'Vang 18K',  value: 'VANG_18K'  },
 ];
 
+function Chip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'flex-1 h-9 inline-flex items-center justify-center border cursor-pointer',
+        'font-mono text-[11px] leading-none font-bold tracking-[0.1em] uppercase rounded-none',
+        active ? 'bg-gold border-gold text-gold-ink' : 'bg-transparent border-line text-bone',
+      )}
+    >
+      {label}
+    </button>
+  );
+}
+
 export function AddAlertModal({ open, onClose }: Props) {
   const [brand,      setBrand]      = useState<GoldBrand>('SJC');
   const [goldType,   setGoldType]   = useState<GoldType>('MIEN_SJC');
@@ -32,23 +49,6 @@ export function AddAlertModal({ open, onClose }: Props) {
 
   if (!open) return null;
 
-  const Chip = ({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) => (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
-        flex: 1, height: 36, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-        border: `1px solid ${active ? 'var(--gold)' : 'var(--line)'}`,
-        borderRadius: 0,
-        background: active ? 'var(--gold)' : 'transparent',
-        color: active ? '#0B0B0F' : 'var(--bone)',
-        font: '700 11px/1 var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer',
-      }}
-    >
-      {label}
-    </button>
-  );
-
   const handleSubmit = () => {
     setError(null);
     createAlert.mutate(
@@ -56,7 +56,6 @@ export function AddAlertModal({ open, onClose }: Props) {
       {
         onSuccess: () => {
           onClose();
-          // reset
           setBrand('SJC'); setGoldType('MIEN_SJC'); setCond('gte');
           setThreshold(80_000_000); setRepeatMode(false);
         },
@@ -76,84 +75,67 @@ export function AddAlertModal({ open, onClose }: Props) {
   return (
     <div
       onClick={onClose}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 100,
-        background: 'rgba(11,11,15,0.65)', backdropFilter: 'blur(6px)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}
+      className="fixed inset-0 z-[100] bg-[rgba(11,11,15,0.65)] backdrop-blur-[6px] flex items-center justify-center"
     >
       <div
         onClick={e => e.stopPropagation()}
-        style={{
-          width: 520, background: 'var(--ink-2)', border: '1px solid var(--line)',
-          borderRadius: 14, padding: 28, boxShadow: '0 30px 80px rgba(0,0,0,0.6)',
-        }}
+        className="w-[520px] bg-ink-2 border border-line rounded-[14px] p-7 shadow-[0_30px_80px_rgba(0,0,0,0.6)]"
       >
-        <div style={{ marginBottom: 20 }}>
-          <h2 style={{ font: '700 24px/1 var(--font-display)', margin: 0, letterSpacing: '-0.015em' }}>new price alert</h2>
-          <div className="mono" style={{ fontSize: 11, color: 'var(--mute)', marginTop: 6 }}>email + push when threshold is crossed</div>
+        <div className="mb-5">
+          <h2 className="font-display text-[24px] leading-none font-bold m-0 tracking-[-0.015em]">new price alert</h2>
+          <div className="font-mono text-[11px] text-mute mt-[6px]">email + push when threshold is crossed</div>
         </div>
 
         {/* Brand */}
-        <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 8 }}>brand</div>
-        <div style={{ display: 'flex', gap: 0, marginBottom: 18, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--line)' }}>
+        <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-2">brand</div>
+        <div className="flex mb-[18px] rounded-lg overflow-hidden border border-line">
           {BRANDS.map(b => <Chip key={b.value} label={b.label} active={brand === b.value} onClick={() => setBrand(b.value)}/>)}
         </div>
 
         {/* Gold type */}
-        <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 8 }}>gold type</div>
-        <div style={{ display: 'flex', gap: 0, marginBottom: 18, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--line)' }}>
+        <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-2">gold type</div>
+        <div className="flex mb-[18px] rounded-lg overflow-hidden border border-line">
           {GOLD_TYPES.map(g => <Chip key={g.value} label={g.label} active={goldType === g.value} onClick={() => setGoldType(g.value)}/>)}
         </div>
 
         {/* Condition */}
-        <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 8 }}>condition</div>
-        <div style={{ display: 'flex', gap: 0, marginBottom: 18, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--line)' }}>
+        <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-2">condition</div>
+        <div className="flex mb-[18px] rounded-lg overflow-hidden border border-line">
           <Chip label="≥ rises above" active={cond === 'gte'} onClick={() => setCond('gte')}/>
           <Chip label="≤ drops below" active={cond === 'lte'} onClick={() => setCond('lte')}/>
         </div>
 
         {/* Threshold price */}
-        <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 8 }}>threshold price (VND)</div>
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 10,
-          background: 'var(--ink-3)', border: '1px solid var(--line)',
-          borderRadius: 10, padding: '4px 8px 4px 16px', marginBottom: 18,
-        }}>
-          <span style={{ font: '700 24px/1 var(--font-display)', color: 'var(--gold)' }}>₫</span>
+        <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-2">threshold price (VND)</div>
+        <div className="flex items-center gap-[10px] bg-ink-3 border border-line rounded-[10px] py-1 px-2 pl-4 mb-[18px]">
+          <span className="font-display text-[24px] leading-none font-bold text-gold">₫</span>
           <input
             type="number"
             value={threshold}
             onChange={e => setThreshold(+e.target.value)}
             min={0}
-            style={{
-              flex: 1, height: 46, background: 'transparent', border: 0, outline: 0,
-              font: '700 24px/1 var(--font-display)', color: 'var(--chalk)', fontVariantNumeric: 'tabular-nums',
-            }}
+            className="flex-1 h-[46px] bg-transparent border-0 outline-none font-display text-[24px] leading-none font-bold text-chalk [font-variant-numeric:tabular-nums]"
           />
         </div>
 
         {/* Repeat */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 22 }}>
+        <div className="flex items-center gap-[10px] mb-[22px]">
           <input
             id="repeatMode"
             type="checkbox"
             checked={repeatMode}
             onChange={e => setRepeatMode(e.target.checked)}
-            style={{ width: 16, height: 16, accentColor: 'var(--gold)', cursor: 'pointer' }}
+            className="w-4 h-4 cursor-pointer [accent-color:var(--gold)]"
           />
-          <label htmlFor="repeatMode" style={{ font: '500 13px/1 var(--font-display)', color: 'var(--bone)', cursor: 'pointer' }}>
+          <label htmlFor="repeatMode" className="font-sans text-[13px] leading-none font-medium text-bone cursor-pointer">
             repeat (re-arm after each trigger)
           </label>
         </div>
 
         {/* Summary */}
-        <div style={{
-          padding: '12px 14px', background: 'var(--ink-3)', border: '1px solid var(--line)',
-          borderRadius: 8, font: '500 11px/1.5 var(--font-mono)', color: 'var(--mute)', marginBottom: 18,
-        }}>
+        <div className="p-[12px_14px] bg-ink-3 border border-line rounded-lg font-mono text-[11px] leading-[1.5] text-mute mb-[18px]">
           notify when{' '}
-          <span style={{ color: 'var(--gold)' }}>
+          <span className="text-gold">
             {brandLabel} · {goldTypeLabel} {cond === 'gte' ? '≥' : '≤'} ₫{threshold.toLocaleString('en-US')}
           </span>
           . repeat: {repeatMode ? 'yes' : 'no'}
@@ -161,26 +143,22 @@ export function AddAlertModal({ open, onClose }: Props) {
 
         {/* Error */}
         {error && (
-          <div style={{
-            padding: '10px 14px', background: 'rgba(229,72,77,0.12)', border: '1px solid rgba(229,72,77,0.35)',
-            borderRadius: 8, font: '500 12px/1.5 var(--font-mono)', color: 'var(--down)', marginBottom: 16,
-          }}>
+          <div className="p-[10px_14px] bg-[rgba(229,72,77,0.12)] border border-[rgba(229,72,77,0.35)] rounded-lg font-mono text-[12px] leading-[1.5] text-down mb-4">
             {error}
           </div>
         )}
 
         {/* Buttons */}
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div className="flex gap-[10px]">
           <button
             type="button"
             onClick={onClose}
             disabled={createAlert.isPending}
-            style={{
-              flex: 1, height: 46, background: 'var(--ink-3)', border: '1px solid var(--line)',
-              borderRadius: 10, cursor: 'pointer', font: '700 14px/1 var(--font-mono)',
-              color: 'var(--chalk)', letterSpacing: '0.04em', textTransform: 'uppercase',
-              opacity: createAlert.isPending ? 0.5 : 1,
-            }}
+            className={cn(
+              'flex-1 h-[46px] bg-ink-3 border border-line rounded-[10px] cursor-pointer',
+              'font-mono text-[14px] leading-none font-bold text-chalk tracking-[0.04em] uppercase',
+              createAlert.isPending && 'opacity-50',
+            )}
           >
             cancel
           </button>
@@ -188,24 +166,17 @@ export function AddAlertModal({ open, onClose }: Props) {
             type="button"
             onClick={handleSubmit}
             disabled={createAlert.isPending}
-            style={{
-              flex: 2, height: 46,
-              background: createAlert.isPending ? 'var(--ink-3)' : 'var(--gold)',
-              border: `1px solid ${createAlert.isPending ? 'var(--line)' : 'var(--gold)'}`,
-              borderRadius: 10, cursor: createAlert.isPending ? 'default' : 'pointer',
-              font: '700 14px/1 var(--font-mono)',
-              color: createAlert.isPending ? 'var(--mute)' : '#0B0B0F',
-              letterSpacing: '0.04em', textTransform: 'uppercase',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            }}
+            className={cn(
+              'flex-[2] h-[46px] rounded-[10px] font-mono text-[14px] leading-none font-bold tracking-[0.04em] uppercase',
+              'flex items-center justify-center gap-2',
+              createAlert.isPending
+                ? 'bg-ink-3 border border-line text-mute cursor-default'
+                : 'bg-gold border border-gold text-gold-ink cursor-pointer',
+            )}
           >
             {createAlert.isPending ? (
               <>
-                <span style={{
-                  width: 14, height: 14, border: '2px solid var(--mute)',
-                  borderTopColor: 'var(--gold)', borderRadius: '50%',
-                  animation: 'spin 0.6s linear infinite', display: 'inline-block',
-                }}/>
+                <span className="w-[14px] h-[14px] border-2 border-mute border-t-gold rounded-full animate-spin inline-block"/>
                 creating…
               </>
             ) : 'create alert'}

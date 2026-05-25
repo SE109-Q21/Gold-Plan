@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { useLatestDigest } from '@/lib/digest.api';
+import { cn } from '@/lib/utils';
 
 function todayKey(): string {
   return `digest_dismissed_${new Date().toISOString().slice(0, 10)}`;
@@ -29,7 +30,6 @@ export function DigestCard() {
     return !!sessionStorage.getItem(todayKey());
   });
 
-  // Only render for logged-in users with digest data
   if (!user || !digest) return null;
   if (dismissed) return null;
 
@@ -38,82 +38,41 @@ export function DigestCard() {
     setDismissed(true);
   }
 
-  const pctColor = digest.pctChangeSjc >= 0 ? 'var(--up)' : 'var(--down)';
-  const pctSign = digest.pctChangeSjc >= 0 ? '+' : '';
+  const isUp = digest.pctChangeSjc >= 0;
+  const pctSign = isUp ? '+' : '';
 
   return (
-    <div style={{
-      background: 'var(--ink-2)',
-      border: '1px solid var(--line)',
-      borderRadius: 8,
-      padding: '16px 20px',
-      marginBottom: 20,
-    }}>
+    <div className="bg-ink-2 border border-line rounded-lg p-[16px_20px] mb-5">
       {/* Collapsed row */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: 12,
-      }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          font: '600 13px/1 var(--font-display)',
-          color: 'var(--chalk)',
-        }}>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 font-display text-[13px] leading-none font-semibold text-chalk">
           <span>📊</span>
           <span>
             Today&apos;s Digest
-            <span style={{ color: 'var(--mute)', marginLeft: 6 }}>·</span>
-            <span className="mono" style={{ fontSize: 11, color: 'var(--mute)', marginLeft: 6 }}>
-              {fmtDate(digest.date)}
-            </span>
+            <span className="text-mute ml-[6px]">·</span>
+            <span className="font-mono text-[11px] text-mute ml-[6px]">{fmtDate(digest.date)}</span>
           </span>
-          <span
-            className="mono"
-            style={{
-              fontSize: 10,
-              fontWeight: 700,
-              color: pctColor,
-              background: digest.pctChangeSjc >= 0 ? 'rgba(88,200,150,0.10)' : 'rgba(229,72,77,0.10)',
-              border: `1px solid ${pctColor}`,
-              borderRadius: 4,
-              padding: '2px 6px',
-            }}
-          >
+          <span className={cn(
+            'font-mono text-[10px] font-bold border rounded px-[6px] py-[2px]',
+            isUp
+              ? 'text-up bg-[rgba(88,200,150,0.10)] border-up'
+              : 'text-down bg-[rgba(229,72,77,0.10)] border-down',
+          )}>
             {pctSign}{digest.pctChangeSjc.toFixed(2)}%
           </span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div className="flex items-center gap-2">
           <button
             onClick={() => setExpanded(e => !e)}
-            style={{
-              background: 'transparent',
-              border: '1px solid var(--line)',
-              borderRadius: 4,
-              padding: '4px 10px',
-              font: '600 11px/1 var(--font-mono)',
-              color: 'var(--bone)',
-              cursor: 'pointer',
-              letterSpacing: '0.04em',
-            }}
+            className="bg-transparent border border-line rounded px-[10px] py-1 font-mono text-[11px] leading-none font-semibold text-bone cursor-pointer tracking-[0.04em]"
           >
             {expanded ? '▲ collapse' : '▼ expand'}
           </button>
           <button
             onClick={handleDismiss}
             aria-label="Dismiss digest"
-            style={{
-              background: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              color: 'var(--mute)',
-              font: '500 14px/1 var(--font-mono)',
-              padding: '2px 4px',
-            }}
+            className="bg-transparent border-0 cursor-pointer text-mute font-mono text-[14px] leading-none font-medium px-1 py-[2px]"
           >
             ✕
           </button>
@@ -122,149 +81,56 @@ export function DigestCard() {
 
       {/* Expanded content */}
       {expanded && (
-        <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--hairline)' }}>
-          {/* Date heading */}
-          <div style={{
-            font: '700 15px/1 var(--font-display)',
-            color: 'var(--chalk)',
-            marginBottom: 14,
-          }}>
+        <div className="mt-4 pt-4 border-t border-hairline">
+          <div className="font-display text-[15px] leading-none font-bold text-chalk mb-[14px]">
             Market Digest — {fmtDate(digest.date)}
           </div>
 
           {/* 3-column price row */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr 1fr',
-            gap: 12,
-            marginBottom: 14,
-          }}>
-            {/* SJC Buy */}
-            <div style={{
-              background: 'var(--ink-3)',
-              border: '1px solid var(--line)',
-              borderRadius: 8,
-              padding: '10px 14px',
-            }}>
-              <div className="mono" style={{
-                fontSize: 9,
-                color: 'var(--mute)',
-                letterSpacing: '0.14em',
-                textTransform: 'uppercase',
-                marginBottom: 6,
-              }}>
-                SJC Buy
+          <div className="grid grid-cols-3 gap-3 mb-[14px]">
+            {[
+              { label: 'SJC Buy',  value: fmtVnd(digest.sjcBuyVnd) },
+              { label: 'SJC Sell', value: fmtVnd(digest.sjcSellVnd) },
+              { label: 'XAU/USD',  value: `$${digest.xauUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` },
+            ].map(({ label, value }) => (
+              <div key={label} className="bg-ink-3 border border-line rounded-lg p-[10px_14px]">
+                <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-[6px]">{label}</div>
+                <div className="font-display text-[16px] leading-none font-bold [font-variant-numeric:tabular-nums]">{value}</div>
               </div>
-              <div style={{
-                font: '700 16px/1 var(--font-display)',
-                fontVariantNumeric: 'tabular-nums',
-              }}>
-                {fmtVnd(digest.sjcBuyVnd)}
-              </div>
-            </div>
-
-            {/* SJC Sell */}
-            <div style={{
-              background: 'var(--ink-3)',
-              border: '1px solid var(--line)',
-              borderRadius: 8,
-              padding: '10px 14px',
-            }}>
-              <div className="mono" style={{
-                fontSize: 9,
-                color: 'var(--mute)',
-                letterSpacing: '0.14em',
-                textTransform: 'uppercase',
-                marginBottom: 6,
-              }}>
-                SJC Sell
-              </div>
-              <div style={{
-                font: '700 16px/1 var(--font-display)',
-                fontVariantNumeric: 'tabular-nums',
-              }}>
-                {fmtVnd(digest.sjcSellVnd)}
-              </div>
-            </div>
-
-            {/* XAU/USD */}
-            <div style={{
-              background: 'var(--ink-3)',
-              border: '1px solid var(--line)',
-              borderRadius: 8,
-              padding: '10px 14px',
-            }}>
-              <div className="mono" style={{
-                fontSize: 9,
-                color: 'var(--mute)',
-                letterSpacing: '0.14em',
-                textTransform: 'uppercase',
-                marginBottom: 6,
-              }}>
-                XAU/USD
-              </div>
-              <div style={{
-                font: '700 16px/1 var(--font-display)',
-                fontVariantNumeric: 'tabular-nums',
-              }}>
-                ${digest.xauUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </div>
-            </div>
+            ))}
           </div>
 
           {/* % change badge */}
-          <div style={{ marginBottom: 12 }}>
-            <span
-              className="mono"
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                color: pctColor,
-                background: digest.pctChangeSjc >= 0 ? 'rgba(88,200,150,0.10)' : 'rgba(229,72,77,0.10)',
-                border: `1px solid ${pctColor}`,
-                borderRadius: 4,
-                padding: '4px 10px',
-              }}
-            >
+          <div className="mb-3">
+            <span className={cn(
+              'font-mono text-[11px] font-bold border rounded px-[10px] py-1',
+              isUp
+                ? 'text-up bg-[rgba(88,200,150,0.10)] border-up'
+                : 'text-down bg-[rgba(229,72,77,0.10)] border-down',
+            )}>
               SJC {pctSign}{digest.pctChangeSjc.toFixed(2)}% vs previous
             </span>
           </div>
 
           {/* Highlight */}
-          <div style={{
-            font: '600 13px/1.5 var(--font-display)',
-            color: 'var(--chalk)',
-            marginBottom: digest.aiSummary ? 10 : 0,
-          }}>
+          <div className={cn(
+            'font-display text-[13px] leading-[1.5] font-semibold text-chalk',
+            digest.aiSummary && 'mb-[10px]',
+          )}>
             {digest.highlight}
           </div>
 
           {/* AI Summary */}
           {digest.aiSummary && (
-            <div style={{
-              font: 'italic 500 12px/1.6 var(--font-display)',
-              color: 'var(--mute)',
-              paddingTop: 10,
-              borderTop: '1px solid var(--hairline)',
-            }}>
+            <div className="italic font-display text-[12px] leading-[1.6] font-medium text-mute pt-[10px] border-t border-hairline">
               {digest.aiSummary}
             </div>
           )}
 
-          {/* Collapse button */}
-          <div style={{ marginTop: 14, textAlign: 'center' }}>
+          <div className="mt-[14px] text-center">
             <button
               onClick={() => setExpanded(false)}
-              style={{
-                background: 'transparent',
-                border: '1px solid var(--line)',
-                borderRadius: 4,
-                padding: '5px 16px',
-                font: '600 11px/1 var(--font-mono)',
-                color: 'var(--mute)',
-                cursor: 'pointer',
-                letterSpacing: '0.04em',
-              }}
+              className="bg-transparent border border-line rounded px-4 py-[5px] font-mono text-[11px] leading-none font-semibold text-mute cursor-pointer tracking-[0.04em]"
             >
               ▲ collapse
             </button>

@@ -17,6 +17,7 @@ import { DigestCard } from '@/components/DigestCard';
 import { ForecastVoteWidget } from '@/components/ForecastVoteWidget';
 import { HeatIndexHistoryChart } from '@/components/HeatIndexHistoryChart';
 import { ArbitrageWidget } from '@/components/ArbitrageWidget';
+import { cn } from '@/lib/utils';
 import {
   DndContext,
   closestCenter,
@@ -58,54 +59,44 @@ function HeatIndexGauge() {
   const score = data?.value ?? 0;
   const label = data?.category ?? '—';
   const zoneColor = score <= 33 ? '#60A5FA' : score <= 66 ? '#FBBF24' : '#EF4444';
-  const arcLen = Math.PI * 50; // ≈ 157
+  const arcLen = Math.PI * 50;
   const visibleArc = (score / 100) * arcLen;
-
   const needleAngle = (score / 100) * Math.PI;
   const needleX = 60 - Math.cos(needleAngle) * 50;
   const needleY = 66 - Math.sin(needleAngle) * 50;
-
   const tooltipContent = data
     ? `Velocity: ${data.priceVelocity?.toFixed(1) ?? '—'}% · Spread: ${data.spreadSize != null ? (data.spreadSize / 1_000_000).toFixed(2) : '—'}M₫ · Crossings: ${data.thresholdCrossings ?? '—'}`
     : '';
 
   if (isLoading) return (
-    <div style={{ height: 76, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--mute)', font: '500 12px/1 var(--font-mono)' }}>
+    <div className="h-[76px] flex items-center justify-center text-mute font-mono text-[12px] leading-none font-medium">
       loading…
     </div>
   );
 
   return (
-    <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 22 }}>
+    <div className="relative flex items-center gap-[22px]">
       <svg width="120" height="76" viewBox="0 0 120 76">
-        {/* Background arc */}
         <path d="M10 66 A50 50 0 0 1 110 66" stroke="#22232B" strokeWidth="8" fill="none" strokeLinecap="round"/>
-        {/* Colored arc up to score */}
         <path d="M10 66 A50 50 0 0 1 110 66"
           stroke={zoneColor} strokeWidth="8" fill="none" strokeLinecap="round"
           strokeDasharray={`${visibleArc} ${arcLen}`}
           strokeDashoffset="0"
         />
-        {/* Needle dot */}
         <circle cx={needleX} cy={needleY} r="7" fill={zoneColor} stroke="#0B0B0F" strokeWidth="2"/>
       </svg>
       <div>
-        <div style={{ font: '800 44px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>
-          {score}
-        </div>
-        <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '0.12em', textTransform: 'uppercase', marginTop: 4 }}>
-          / 100 · {label.toLowerCase()}
-        </div>
+        <div className="text-[44px] leading-none font-extrabold font-sans tabular-nums">{score}</div>
+        <div className="font-mono text-[10px] text-mute tracking-[0.12em] uppercase mt-1">/ 100 · {label.toLowerCase()}</div>
       </div>
-      {/* "?" info icon with tooltip */}
       <span
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
-        style={{ position: 'absolute', top: 0, right: 0, cursor: 'help', font: '700 11px/1 var(--font-mono)', color: 'var(--mute)', padding: '2px 6px', border: '1px solid var(--line)', borderRadius: 4 }}
+        className="absolute top-0 right-0 cursor-help font-mono text-[11px] leading-none font-bold text-mute px-[6px] py-[2px] border border-line rounded"
       >
         ?
         {showTooltip && tooltipContent && (
-          <span style={{ position: 'absolute', bottom: '120%', right: 0, background: 'var(--ink-3)', border: '1px solid var(--line)', borderRadius: 8, padding: '8px 12px', font: '500 11px/1.5 var(--font-mono)', color: 'var(--chalk)', whiteSpace: 'nowrap', zIndex: 100 }}>
+          <span className="absolute bottom-[120%] right-0 bg-ink-3 border border-line rounded-lg px-3 py-2 font-mono text-[11px] leading-[1.5] font-medium text-chalk whitespace-nowrap z-[100]">
             {tooltipContent}
           </span>
         )}
@@ -122,11 +113,11 @@ function HeatIndexStats() {
     { l: 'Crossings', v: data ? `${data.thresholdCrossings}` : '—' },
   ];
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginTop: 18, paddingTop: 14, borderTop: '1px solid var(--hairline)' }}>
+    <div className="grid grid-cols-3 gap-3 mt-[18px] pt-[14px] border-t border-hairline">
       {stats.map(s => (
         <div key={s.l}>
-          <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 4 }}>{s.l}</div>
-          <div style={{ font: '700 16px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>{s.v}</div>
+          <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-1">{s.l}</div>
+          <div className="text-[16px] leading-none font-bold font-sans tabular-nums">{s.v}</div>
         </div>
       ))}
     </div>
@@ -135,65 +126,48 @@ function HeatIndexStats() {
 
 function ExchangeRateCard() {
   const { data: fx } = useExchangeRates();
-
   const sourceBadgeColor =
-    fx?.source === 'live' ? 'var(--live)' :
-    fx?.source === 'stale' ? 'var(--gold)' :
-    'var(--mute)';
+    fx?.source === 'live' ? 'text-live' :
+    fx?.source === 'stale' ? 'text-gold' :
+    'text-mute';
 
   return (
-    <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, padding: '18px 24px' }}>
-      {/* Card header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <span style={{ font: '700 9px/1 var(--font-mono)', color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase' }}>
-          exchange rates
-        </span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+    <div className="bg-ink-2 border border-line rounded-[14px] px-6 py-[18px]">
+      <div className="flex justify-between items-center mb-4">
+        <span className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase leading-none font-bold">exchange rates</span>
+        <div className="flex items-center gap-2">
           {fx && (
             <>
-              <span style={{ font: '700 9px/1 var(--font-mono)', color: sourceBadgeColor, letterSpacing: '0.14em', textTransform: 'uppercase' }}>
+              <span className={cn('font-mono text-[9px] leading-none font-bold tracking-[0.14em] uppercase', sourceBadgeColor)}>
                 {fx.source}
               </span>
-              <span style={{ font: '700 9px/1 var(--font-mono)', color: 'var(--mute)', letterSpacing: '0.08em' }}>
+              <span className="font-mono text-[9px] text-mute tracking-[0.08em] leading-none font-bold">
                 {minsAgo(fx.updatedAt)}
               </span>
             </>
           )}
-          {!fx && (
-            <span style={{ font: '700 9px/1 var(--font-mono)', color: 'var(--mute)', letterSpacing: '0.08em' }}>loading…</span>
-          )}
+          {!fx && <span className="font-mono text-[9px] text-mute tracking-[0.08em] leading-none font-bold">loading…</span>}
         </div>
       </div>
-
-      {/* Two-column rate display */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-        {/* USD/VND */}
-        <div style={{ padding: 14, background: 'var(--ink-3)', border: '1px solid var(--line)', borderRadius: 10 }}>
-          <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 6 }}>
-            usd / vnd
-          </div>
-          <div style={{ font: '700 22px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="p-[14px] bg-ink-3 border border-line rounded-[10px]">
+          <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-[6px]">usd / vnd</div>
+          <div className="text-[22px] leading-none font-bold font-sans tabular-nums">
             {fx ? fx.usdVnd.toLocaleString('en-US', { maximumFractionDigits: 0 }) : '—'}
           </div>
-          <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', marginTop: 6 }}>per 1 usd</div>
+          <div className="font-mono text-[10px] text-mute mt-[6px]">per 1 usd</div>
         </div>
-
-        {/* EUR/VND */}
-        <div style={{ padding: 14, background: 'var(--ink-3)', border: '1px solid var(--line)', borderRadius: 10 }}>
-          <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 6 }}>
-            eur / vnd
-          </div>
-          <div style={{ font: '700 22px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>
+        <div className="p-[14px] bg-ink-3 border border-line rounded-[10px]">
+          <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-[6px]">eur / vnd</div>
+          <div className="text-[22px] leading-none font-bold font-sans tabular-nums">
             {fx ? fx.eurVnd.toLocaleString('en-US', { maximumFractionDigits: 0 }) : '—'}
           </div>
-          <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', marginTop: 6 }}>per 1 eur</div>
+          <div className="font-mono text-[10px] text-mute mt-[6px]">per 1 eur</div>
         </div>
       </div>
     </div>
   );
 }
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
 
 function daysAgo(iso: string): string {
   const d = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
@@ -207,18 +181,10 @@ function PinIcon({ pinned, onClick }: { pinned: boolean; onClick: (e: React.Mous
     <button
       onClick={onClick}
       title={pinned ? 'Unpin' : 'Pin'}
-      style={{
-        background: 'transparent',
-        border: 'none',
-        cursor: 'pointer',
-        padding: '2px 4px',
-        display: 'flex',
-        alignItems: 'center',
-        color: pinned ? 'var(--gold)' : 'var(--mute)',
-        fontSize: 14,
-        lineHeight: 1,
-        flexShrink: 0,
-      }}
+      className={cn(
+        'bg-transparent border-none cursor-pointer px-1 py-0.5 flex items-center text-[14px] leading-none shrink-0',
+        pinned ? 'text-gold' : 'text-mute',
+      )}
     >
       📌
     </button>
@@ -247,20 +213,7 @@ function DragHandle({ dragHandleProps }: { dragHandleProps?: React.HTMLAttribute
     <div
       {...dragHandleProps}
       title="Drag to reorder"
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: 20,
-        height: 20,
-        cursor: 'grab',
-        color: 'var(--mute)',
-        fontSize: 13,
-        flexShrink: 0,
-        opacity: 0.5,
-        userSelect: 'none',
-        touchAction: 'none',
-      }}
+      className="flex items-center justify-center w-5 h-5 cursor-grab text-mute text-[13px] shrink-0 opacity-50 select-none touch-none"
     >
       ⠿
     </div>
@@ -274,19 +227,17 @@ function BrowsingBadge({ brand, goldType }: { brand: string; goldType: string })
     ? new Intl.NumberFormat('vi-VN').format(ctx.buyPrice) + '₫'
     : null;
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginLeft: 6 }}>
-      <span className="mono" style={{ fontSize: 9, color: 'var(--mute)' }}>
+    <span className="inline-flex items-center gap-1 ml-[6px]">
+      <span className="font-mono text-[9px] text-mute">
         Đã xem {daysAgo(ctx.lastViewedAt)}
         {formattedPrice && <> · {formattedPrice}</>}
       </span>
       {ctx.deltaPct !== null && (
         <span
-          className="mono"
-          style={{
-            fontSize: 9,
-            color: ctx.deltaPct >= 0 ? 'var(--up)' : 'var(--down)',
-            fontWeight: 700,
-          }}
+          className={cn(
+            'font-mono text-[9px] font-bold',
+            ctx.deltaPct >= 0 ? 'text-up' : 'text-down',
+          )}
         >
           ({ctx.deltaPct >= 0 ? '+' : ''}{ctx.deltaPct.toFixed(2)}%)
         </span>
@@ -302,61 +253,42 @@ function PriceRow({
   return (
     <div
       onClick={onClick}
+      className={cn(
+        'grid px-6 py-4 items-center',
+        rowIndex !== 0 && 'border-t border-hairline',
+        isBestBuy ? 'bg-[rgba(212,175,55,0.04)]' : 'bg-transparent',
+        isLoggedIn ? 'cursor-pointer' : 'cursor-default',
+      )}
       style={{
-        display: 'grid',
         gridTemplateColumns: (isPinned && isLoggedIn ? '20px ' : '') + '2fr 1fr 1fr 1fr' + (isLoggedIn ? ' 32px' : ''),
-        padding: '16px 24px',
-        alignItems: 'center',
-        borderTop: rowIndex === 0 ? 'none' : '1px solid var(--hairline)',
-        background: isBestBuy ? 'rgba(212,175,55,0.04)' : 'transparent',
-        cursor: isLoggedIn ? 'pointer' : 'default',
       }}
     >
-      {isPinned && isLoggedIn && (
-        <DragHandle dragHandleProps={dragHandleProps} />
-      )}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div style={{
-          width: 36, height: 36, borderRadius: 6,
-          background: 'var(--ink-3)', border: '1px solid var(--line)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          font: '800 11px/1 var(--font-mono)', color: 'var(--gold)', letterSpacing: '0.06em',
-        }}>
+      {isPinned && isLoggedIn && <DragHandle dragHandleProps={dragHandleProps} />}
+      <div className="flex items-center gap-3">
+        <div className="w-9 h-9 rounded-md bg-ink-3 border border-line flex items-center justify-center font-mono text-[11px] font-extrabold text-gold tracking-[0.06em]">
           {brand.slice(0, 2)}
         </div>
-        <div style={{ font: '700 14px/1.1 var(--font-display)' }}>{brand}</div>
+        <div className="text-[14px] leading-[1.1] font-bold font-sans">{brand}</div>
       </div>
-      <div style={{ textAlign: 'right' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-          <div style={{ font: '700 15px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>
-            {fmt(buyPrice)}
-          </div>
+      <div className="text-right">
+        <div className="inline-flex items-center flex-wrap justify-end">
+          <div className="text-[15px] leading-none font-bold font-sans tabular-nums">{fmt(buyPrice)}</div>
           {isLoggedIn && <BrowsingBadge brand={brand} goldType={goldType} />}
         </div>
         {isBestBuy && (
-          <div className="mono" style={{ fontSize: 9, color: 'var(--up)', letterSpacing: '0.14em', textTransform: 'uppercase', marginTop: 4 }}>
-            ▲ best
-          </div>
+          <div className="font-mono text-[9px] text-up tracking-[0.14em] uppercase mt-1">▲ best</div>
         )}
       </div>
-      <div style={{ textAlign: 'right' }}>
-        <div style={{
-          font: '700 15px/1 var(--font-display)',
-          fontVariantNumeric: 'tabular-nums',
-          color: isBestSell ? 'var(--gold)' : 'var(--chalk)',
-        }}>
+      <div className="text-right">
+        <div className={cn('text-[15px] leading-none font-bold font-sans tabular-nums', isBestSell ? 'text-gold' : 'text-chalk')}>
           {fmt(sellPrice)}
         </div>
         {isBestSell && (
-          <div className="mono" style={{ fontSize: 9, color: 'var(--gold)', letterSpacing: '0.14em', textTransform: 'uppercase', marginTop: 4 }}>
-            ▼ lowest
-          </div>
+          <div className="font-mono text-[9px] text-gold tracking-[0.14em] uppercase mt-1">▼ lowest</div>
         )}
       </div>
-      <div style={{ textAlign: 'right' }}>
-        <div className="mono" style={{ fontSize: 13, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
-          {fmt(sellPrice - buyPrice)}
-        </div>
+      <div className="text-right">
+        <div className="font-mono text-[13px] font-bold tabular-nums">{fmt(sellPrice - buyPrice)}</div>
       </div>
       {isLoggedIn && (
         <PinIcon
@@ -371,8 +303,6 @@ function PriceRow({
     </div>
   );
 }
-
-// ─── SortablePriceRow ─────────────────────────────────────────────────────────
 
 type SortablePriceRowProps = Omit<PriceRowProps, 'dragHandleProps'> & { id: string };
 
@@ -396,10 +326,7 @@ function SortablePriceRow(props: SortablePriceRowProps) {
 
   return (
     <div ref={setNodeRef} style={style}>
-      <PriceRow
-        {...props}
-        dragHandleProps={{ ...attributes, ...listeners }}
-      />
+      <PriceRow {...props} dragHandleProps={{ ...attributes, ...listeners }} />
     </div>
   );
 }
@@ -448,7 +375,6 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
   const removePin = useRemovePin();
   const reorderPins = useReorderPins();
 
-  // Local order state for pinned brands (used by DnD)
   const [pinnedOrder, setPinnedOrder] = useState<Array<{ brand: string; goldType: string }> | null>(null);
 
   const sensors = useSensors(
@@ -459,11 +385,9 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
   const displayData = chartData.length > 1 ? chartData : [2280, 2295, 2310, 2325, 2345];
   const hoverVal = hoverPrice ?? displayData[displayData.length - 1];
 
-  // Comparison brands
   const compRow = comparison?.[0];
   const compBrands = compRow?.brands ?? [];
   const compGoldType = compRow?.goldType ?? 'MIEN_SJC';
-  // Fall back to domestic prices for brand spreads (unused but kept for future)
   void domestic;
 
   const FALLBACK_BRANDS: ComparisonBrandDto[] = [
@@ -484,8 +408,6 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
     );
   }
 
-  // Build the sorted list of pinned brand+goldType keys from server data,
-  // falling back to local state during an active drag session
   const serverPinnedItems = (personalisationOrder ?? [])
     .filter((p) => p.isPinned)
     .sort((a, b) => (a.pinOrder ?? 0) - (b.pinOrder ?? 0))
@@ -513,114 +435,144 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
   );
 
   return (
-    <div style={{ padding: '24px 28px 40px' }}>
+    <div className="px-7 pt-6 pb-10">
       <DigestCard />
-    <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 20 }}>
-      {/* ── Left column */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 20, minWidth: 0 }}>
+      <div className="grid gap-5" style={{ gridTemplateColumns: '1.6fr 1fr' }}>
+        {/* ── Left column */}
+        <div className="flex flex-col gap-5 min-w-0">
 
-        {/* Hero price card */}
-        <div className="gt-card" style={{
-          background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14,
-          padding: '26px 28px 22px', overflow: 'hidden',
-          clipPath: 'polygon(0 0, calc(100% - 22px) 0, 100% 22px, 100% 100%, 0 100%)',
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
-            <span className="stamp">XAU/USD · london spot · 24K</span>
-            <span className="mono" style={{ fontSize: 11, color: 'var(--mute)' }}>
-              {intl ? 'live' : 'loading…'}
-            </span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 32 }}>
-            <div>
-              <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 8 }}>spot · per troy oz</div>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-                <span style={{ font: '800 76px/0.95 var(--font-display)', letterSpacing: '-0.035em', fontVariantNumeric: 'tabular-nums' }}>
-                  ${intl ? Math.floor(intl.spotPriceUsd).toLocaleString() : '2,345'}
-                </span>
-                <span style={{ font: '800 44px/1 var(--font-display)', color: 'var(--gold)', fontVariantNumeric: 'tabular-nums' }}>
-                  .{intl ? String(Math.round(intl.spotPriceUsd * 100) % 100).padStart(2, '0') : '67'}
-                </span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 12 }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, font: '700 14px/1 var(--font-mono)', color: change1D != null && change1D < 0 ? 'var(--down)' : 'var(--up)', background: change1D != null && change1D < 0 ? 'rgba(229,72,77,0.10)' : 'rgba(88,200,150,0.10)', padding: '7px 10px', borderRadius: 4 }}>
-                  <svg width="11" height="11" viewBox="0 0 10 10"><path d={change1D != null && change1D < 0 ? 'M5 9l4-6H1z' : 'M5 1l4 6H1z'} fill={change1D != null && change1D < 0 ? 'var(--down)' : 'var(--up)'}/></svg>
-                  {change1D != null ? (change1D >= 0 ? '+' : '') + change1D.toFixed(2) + '%' : '—'}
-                </span>
-                <span className="mono" style={{ fontSize: 11, color: 'var(--mute)' }}>24h</span>
-              </div>
-            </div>
-            <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <div style={{ padding: 14, background: 'var(--ink-3)', border: '1px solid var(--line)', borderRadius: 10 }}>
-                <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 6 }}>per tael · vnd</div>
-                <div style={{ font: '700 22px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>
-                  {intl ? (intl.spotPriceVnd / 1_000_000).toFixed(2) : '78.92'}<span style={{ color: 'var(--mute)', fontSize: 14, marginLeft: 4 }}>M₫</span>
-                </div>
-                <div className="mono" style={{ fontSize: 10, color: change1D != null && change1D < 0 ? 'var(--down)' : 'var(--up)', marginTop: 6 }}>{change1D != null ? (change1D >= 0 ? '+' : '') + change1D.toFixed(2) + '%' : '—'}</div>
-              </div>
-              <div style={{ padding: 14, background: 'var(--ink-3)', border: '1px solid var(--line)', borderRadius: 10 }}>
-                <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 6 }}>usd / vnd</div>
-                <div style={{ font: '700 22px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>
-                  {intl ? intl.exchangeRate.toLocaleString('en-US', { maximumFractionDigits: 0 }) : '24,815'}
-                </div>
-                <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', marginTop: 6 }}>—</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Exchange Rate card */}
-        <ExchangeRateCard />
-
-        {/* Chart card */}
-        <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, padding: 24 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-            <div>
-              <h3 style={{ font: '700 18px/1 var(--font-display)', margin: 0, letterSpacing: '-0.01em' }}>Price history</h3>
-              <div className="mono" style={{ fontSize: 11, color: 'var(--mute)', marginTop: 6 }}>
-                SJC Miếng · <span style={{ color: 'var(--chalk)' }}>{fmt(hoverVal)}</span>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 4 }}>
-              {RANGE_LABELS.map(r => (
-                <button key={r} onClick={() => setRange(r)} style={{
-                  display: 'inline-flex', alignItems: 'center', height: 30, padding: '0 10px',
-                  border: `1px solid ${range === r ? 'var(--gold)' : 'var(--line)'}`,
-                  borderRadius: 0, background: range === r ? 'var(--gold)' : 'transparent',
-                  color: range === r ? '#0B0B0F' : 'var(--bone)',
-                  font: '700 11px/1 var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase',
-                  cursor: 'pointer',
-                }}>{r}</button>
-              ))}
-            </div>
-          </div>
-          <PriceChart history={history ?? []} range={range} onHoverPrice={setHoverPrice} chartId="overview-pc" />
-        </div>
-
-        {/* Brand spreads table */}
-        <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, padding: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 24px', borderBottom: '1px solid var(--hairline)' }}>
-            <h3 style={{ font: '700 18px/1 var(--font-display)', margin: 0, letterSpacing: '-0.01em' }}>Domestic brand spreads</h3>
-            <span className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>vnd per tael · best highlighted</span>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr' + (isLoggedIn ? ' 32px' : ''), padding: '12px 24px', font: '700 10px/1 var(--font-mono)', color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase', background: 'var(--ink-3)', borderBottom: '1px solid var(--hairline)' }}>
-            <span>brand</span><span style={{ textAlign: 'right' }}>buy</span><span style={{ textAlign: 'right' }}>sell</span><span style={{ textAlign: 'right' }}>spread</span>
-            {isLoggedIn && <span/>}
-          </div>
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
+          {/* Hero price card */}
+          <div
+            className="bg-ink-2 border border-line rounded-[14px] px-7 pt-[26px] pb-[22px] overflow-hidden"
+            style={{ clipPath: 'polygon(0 0, calc(100% - 22px) 0, 100% 22px, 100% 100%, 0 100%)' }}
           >
-            <SortableContext items={pinnedIds} strategy={verticalListSortingStrategy}>
-              {displayBrands.map((b, i) => {
-                const pinned = isPinnedRow(b.brand, compGoldType);
-                const id = `${b.brand}__${compGoldType}`;
-                if (pinned && isLoggedIn) {
+            <div className="flex justify-between items-center mb-[18px]">
+              <span className="stamp">XAU/USD · london spot · 24K</span>
+              <span className="font-mono text-[11px] text-mute">{intl ? 'live' : 'loading…'}</span>
+            </div>
+            <div className="flex items-end gap-8">
+              <div>
+                <div className="font-mono text-[10px] text-mute tracking-[0.14em] uppercase mb-2">spot · per troy oz</div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-[76px] leading-[0.95] font-extrabold font-sans tracking-[-0.035em] tabular-nums">
+                    ${intl ? Math.floor(intl.spotPriceUsd).toLocaleString() : '2,345'}
+                  </span>
+                  <span className="text-[44px] leading-none font-extrabold font-sans text-gold tabular-nums">
+                    .{intl ? String(Math.round(intl.spotPriceUsd * 100) % 100).padStart(2, '0') : '67'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 mt-3">
+                  <span className={cn(
+                    'inline-flex items-center gap-[6px] font-mono text-[14px] leading-none font-bold px-[10px] py-[7px] rounded',
+                    change1D != null && change1D < 0
+                      ? 'text-down bg-[rgba(229,72,77,0.10)]'
+                      : 'text-up bg-[rgba(88,200,150,0.10)]',
+                  )}>
+                    <svg width="11" height="11" viewBox="0 0 10 10">
+                      <path d={change1D != null && change1D < 0 ? 'M5 9l4-6H1z' : 'M5 1l4 6H1z'} fill={change1D != null && change1D < 0 ? 'var(--down)' : 'var(--up)'}/>
+                    </svg>
+                    {change1D != null ? (change1D >= 0 ? '+' : '') + change1D.toFixed(2) + '%' : '—'}
+                  </span>
+                  <span className="font-mono text-[11px] text-mute">24h</span>
+                </div>
+              </div>
+              <div className="flex-1 grid grid-cols-2 gap-3">
+                <div className="p-[14px] bg-ink-3 border border-line rounded-[10px]">
+                  <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-[6px]">per tael · vnd</div>
+                  <div className="text-[22px] leading-none font-bold font-sans tabular-nums">
+                    {intl ? (intl.spotPriceVnd / 1_000_000).toFixed(2) : '78.92'}
+                    <span className="text-mute text-[14px] ml-1">M₫</span>
+                  </div>
+                  <div className={cn('font-mono text-[10px] mt-[6px]', change1D != null && change1D < 0 ? 'text-down' : 'text-up')}>
+                    {change1D != null ? (change1D >= 0 ? '+' : '') + change1D.toFixed(2) + '%' : '—'}
+                  </div>
+                </div>
+                <div className="p-[14px] bg-ink-3 border border-line rounded-[10px]">
+                  <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-[6px]">usd / vnd</div>
+                  <div className="text-[22px] leading-none font-bold font-sans tabular-nums">
+                    {intl ? intl.exchangeRate.toLocaleString('en-US', { maximumFractionDigits: 0 }) : '24,815'}
+                  </div>
+                  <div className="font-mono text-[10px] text-mute mt-[6px]">—</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Exchange Rate card */}
+          <ExchangeRateCard />
+
+          {/* Chart card */}
+          <div className="bg-ink-2 border border-line rounded-[14px] p-6">
+            <div className="flex justify-between items-center mb-[14px]">
+              <div>
+                <h3 className="text-[18px] leading-none font-bold font-sans m-0 tracking-[-0.01em]">Price history</h3>
+                <div className="font-mono text-[11px] text-mute mt-[6px]">
+                  SJC Miếng · <span className="text-chalk">{fmt(hoverVal)}</span>
+                </div>
+              </div>
+              <div className="flex gap-1">
+                {RANGE_LABELS.map(r => (
+                  <button
+                    key={r}
+                    onClick={() => setRange(r)}
+                    className={cn(
+                      'inline-flex items-center h-[30px] px-[10px] border rounded-none font-mono text-[11px] leading-none font-bold tracking-[0.1em] uppercase cursor-pointer',
+                      range === r
+                        ? 'border-gold bg-gold text-gold-ink'
+                        : 'border-line bg-transparent text-bone',
+                    )}
+                  >{r}</button>
+                ))}
+              </div>
+            </div>
+            <PriceChart history={history ?? []} range={range} onHoverPrice={setHoverPrice} chartId="overview-pc" />
+          </div>
+
+          {/* Brand spreads table */}
+          <div className="bg-ink-2 border border-line rounded-[14px]">
+            <div className="flex items-center justify-between px-6 py-[18px] border-b border-hairline">
+              <h3 className="text-[18px] leading-none font-bold font-sans m-0 tracking-[-0.01em]">Domestic brand spreads</h3>
+              <span className="font-mono text-[10px] text-mute tracking-[0.12em] uppercase">vnd per tael · best highlighted</span>
+            </div>
+            <div
+              className="px-6 py-3 font-mono text-[10px] text-mute tracking-[0.14em] uppercase bg-ink-3 border-b border-hairline grid"
+              style={{ gridTemplateColumns: '2fr 1fr 1fr 1fr' + (isLoggedIn ? ' 32px' : '') }}
+            >
+              <span>brand</span>
+              <span className="text-right">buy</span>
+              <span className="text-right">sell</span>
+              <span className="text-right">spread</span>
+              {isLoggedIn && <span/>}
+            </div>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={pinnedIds} strategy={verticalListSortingStrategy}>
+                {displayBrands.map((b, i) => {
+                  const pinned = isPinnedRow(b.brand, compGoldType);
+                  const id = `${b.brand}__${compGoldType}`;
+                  if (pinned && isLoggedIn) {
+                    return (
+                      <SortablePriceRow
+                        key={b.brand}
+                        id={id}
+                        brand={b.brand}
+                        goldType={compGoldType}
+                        buyPrice={b.buyPrice}
+                        sellPrice={b.sellPrice}
+                        isBestBuy={b.isBestBuy}
+                        isBestSell={b.isBestSell}
+                        isLoggedIn={isLoggedIn}
+                        isPinned={true}
+                        onPin={() => addPin.mutate({ brand: b.brand, goldType: compGoldType })}
+                        onUnpin={() => removePin.mutate({ brand: b.brand, goldType: compGoldType })}
+                        onClick={() => handleRowClick(b.brand, compGoldType, b.buyPrice)}
+                        rowIndex={i}
+                        fmt={fmt}
+                      />
+                    );
+                  }
                   return (
-                    <SortablePriceRow
+                    <PriceRow
                       key={b.brand}
-                      id={id}
                       brand={b.brand}
                       goldType={compGoldType}
                       buyPrice={b.buyPrice}
@@ -628,7 +580,7 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
                       isBestBuy={b.isBestBuy}
                       isBestSell={b.isBestSell}
                       isLoggedIn={isLoggedIn}
-                      isPinned={true}
+                      isPinned={false}
                       onPin={() => addPin.mutate({ brand: b.brand, goldType: compGoldType })}
                       onUnpin={() => removePin.mutate({ brand: b.brand, goldType: compGoldType })}
                       onClick={() => handleRowClick(b.brand, compGoldType, b.buyPrice)}
@@ -636,116 +588,115 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
                       fmt={fmt}
                     />
                   );
-                }
-                return (
-                  <PriceRow
-                    key={b.brand}
-                    brand={b.brand}
-                    goldType={compGoldType}
-                    buyPrice={b.buyPrice}
-                    sellPrice={b.sellPrice}
-                    isBestBuy={b.isBestBuy}
-                    isBestSell={b.isBestSell}
-                    isLoggedIn={isLoggedIn}
-                    isPinned={false}
-                    onPin={() => addPin.mutate({ brand: b.brand, goldType: compGoldType })}
-                    onUnpin={() => removePin.mutate({ brand: b.brand, goldType: compGoldType })}
-                    onClick={() => handleRowClick(b.brand, compGoldType, b.buyPrice)}
-                    rowIndex={i}
-                    fmt={fmt}
-                  />
-                );
-              })}
-            </SortableContext>
-          </DndContext>
+                })}
+              </SortableContext>
+            </DndContext>
+          </div>
+        </div>
+
+        {/* ── Right column */}
+        <div className="flex flex-col gap-5 min-w-0">
+
+          {/* Karat strip */}
+          <div className="bg-ink-2 border border-line rounded-[14px] p-5">
+            <div className="flex justify-between items-baseline mb-[14px]">
+              <h3 className="text-[16px] leading-none font-bold font-sans m-0">By karat</h3>
+              <span className="font-mono text-[10px] text-mute tracking-[0.12em] uppercase">per oz · usd</span>
+            </div>
+            {KARATS.map((k, i) => {
+              const price = intl ? intl.spotPriceUsd * k.multiplier : 0;
+              const karatDir: 'up' | 'down' = change1D != null && change1D < 0 ? 'down' : 'up';
+              const karatSpark = history1D && history1D.length > 0
+                ? history1D.slice(-12).map(p => (p.buyPrice / 1_000_000) * k.multiplier)
+                : [];
+              const changeStr = change1D != null ? (change1D >= 0 ? '+' : '') + change1D.toFixed(2) + '%' : '—';
+              return (
+                <div
+                  key={k.karat}
+                  className={cn('grid items-center gap-3 py-[14px]', i !== 0 && 'border-t border-hairline')}
+                  style={{ gridTemplateColumns: '52px 1fr 80px 60px' }}
+                >
+                  <div className="text-[18px] leading-none font-extrabold font-sans text-gold tracking-[-0.02em]">{k.karat}</div>
+                  <div>
+                    <div className="text-[20px] leading-none font-bold font-sans tabular-nums">{price > 0 ? fmtUsd(price) : '…'}</div>
+                    <div className="font-mono text-[10px] text-mute mt-1">{k.pct}% purity</div>
+                  </div>
+                  <Sparkline data={karatSpark.length > 0 ? karatSpark : [1,1,1,1,1,1,1,1,1,1,1,1]} w={80} h={28} dir={karatDir}/>
+                  <div className={cn('font-mono text-[11px] text-right font-bold', karatDir === 'up' ? 'text-up' : 'text-down')}>{changeStr}</div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Market heat */}
+          <div className="bg-ink-2 border border-line rounded-[14px] p-5">
+            <div className="flex justify-between items-baseline mb-[14px]">
+              <h3 className="text-[16px] leading-none font-bold font-sans m-0">Market heat</h3>
+            </div>
+            <HeatIndexGauge />
+            <HeatIndexStats />
+          </div>
+
+          {/* Arbitrage opportunities */}
+          <ArbitrageWidget />
+
+          {/* Heat Index 7-day trend */}
+          <HeatIndexHistoryChart />
+
+          {/* Alerts widget */}
+          <div className="bg-ink-2 border border-line rounded-[14px] p-5">
+            <div className="flex justify-between items-baseline mb-[14px]">
+              <h3 className="text-[16px] leading-none font-bold font-sans m-0">Your alerts</h3>
+              <button
+                onClick={handleNavigateAlerts}
+                className="bg-transparent border-0 cursor-pointer font-mono text-[11px] text-gold tracking-[0.08em] leading-none font-bold"
+              >
+                view all →
+              </button>
+            </div>
+            {!isLoggedIn && (
+              <div className="py-5 text-center text-mute font-mono text-[12px] leading-none font-medium">
+                sign in to see your alerts
+              </div>
+            )}
+            {isLoggedIn && alertsData?.length === 0 && (
+              <div className="py-5 text-center text-mute font-mono text-[12px] leading-none font-medium">
+                no alerts yet
+              </div>
+            )}
+            {isLoggedIn && (alertsData ?? []).slice(0, 3).map((a, i) => {
+              const isFired = a.status === 'triggered';
+              return (
+                <div
+                  key={a.id}
+                  className={cn('flex items-center justify-between py-3', i !== 0 && 'border-t border-hairline')}
+                >
+                  <div className="flex items-center gap-[10px]">
+                    <span className="font-mono text-[10px] font-bold text-gold tracking-[0.1em] px-[6px] py-[3px] border border-gold rounded-[3px]">{a.brand}</span>
+                    <span className="font-mono text-[13px] text-bone leading-none font-medium">{a.condition === 'gte' ? '≥' : '≤'}</span>
+                    <span className="text-[14px] leading-none font-bold font-sans tabular-nums">{(Number(a.thresholdPrice) / 1_000_000).toFixed(2)}M₫</span>
+                  </div>
+                  <span className={cn(
+                    'font-mono text-[9px] leading-none font-bold tracking-[0.14em] uppercase px-[7px] py-[4px] rounded-[3px] border',
+                    isFired ? 'text-gold-ink bg-gold border-gold' : 'text-mute bg-transparent border-line',
+                  )}>
+                    {isFired ? 'fired' : 'waiting'}
+                  </span>
+                </div>
+              );
+            })}
+            <button
+              onClick={handleNavigateAlerts}
+              className="w-full h-11 mt-[10px] inline-flex items-center justify-center gap-2 bg-gold text-gold-ink border border-gold rounded-[10px] cursor-pointer font-mono text-[14px] leading-none font-bold tracking-[0.04em] uppercase"
+            >
+              <IconPlus s={15}/> new alert
+            </button>
+          </div>
+
+          {/* Community forecast */}
+          <ForecastVoteWidget />
         </div>
       </div>
-
-      {/* ── Right column */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 20, minWidth: 0 }}>
-
-        {/* Karat strip */}
-        <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, padding: 20 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
-            <h3 style={{ font: '700 16px/1 var(--font-display)', margin: 0 }}>By karat</h3>
-            <span className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>per oz · usd</span>
-          </div>
-          {KARATS.map((k, i) => {
-            const price = intl ? intl.spotPriceUsd * k.multiplier : 0;
-            const karatDir: 'up' | 'down' = change1D != null && change1D < 0 ? 'down' : 'up';
-            const karatSpark = history1D && history1D.length > 0
-              ? history1D.slice(-12).map(p => (p.buyPrice / 1_000_000) * k.multiplier)
-              : [];
-            const changeStr = change1D != null ? (change1D >= 0 ? '+' : '') + change1D.toFixed(2) + '%' : '—';
-            return (
-              <div key={k.karat} style={{ display: 'grid', gridTemplateColumns: '52px 1fr 80px 60px', alignItems: 'center', gap: 12, padding: '14px 0', borderTop: i === 0 ? 'none' : '1px solid var(--hairline)' }}>
-                <div style={{ font: '800 18px/1 var(--font-display)', color: 'var(--gold)', letterSpacing: '-0.02em' }}>{k.karat}</div>
-                <div>
-                  <div style={{ font: '700 20px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>{price > 0 ? fmtUsd(price) : '…'}</div>
-                  <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', marginTop: 4 }}>{k.pct}% purity</div>
-                </div>
-                <Sparkline data={karatSpark.length > 0 ? karatSpark : [1,1,1,1,1,1,1,1,1,1,1,1]} w={80} h={28} dir={karatDir}/>
-                <div className="mono" style={{ fontSize: 11, color: karatDir === 'up' ? 'var(--up)' : 'var(--down)', textAlign: 'right', fontWeight: 700 }}>{changeStr}</div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Market heat */}
-        <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, padding: 20 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
-            <h3 style={{ font: '700 16px/1 var(--font-display)', margin: 0 }}>Market heat</h3>
-          </div>
-          <HeatIndexGauge />
-          <HeatIndexStats />
-        </div>
-
-        {/* Arbitrage opportunities */}
-        <ArbitrageWidget />
-
-        {/* Heat Index 7-day trend */}
-        <HeatIndexHistoryChart />
-
-        {/* Alerts widget */}
-        <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, padding: 20 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
-            <h3 style={{ font: '700 16px/1 var(--font-display)', margin: 0 }}>Your alerts</h3>
-            <button onClick={handleNavigateAlerts} style={{ background: 'transparent', border: 0, cursor: 'pointer', font: '700 11px/1 var(--font-mono)', color: 'var(--gold)', letterSpacing: '0.08em' }}>view all →</button>
-          </div>
-          {!isLoggedIn && (
-            <div style={{ padding: '20px 0', textAlign: 'center', color: 'var(--mute)', font: '500 12px/1 var(--font-mono)' }}>
-              sign in to see your alerts
-            </div>
-          )}
-          {isLoggedIn && alertsData?.length === 0 && (
-            <div style={{ padding: '20px 0', textAlign: 'center', color: 'var(--mute)', font: '500 12px/1 var(--font-mono)' }}>
-              no alerts yet
-            </div>
-          )}
-          {isLoggedIn && (alertsData ?? []).slice(0, 3).map((a, i) => {
-            const isFired = a.status === 'triggered';
-            return (
-              <div key={a.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderTop: i === 0 ? 'none' : '1px solid var(--hairline)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span className="mono" style={{ fontSize: 10, fontWeight: 700, color: 'var(--gold)', letterSpacing: '0.1em', padding: '3px 6px', border: '1px solid var(--gold)', borderRadius: 3 }}>{a.brand}</span>
-                  <span style={{ font: '500 13px/1 var(--font-mono)', color: 'var(--bone)' }}>{a.condition === 'gte' ? '≥' : '≤'}</span>
-                  <span style={{ font: '700 14px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>{(Number(a.thresholdPrice) / 1_000_000).toFixed(2)}M₫</span>
-                </div>
-                <span style={{ font: '700 9px/1 var(--font-mono)', letterSpacing: '0.14em', textTransform: 'uppercase', color: isFired ? '#0B0B0F' : 'var(--mute)', background: isFired ? 'var(--gold)' : 'transparent', border: `1px solid ${isFired ? 'var(--gold)' : 'var(--line)'}`, padding: '4px 7px', borderRadius: 3 }}>
-                  {isFired ? 'fired' : 'waiting'}
-                </span>
-              </div>
-            );
-          })}
-          <button onClick={handleNavigateAlerts} style={{ width: '100%', height: 44, marginTop: 10, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'var(--gold)', color: '#0B0B0F', border: '1px solid var(--gold)', borderRadius: 10, cursor: 'pointer', font: '700 14px/1 var(--font-mono)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-            <IconPlus s={15}/> new alert
-          </button>
-        </div>
-
-        {/* Community forecast */}
-        <ForecastVoteWidget />
-      </div>
-    </div>
     </div>
   );
 }

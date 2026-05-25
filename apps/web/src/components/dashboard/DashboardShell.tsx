@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 import { useInternationalPrice, useComparison } from '@/lib/price.api';
 import type { GoldType } from '@gpls/shared';
+import { cn } from '@/lib/utils';
 
 // Icons (Lucide-style inline SVG)
 function IconHome({ s = 20 }: { s?: number }) {
@@ -126,14 +127,10 @@ function Sidebar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
     : '';
 
   return (
-    <aside style={{
-      width: 232, flexShrink: 0, height: '100%',
-      background: 'var(--ink-2)', borderRight: '1px solid var(--line)',
-      display: 'flex', flexDirection: 'column', padding: '20px 0',
-    }}>
+    <aside className="w-[232px] shrink-0 h-full bg-ink-2 border-r border-line flex flex-col py-5">
       {/* Wordmark */}
-      <div style={{ padding: '0 20px 22px', borderBottom: '1px solid var(--hairline)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div className="px-5 pb-[22px] border-b border-hairline">
+        <div className="flex items-center gap-[10px]">
           <svg width="24" height="24" viewBox="0 0 24 24">
             <rect x="3"  y="9"  width="3.5" height="11" rx="1" fill="#D4AF37"/>
             <rect x="9"  y="3"  width="3.5" height="17" rx="1" fill="#D4AF37"/>
@@ -141,53 +138,50 @@ function Sidebar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
             <rect x="21" y="6"  width="2"   height="14" rx="1" fill="#D4AF37" opacity="0.6"/>
           </svg>
           <div>
-            <div style={{ font: '800 16px/1 var(--font-display)', letterSpacing: '-0.02em' }}>goldtracker</div>
-            <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.16em', marginTop: 4 }}>GT.2026.05</div>
+            <div className="text-[16px] leading-none font-extrabold font-sans tracking-[-0.02em]">goldtracker</div>
+            <div className="font-mono text-[9px] text-mute tracking-[0.16em] mt-1">GT.2026.05</div>
           </div>
         </div>
       </div>
 
       {/* Nav */}
-      <nav style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '16px 12px', flex: 1 }}>
-        <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.16em', textTransform: 'uppercase', padding: '4px 12px 8px' }}>Workspace</div>
+      <nav className="flex flex-col gap-0.5 px-3 py-4 flex-1">
+        <div className="font-mono text-[9px] text-mute tracking-[0.16em] uppercase px-3 pt-1 pb-2">Workspace</div>
         {NAV_ITEMS.filter(it => !it.href && !it.adminOnly && (!it.requiresAuth || !!user)).map(it => {
           const active = tab === it.id;
           const handleClick = () => onChange(it.id as Tab);
           return (
-            <button key={it.id} onClick={handleClick} style={{
-              display: 'flex', alignItems: 'center', gap: 12,
-              padding: '10px 12px', border: 0,
-              background: active ? 'var(--ink-3)' : 'transparent',
-              color: active ? 'var(--chalk)' : 'var(--bone)',
-              borderRadius: 6, cursor: 'pointer',
-              font: '500 13px/1 var(--font-display)',
-              position: 'relative',
-              transition: 'background 140ms var(--ease), color 140ms var(--ease)',
-            }}>
-              {active && <span style={{ position: 'absolute', left: -12, top: 8, bottom: 8, width: 3, background: 'var(--gold)', borderRadius: '0 2px 2px 0' }}/>}
-              <span style={{ color: active ? 'var(--gold)' : 'var(--mute)' }}>
+            <button
+              key={it.id}
+              onClick={handleClick}
+              className={cn(
+                'relative flex items-center gap-3 px-3 py-[10px] rounded-md border-0 cursor-pointer w-full',
+                'text-[13px] leading-none font-medium font-sans transition-colors duration-[140ms]',
+                active ? 'bg-ink-3 text-chalk' : 'bg-transparent text-bone hover:bg-ink-3/60 hover:text-chalk',
+              )}
+            >
+              {active && (
+                <span className="absolute -left-3 top-2 bottom-2 w-[3px] bg-gold [border-radius:0_2px_2px_0]"/>
+              )}
+              <span className={cn(active ? 'text-gold' : 'text-mute')}>
                 <it.Icon s={16}/>
               </span>
               <span>{it.label}</span>
             </button>
           );
         })}
+
         <>
-          <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.16em', textTransform: 'uppercase', padding: '20px 12px 8px' }}>Tools</div>
+          <div className="font-mono text-[9px] text-mute tracking-[0.16em] uppercase px-3 pt-5 pb-2">Tools</div>
           {NAV_ITEMS.filter(it => !!it.href && !it.adminOnly && (!it.requiresAuth || !!user)).map(it => {
             const handleClick = () => router.push(it.href as string);
             return (
-              <button key={it.id} onClick={handleClick} style={{
-                display: 'flex', alignItems: 'center', gap: 12,
-                padding: '10px 12px', border: 0,
-                background: 'transparent',
-                color: 'var(--bone)',
-                borderRadius: 6, cursor: 'pointer',
-                font: '500 13px/1 var(--font-display)',
-                position: 'relative',
-                transition: 'background 140ms var(--ease), color 140ms var(--ease)',
-              }}>
-                <span style={{ color: 'var(--mute)' }}>
+              <button
+                key={it.id}
+                onClick={handleClick}
+                className="relative flex items-center gap-3 px-3 py-[10px] border-0 rounded-md cursor-pointer bg-transparent text-bone hover:bg-ink-3/60 hover:text-chalk text-[13px] leading-none font-medium font-sans transition-colors duration-[140ms] w-full"
+              >
+                <span className="text-mute">
                   <it.Icon s={16}/>
                 </span>
                 <span>{it.label}</span>
@@ -195,22 +189,19 @@ function Sidebar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
             );
           })}
         </>
+
         {user?.role === 'admin' && (
           <>
-            <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.16em', textTransform: 'uppercase', padding: '20px 12px 8px' }}>Admin</div>
+            <div className="font-mono text-[9px] text-mute tracking-[0.16em] uppercase px-3 pt-5 pb-2">Admin</div>
             {NAV_ITEMS.filter(it => it.adminOnly).map(it => {
               const handleClick = () => router.push(it.href as string);
               return (
-                <button key={it.id} onClick={handleClick} style={{
-                  display: 'flex', alignItems: 'center', gap: 12,
-                  padding: '10px 12px', border: 0,
-                  background: 'transparent',
-                  color: 'var(--bone)',
-                  borderRadius: 6, cursor: 'pointer',
-                  font: '500 13px/1 var(--font-display)',
-                  transition: 'background 140ms var(--ease), color 140ms var(--ease)',
-                }}>
-                  <span style={{ color: 'var(--mute)' }}>
+                <button
+                  key={it.id}
+                  onClick={handleClick}
+                  className="relative flex items-center gap-3 px-3 py-[10px] border-0 rounded-md cursor-pointer bg-transparent text-bone hover:bg-ink-3/60 hover:text-chalk text-[13px] leading-none font-medium font-sans transition-colors duration-[140ms] w-full"
+                >
+                  <span className="text-mute">
                     <it.Icon s={16}/>
                   </span>
                   <span>{it.label}</span>
@@ -220,43 +211,43 @@ function Sidebar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
           </>
         )}
 
-        <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.16em', textTransform: 'uppercase', padding: '20px 12px 8px' }}>Watchlist</div>
+        <div className="font-mono text-[9px] text-mute tracking-[0.16em] uppercase px-3 pt-5 pb-2">Watchlist</div>
         {watchlist.map(w => (
-          <div key={w.code} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderRadius: 6 }}>
-            <span className="mono" style={{ fontSize: 11, fontWeight: 700, color: 'var(--bone)' }}>{w.code}</span>
-            <div style={{ font: '600 11px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>{w.val}</div>
+          <div key={w.code} className="flex justify-between items-center px-3 py-2 rounded-md">
+            <span className="font-mono text-[11px] font-bold text-bone">{w.code}</span>
+            <div className="text-[11px] leading-none font-semibold font-sans tabular-nums">{w.val}</div>
           </div>
         ))}
       </nav>
 
       {/* Live status */}
-      <div style={{ padding: '14px 16px', borderTop: '1px solid var(--hairline)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ width: 7, height: 7, borderRadius: 99, background: 'var(--live)', boxShadow: '0 0 8px var(--live)', flexShrink: 0 }}/>
-          <span className="mono" style={{ fontSize: 10, color: 'var(--bone)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>live · ict</span>
+      <div className="px-4 py-[14px] border-t border-hairline">
+        <div className="flex items-center gap-2">
+          <span className="w-[7px] h-[7px] rounded-full bg-live shadow-[0_0_8px_var(--live)] shrink-0"/>
+          <span className="font-mono text-[10px] text-bone tracking-[0.1em] uppercase">live · ict</span>
         </div>
-        <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', marginTop: 8, lineHeight: 1.5 }}>
+        <div className="font-mono text-[9px] text-mute mt-2 leading-[1.5]">
           next refresh in 04:48<br/>sjc · doji · pnj
         </div>
       </div>
 
       {/* User / Auth section */}
-      <div style={{ padding: '12px 16px', borderTop: '1px solid var(--hairline)' }}>
+      <div className="px-4 py-3 border-t border-hairline">
         {user ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 30, height: 30, borderRadius: 8, background: 'linear-gradient(135deg,#D4AF37,#8E7321)', display: 'flex', alignItems: 'center', justifyContent: 'center', font: '800 11px/1 var(--font-display)', color: '#0B0B0F', flexShrink: 0 }}>
+          <div className="flex items-center gap-[10px]">
+            <div className="w-[30px] h-[30px] rounded-lg bg-[linear-gradient(135deg,#D4AF37,#8E7321)] flex items-center justify-center text-[11px] leading-none font-extrabold font-sans text-gold-ink shrink-0">
               {initials}
             </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div className="mono" style={{ fontSize: 10, color: 'var(--bone)', letterSpacing: '0.04em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <div className="flex-1 min-w-0">
+              <div className="font-mono text-[10px] text-bone tracking-[0.04em] overflow-hidden text-ellipsis whitespace-nowrap">
                 {user.displayName ?? user.email}
               </div>
               {user.role === 'admin' ? (
-                <span style={{ display: 'inline-block', background: 'var(--gold)', color: '#0B0B0F', font: '800 8px/1 var(--font-mono)', letterSpacing: '0.14em', padding: '3px 6px', borderRadius: 3, textTransform: 'uppercase', marginTop: 3 }}>
+                <span className="inline-block bg-gold text-gold-ink font-mono text-[8px] leading-none font-extrabold tracking-[0.14em] px-[6px] py-[3px] rounded-[3px] uppercase mt-[3px]">
                   ADMIN
                 </span>
               ) : (
-                <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: 2 }}>
+                <div className="font-mono text-[9px] text-mute uppercase tracking-[0.1em] mt-0.5">
                   {user.role}
                 </div>
               )}
@@ -265,7 +256,7 @@ function Sidebar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
         ) : (
           <button
             onClick={() => router.push('/auth/login')}
-            style={{ width: '100%', height: 34, background: 'var(--gold)', border: 0, borderRadius: 8, cursor: 'pointer', font: '700 11px/1 var(--font-display)', color: '#0B0B0F', letterSpacing: '0.04em' }}
+            className="w-full h-[34px] bg-gold border-0 rounded-lg cursor-pointer text-[11px] leading-none font-bold font-sans text-gold-ink tracking-[0.04em]"
           >
             Log in
           </button>
@@ -372,152 +363,154 @@ function TopBar({ currency, onCurrency, onTab }: { currency: string; onCurrency:
   }
 
   return (
-    <header style={{
-      height: 56, flexShrink: 0,
-      background: 'var(--ink-2)', borderBottom: '1px solid var(--line)',
-      display: 'flex', alignItems: 'center', gap: 16, padding: '0 20px 0 28px',
-    }}>
+    <header className="h-14 shrink-0 bg-ink-2 border-b border-line flex items-center gap-4 pr-5 pl-7">
       {/* Search bar */}
-      <div ref={searchRef} style={{ flex: 1, maxWidth: 420, position: 'relative' }}>
+      <div ref={searchRef} className="flex-1 max-w-[420px] relative">
         <div
           onClick={() => { setSearchOpen(true); setTimeout(() => searchInputRef.current?.focus(), 0); }}
-          style={{ height: 34, display: 'flex', alignItems: 'center', gap: 10, background: 'var(--ink-3)', border: `1px solid ${searchOpen ? 'var(--gold)' : 'var(--line)'}`, borderRadius: 6, padding: '0 12px', cursor: 'text' }}
+          className={cn(
+            'h-[34px] flex items-center gap-[10px] bg-ink-3 rounded-md px-3 cursor-text border',
+            searchOpen ? 'border-gold' : 'border-line',
+          )}
         >
-          <span style={{ color: 'var(--mute)', flexShrink: 0 }}><IconSearch s={14}/></span>
+          <span className="text-mute shrink-0"><IconSearch s={14}/></span>
           <input
             ref={searchInputRef}
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             onFocus={() => setSearchOpen(true)}
             placeholder="search assets, brands, alerts…"
-            style={{ flex: 1, background: 'transparent', border: 0, outline: 'none', font: '400 12px/1 var(--font-mono)', color: 'var(--chalk)', '::placeholder': { color: 'var(--mute)' } } as React.CSSProperties}
+            className="flex-1 bg-transparent border-0 outline-none text-[12px] leading-none font-normal font-mono text-chalk placeholder:text-mute"
           />
           {!searchOpen && (
-            <span className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.1em', border: '1px solid var(--line)', borderRadius: 3, padding: '2px 6px', flexShrink: 0 }}>⌘ K</span>
+            <span className="font-mono text-[9px] text-mute tracking-[0.1em] border border-line rounded-[3px] px-1.5 py-0.5 shrink-0">⌘ K</span>
           )}
         </div>
         {searchOpen && filteredItems.length > 0 && (
-          <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 10, zIndex: 300, overflow: 'hidden', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
+          <div className="absolute top-[calc(100%+6px)] left-0 right-0 bg-ink-2 border border-line rounded-[10px] z-[300] overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
             {filteredItems.map((item, i) => (
               <button
                 key={i}
                 onClick={item.action}
-                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'transparent', border: 0, cursor: 'pointer', color: 'var(--chalk)', font: '500 13px/1 var(--font-display)', textAlign: 'left', transition: 'background 100ms' }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'var(--ink-3)')}
-                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                className="w-full flex items-center justify-between px-[14px] py-[10px] bg-transparent border-0 cursor-pointer text-chalk text-[13px] leading-none font-medium font-sans text-left hover:bg-ink-3 transition-colors duration-100"
               >
                 <span>{item.label}</span>
-                <span className="mono" style={{ fontSize: 9, color: 'var(--mute)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{item.type}</span>
+                <span className="font-mono text-[9px] text-mute uppercase tracking-[0.1em]">{item.type}</span>
               </button>
             ))}
           </div>
         )}
         {searchOpen && filteredItems.length === 0 && (
-          <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 10, zIndex: 300, padding: '20px 14px', textAlign: 'center', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
-            <span className="mono" style={{ fontSize: 11, color: 'var(--mute)' }}>no results for &quot;{searchQuery}&quot;</span>
+          <div className="absolute top-[calc(100%+6px)] left-0 right-0 bg-ink-2 border border-line rounded-[10px] z-[300] px-[14px] py-5 text-center shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
+            <span className="font-mono text-[11px] text-mute">no results for &quot;{searchQuery}&quot;</span>
           </div>
         )}
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, font: '700 10px/1 var(--font-mono)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--live)', border: '1px solid rgba(157,204,110,0.4)', padding: '6px 10px', borderRadius: 4 }}>
-          <span style={{ width: 6, height: 6, borderRadius: 99, background: 'var(--live)' }}/>
+
+      <div className="flex items-center gap-2">
+        {/* Live badge */}
+        <span className="inline-flex items-center gap-[6px] text-[10px] leading-none font-bold font-mono tracking-[0.12em] uppercase text-live border border-[rgba(157,204,110,0.4)] px-[10px] py-[6px] rounded">
+          <span className="w-1.5 h-1.5 rounded-full bg-live"/>
           live
         </span>
-        <div style={{ display: 'flex', background: 'var(--ink-3)', border: '1px solid var(--line)', borderRadius: 6, padding: 2 }}>
+
+        {/* Currency switcher */}
+        <div className="flex bg-ink-3 border border-line rounded-md p-0.5">
           {['USD', 'VND', 'EUR'].map(c => (
-            <button key={c} onClick={() => onCurrency(c)} style={{ padding: '5px 10px', border: 0, cursor: 'pointer', background: currency === c ? 'var(--gold)' : 'transparent', color: currency === c ? '#0B0B0F' : 'var(--bone)', font: '700 10px/1 var(--font-mono)', letterSpacing: '0.1em', borderRadius: 4 }}>{c}</button>
+            <button
+              key={c}
+              onClick={() => onCurrency(c)}
+              className={cn(
+                'px-[10px] py-[5px] border-0 cursor-pointer text-[10px] leading-none font-bold font-mono tracking-[0.1em] rounded',
+                currency === c ? 'bg-gold text-gold-ink' : 'bg-transparent text-bone',
+              )}
+            >{c}</button>
           ))}
         </div>
+
         {/* Bell with dropdown */}
-        <div ref={bellRef} style={{ position: 'relative' }}>
+        <div ref={bellRef} className="relative">
           <button
             onClick={handleBellClick}
-            style={{ width: 34, height: 34, background: bellOpen ? 'var(--ink-3)' : 'transparent', border: '1px solid var(--line)', borderRadius: 6, cursor: 'pointer', color: 'var(--bone)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}
+            className={cn(
+              'w-[34px] h-[34px] border border-line rounded-md cursor-pointer text-bone flex items-center justify-center relative',
+              bellOpen ? 'bg-ink-3' : 'bg-transparent',
+            )}
           >
             <IconBell s={15}/>
             {!bellOpen && hasUnread && (
-              <span style={{ position: 'absolute', top: 6, right: 7, width: 7, height: 7, borderRadius: 99, background: 'var(--gold)', boxShadow: '0 0 0 2px var(--ink-2)' }}/>
+              <span className="absolute top-[6px] right-[7px] w-[7px] h-[7px] rounded-full bg-gold shadow-[0_0_0_2px_var(--ink-2)]"/>
             )}
           </button>
           {bellOpen && (
-            <div style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, width: 300, background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 12, zIndex: 200, overflow: 'hidden' }}>
-              {/* Header */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid var(--line)' }}>
-                <span style={{ font: '700 9px/1 var(--font-mono)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--mute)' }}>Notifications</span>
-                <button
-                  onClick={() => {}}
-                  style={{ background: 'transparent', border: 0, cursor: 'pointer', font: '600 11px/1 var(--font-mono)', color: 'var(--gold)', padding: 0 }}
-                >
-                  all &rarr;
+            <div className="absolute top-[calc(100%+8px)] right-0 w-[300px] bg-ink-2 border border-line rounded-xl z-[200] overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-line">
+                <span className="font-mono text-[9px] leading-none font-bold tracking-[0.12em] uppercase text-mute">Notifications</span>
+                <button onClick={() => {}} className="bg-transparent border-0 cursor-pointer font-mono text-[11px] leading-none font-semibold text-gold p-0">
+                  all →
                 </button>
               </div>
-              {/* Empty state */}
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 20px', gap: 10 }}>
-                <span style={{ color: 'var(--gold)' }}><IconBell s={28}/></span>
-                <span style={{ fontSize: 13, color: 'var(--chalk)', fontWeight: 600 }}>No notifications yet</span>
-                <span style={{ fontSize: 11, color: 'var(--mute)', textAlign: 'center', lineHeight: 1.5 }}>Alerts you set up will appear here</span>
+              <div className="flex flex-col items-center justify-center px-5 py-8 gap-[10px]">
+                <span className="text-gold"><IconBell s={28}/></span>
+                <span className="text-[13px] text-chalk font-semibold">No notifications yet</span>
+                <span className="text-[11px] text-mute text-center leading-[1.5]">Alerts you set up will appear here</span>
               </div>
             </div>
           )}
         </div>
+
         {/* Avatar / auth */}
-        <div ref={avatarRef} style={{ position: 'relative' }}>
+        <div ref={avatarRef} className="relative">
           {user ? (
             <button
               onClick={() => setAvatarOpen(v => !v)}
-              style={{ width: 32, height: 32, borderRadius: 99, background: 'linear-gradient(135deg, #D4AF37, #8E7321)', display: 'flex', alignItems: 'center', justifyContent: 'center', font: '800 11px/1 var(--font-display)', color: '#0B0B0F', border: 0, cursor: 'pointer' }}
+              className="w-8 h-8 rounded-full bg-[linear-gradient(135deg,#D4AF37,#8E7321)] flex items-center justify-center text-[11px] leading-none font-extrabold font-sans text-gold-ink border-0 cursor-pointer"
             >
               {initials || 'GT'}
             </button>
           ) : (
             <button
               onClick={() => router.push('/auth/login')}
-              style={{ height: 32, padding: '0 14px', background: 'var(--gold)', border: 0, borderRadius: 99, cursor: 'pointer', font: '700 11px/1 var(--font-display)', color: '#0B0B0F', letterSpacing: '0.04em' }}
+              className="h-8 px-[14px] bg-gold border-0 rounded-full cursor-pointer text-[11px] leading-none font-bold font-sans text-gold-ink tracking-[0.04em]"
             >
               Log in
             </button>
           )}
           {avatarOpen && user && (
-            <div style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, width: 220, background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 12, zIndex: 200, overflow: 'hidden', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
-              {/* User info */}
-              <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--line)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 30, height: 30, borderRadius: 8, background: 'linear-gradient(135deg,#D4AF37,#8E7321)', display: 'flex', alignItems: 'center', justifyContent: 'center', font: '800 11px/1 var(--font-display)', color: '#0B0B0F', flexShrink: 0 }}>
+            <div className="absolute top-[calc(100%+8px)] right-0 w-[220px] bg-ink-2 border border-line rounded-xl z-[200] overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
+              <div className="px-4 py-[14px] border-b border-line">
+                <div className="flex items-center gap-[10px]">
+                  <div className="w-[30px] h-[30px] rounded-lg bg-[linear-gradient(135deg,#D4AF37,#8E7321)] flex items-center justify-center text-[11px] leading-none font-extrabold font-sans text-gold-ink shrink-0">
                     {initials || 'GT'}
                   </div>
-                  <div style={{ minWidth: 0 }}>
-                    <div className="mono" style={{ fontSize: 11, color: 'var(--chalk)', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div className="min-w-0">
+                    <div className="font-mono text-[11px] text-chalk font-bold overflow-hidden text-ellipsis whitespace-nowrap">
                       {user.displayName ?? user.email}
                     </div>
                     {user.role === 'admin' ? (
-                      <span style={{ display: 'inline-block', background: 'var(--gold)', color: '#0B0B0F', font: '800 8px/1 var(--font-mono)', letterSpacing: '0.14em', padding: '3px 6px', borderRadius: 3, textTransform: 'uppercase', marginTop: 3 }}>
+                      <span className="inline-block bg-gold text-gold-ink font-mono text-[8px] leading-none font-extrabold tracking-[0.14em] px-[6px] py-[3px] rounded-[3px] uppercase mt-[3px]">
                         ADMIN
                       </span>
                     ) : (
-                      <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: 2 }}>
+                      <div className="font-mono text-[9px] text-mute uppercase tracking-[0.1em] mt-0.5">
                         {user.role}
                       </div>
                     )}
                   </div>
                 </div>
               </div>
-              {/* Actions */}
-              <div style={{ padding: '6px 0' }}>
+              <div className="py-[6px]">
                 <button
                   onClick={() => { onTab('profile'); setAvatarOpen(false); }}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'transparent', border: 0, cursor: 'pointer', color: 'var(--chalk)', font: '500 13px/1 var(--font-display)', textAlign: 'left' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--ink-3)')}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                  className="w-full flex items-center gap-[10px] px-4 py-[10px] bg-transparent border-0 cursor-pointer text-chalk text-[13px] leading-none font-medium font-sans text-left hover:bg-ink-3 transition-colors"
                 >
                   <IconUser s={14}/>
-                  Profile & settings
+                  Profile &amp; settings
                 </button>
-                <div style={{ height: 1, background: 'var(--line)', margin: '4px 0' }}/>
+                <div className="h-px bg-line my-1"/>
                 <button
                   onClick={() => { logout(); setAvatarOpen(false); }}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'transparent', border: 0, cursor: 'pointer', color: 'var(--red, #e05252)', font: '500 13px/1 var(--font-display)', textAlign: 'left' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--ink-3)')}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                  className="w-full flex items-center gap-[10px] px-4 py-[10px] bg-transparent border-0 cursor-pointer text-[#e05252] text-[13px] leading-none font-medium font-sans text-left hover:bg-ink-3 transition-colors"
                 >
                   Log out
                 </button>
@@ -540,11 +533,11 @@ interface DashboardShellProps {
 
 export function DashboardShell({ children, tab, onTab, currency, onCurrency }: DashboardShellProps) {
   return (
-    <div style={{ position: 'fixed', inset: 0, display: 'flex', overflow: 'hidden', background: 'var(--ink)' }}>
+    <div className="fixed inset-0 flex overflow-hidden bg-ink">
       <Sidebar tab={tab} onChange={onTab}/>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <div className="flex-1 flex flex-col min-w-0">
         <TopBar currency={currency} onCurrency={onCurrency} onTab={onTab}/>
-        <main style={{ flex: 1, overflow: 'auto', background: '#0a0a0d' }}>
+        <main className="flex-1 overflow-auto bg-[#0a0a0d]">
           {children}
         </main>
       </div>

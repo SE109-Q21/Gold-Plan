@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { cn } from '@/lib/utils';
 
 export type PricePoint = { buyPrice: number; recordedAt: string };
 
@@ -98,12 +99,10 @@ export function PriceChart({
 
   const isCompareMode = !!compareData?.length;
 
-  // In compare mode: normalize primary to % change from first point
   const primaryValues = isCompareMode && rawPrices.length > 0
     ? rawPrices.map(p => ((p / rawPrices[0]) - 1) * 100)
     : rawPrices;
 
-  // Normalize compare series to % change
   const compareNorm = isCompareMode ? (compareData ?? []).map(s => {
     const vis = s.history.slice(visStart, Math.min(visEnd + 1, s.history.length));
     const p   = vis.map(pt => pt.buyPrice);
@@ -118,7 +117,14 @@ export function PriceChart({
   ];
 
   if (allYValues.length < 2) {
-    return <div style={{ height: PC_H, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--mute)', font: '500 12px/1 var(--font-mono)' }}>Loading price history…</div>;
+    return (
+      <div
+        className="flex items-center justify-center text-mute font-mono text-[12px] leading-none font-medium"
+        style={{ height: PC_H }}
+      >
+        Loading price history…
+      </div>
+    );
   }
 
   const minP = Math.min(...allYValues), maxP = Math.max(...allYValues);
@@ -194,7 +200,6 @@ export function PriceChart({
     if (e.touches.length === 1 && !touchPinned) doHover(clientXToIdx(e.touches[0].clientX));
   }
 
-  // Feature 1 — click anywhere on chart inner area to set alert at that price
   function handleChartClick(e: React.MouseEvent) {
     if (!onAddAlertAtPrice || isCompareMode) return;
     const rect = containerRef.current!.getBoundingClientRect();
@@ -204,7 +209,6 @@ export function PriceChart({
     if (svgX < PC_PAD.l || svgX > PC_W - PC_PAD.r) return;
     if (svgY < PC_PAD.t || svgY > PC_PAD.t + PC_IH) return;
     const rawPrice = minV + (1 - (svgY - PC_PAD.t) / PC_IH) * vR;
-    // Round to nearest 100k VND for clean alert values
     const rounded = Math.round(Math.max(0, rawPrice) / 100_000) * 100_000;
     onAddAlertAtPrice(rounded);
   }
@@ -225,6 +229,14 @@ export function PriceChart({
     ? `${pDelta >= 0 ? '+' : ''}${pDelta.toFixed(2)}pp (${pDeltaPct >= 0 ? '+' : ''}${pDeltaPct.toFixed(2)}%)`
     : `${pDelta >= 0 ? '+' : ''}${(pDelta / 1_000_000).toFixed(2)}M₫ (${pDeltaPct >= 0 ? '+' : ''}${pDeltaPct.toFixed(2)}%)`;
 
+  const summaryStats = [
+    { l: 'Open',   v: fmtSummary(open),  colorClass: null as string | null },
+    { l: 'Close',  v: fmtSummary(close), colorClass: null },
+    { l: 'Change', v: fmtChange,         colorClass: pDelta >= 0 ? 'text-up' : 'text-down' },
+    { l: 'High',   v: fmtSummary(high),  colorClass: null },
+    { l: 'Low',    v: fmtSummary(low),   colorClass: null },
+  ];
+
   // ─── Hover/tooltip state ──────────────────────────────────────────────────
 
   const safeIdx      = hoverIdx !== null ? Math.min(hoverIdx, primaryValues.length - 1) : null;
@@ -236,7 +248,6 @@ export function PriceChart({
   const tpDeltaPct   = tpPrevValue ? ((tpValue! - tpPrevValue) / Math.abs(tpPrevValue)) * 100 : null;
   const ttXPct       = safeIdx !== null ? (xS(safeIdx) / PC_W) * 100 : 0;
 
-  // Feature 1 — filter alert lines to those within or near visible Y range
   const visibleAlerts = !isCompareMode && alerts
     ? alerts.filter(a => {
         const y = yS(Number(a.thresholdPrice));
@@ -251,63 +262,65 @@ export function PriceChart({
   return (
     <div>
       {/* Period summary bar */}
-      <div style={{ display: 'flex', marginBottom: 16, background: 'rgba(255,255,255,0.02)', border: '1px solid var(--hairline)', borderRadius: 8 }}>
-        {[
-          { l: 'Open',   v: fmtSummary(open),  c: null },
-          { l: 'Close',  v: fmtSummary(close), c: null },
-          { l: 'Change', v: fmtChange, c: pDelta >= 0 ? 'var(--up)' : 'var(--down)' },
-          { l: 'High',   v: fmtSummary(high),  c: null },
-          { l: 'Low',    v: fmtSummary(low),   c: null },
-        ].map((s, i) => (
-          <div key={s.l} style={{ flex: 1, padding: '10px 12px', borderLeft: i === 0 ? 'none' : '1px solid var(--hairline)', minWidth: 0 }}>
-            <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 4 }}>{s.l}</div>
-            <div style={{ font: '600 12px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums', color: s.c ?? 'var(--chalk)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.v}</div>
+      <div className="flex mb-4 bg-[rgba(255,255,255,0.02)] border border-hairline rounded-lg">
+        {summaryStats.map((s, i) => (
+          <div key={s.l} className={cn('flex-1 p-[10px_12px] min-w-0', i !== 0 && 'border-l border-hairline')}>
+            <div className="font-mono text-[9px] leading-none text-mute tracking-[0.14em] uppercase mb-1">{s.l}</div>
+            <div className={cn('font-display text-[12px] leading-none font-semibold tabular-nums truncate', s.colorClass ?? 'text-chalk')}>{s.v}</div>
           </div>
         ))}
       </div>
 
       {/* Controls row */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
-        {/* MA toggle (hidden in compare mode) */}
+      <div className="flex items-center gap-2 mb-[10px] flex-wrap">
         {!isCompareMode && (
           <button
             onClick={() => setShowMA(v => !v)}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 26, padding: '0 10px', border: `1px solid ${showMA ? 'rgba(147,197,253,0.5)' : 'var(--line)'}`, borderRadius: 4, background: showMA ? 'rgba(147,197,253,0.08)' : 'transparent', color: showMA ? '#93c5fd' : 'var(--mute)', font: '700 10px/1 var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer', transition: 'all 140ms' }}
+            className={cn(
+              'inline-flex items-center gap-[6px] h-[26px] px-[10px] border rounded font-mono text-[10px] leading-none font-bold tracking-[0.1em] uppercase cursor-pointer transition-all duration-[140ms]',
+              showMA
+                ? 'border-[rgba(147,197,253,0.5)] bg-[rgba(147,197,253,0.08)] text-[#93c5fd]'
+                : 'border-line bg-transparent text-mute',
+            )}
           >
-            <span style={{ display: 'inline-block', width: 16, height: 1.5, background: showMA ? '#93c5fd' : 'var(--mute)', borderRadius: 1 }}/>
+            <span
+              className={cn('inline-block w-4 h-[1.5px] rounded-[1px]', showMA ? 'bg-[#93c5fd]' : 'bg-mute')}
+            />
             7D MA
           </button>
         )}
+
         {showMA && !isCompareMode && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 5, font: '500 10px/1 var(--font-mono)', color: 'var(--mute)' }}>
-              <span style={{ display: 'inline-block', width: 18, height: 2, background: 'linear-gradient(90deg,#8E7321,#D4AF37)', borderRadius: 1 }}/>Price
+          <div className="flex items-center gap-[14px]">
+            <span className="flex items-center gap-[5px] font-mono text-[10px] leading-none font-medium text-mute">
+              <span className="inline-block w-[18px] h-[2px] rounded-[1px] bg-[linear-gradient(90deg,#8E7321,#D4AF37)]"/>
+              Price
             </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 5, font: '500 10px/1 var(--font-mono)', color: 'rgba(147,197,253,0.8)' }}>
-              <span style={{ display: 'inline-block', width: 18, borderTop: '1.5px dashed rgba(147,197,253,0.65)' }}/>7D SMA
+            <span className="flex items-center gap-[5px] font-mono text-[10px] leading-none font-medium text-[rgba(147,197,253,0.8)]">
+              <span className="inline-block w-[18px]" style={{ borderTop: '1.5px dashed rgba(147,197,253,0.65)' }}/>
+              7D SMA
             </span>
           </div>
         )}
 
-        {/* Feature 3 — compare mode legend */}
         {isCompareMode && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 5, font: '600 10px/1 var(--font-mono)', color: '#D4AF37' }}>
-              <span style={{ display: 'inline-block', width: 18, height: 2, background: 'linear-gradient(90deg,#8E7321,#D4AF37)', borderRadius: 1 }}/>SJC
+          <div className="flex items-center gap-[14px]">
+            <span className="flex items-center gap-[5px] font-mono text-[10px] leading-none font-semibold text-gold">
+              <span className="inline-block w-[18px] h-[2px] rounded-[1px] bg-[linear-gradient(90deg,#8E7321,#D4AF37)]"/>
+              SJC
             </span>
             {compareNorm.map(s => (
-              <span key={s.brand} style={{ display: 'flex', alignItems: 'center', gap: 5, font: '600 10px/1 var(--font-mono)', color: s.color }}>
-                <span style={{ display: 'inline-block', width: 18, height: 2, background: s.color, borderRadius: 1 }}/>
+              <span key={s.brand} className="flex items-center gap-[5px] font-mono text-[10px] leading-none font-semibold" style={{ color: s.color }}>
+                <span className="inline-block w-[18px] h-[2px] rounded-[1px]" style={{ background: s.color }}/>
                 {s.brand}
               </span>
             ))}
-            <span style={{ font: '500 10px/1 var(--font-mono)', color: 'var(--mute)' }}>% change from base</span>
+            <span className="font-mono text-[10px] leading-none font-medium text-mute">% change from base</span>
           </div>
         )}
 
-        {/* Feature 1 — click-to-alert hint */}
         {onAddAlertAtPrice && !isCompareMode && (
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, font: '500 10px/1 var(--font-mono)', color: 'var(--mute)' }}>
+          <span className="inline-flex items-center gap-[5px] font-mono text-[10px] leading-none font-medium text-mute">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
             Click chart to set alert
           </span>
@@ -316,7 +329,7 @@ export function PriceChart({
         {zoomWindow && (
           <button
             onClick={() => { setZoomWindow(null); doHover(null); setTouchPinned(false); }}
-            style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 5, height: 26, padding: '0 10px', border: '1px solid rgba(212,175,55,0.35)', borderRadius: 4, background: 'transparent', color: 'var(--gold)', font: '700 10px/1 var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}
+            className="ml-auto inline-flex items-center gap-[5px] h-[26px] px-[10px] border border-[rgba(212,175,55,0.35)] rounded bg-transparent text-gold font-mono text-[10px] leading-none font-bold tracking-[0.1em] uppercase cursor-pointer"
           >
             ↺ Reset zoom
           </button>
@@ -331,9 +344,9 @@ export function PriceChart({
         onTouchStart={handleTouchStartJSX}
         onTouchMove={handleTouchMoveJSX}
         onClick={handleChartClick}
-        style={{ position: 'relative', cursor: 'crosshair', touchAction: 'none', userSelect: 'none' } as React.CSSProperties}
+        className="relative cursor-crosshair touch-none select-none"
       >
-        <svg viewBox={`0 0 ${PC_W} ${PC_H}`} style={{ display: 'block', width: '100%', height: 'auto' }}>
+        <svg viewBox={`0 0 ${PC_W} ${PC_H}`} className="block w-full h-auto">
           <defs>
             <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%"   stopColor="#D4AF37" stopOpacity={isCompareMode ? "0.08" : "0.28"}/>
@@ -371,7 +384,6 @@ export function PriceChart({
           )}
 
           <g clipPath={`url(#${clipId})`}>
-            {/* Feature 3 — compare series lines (drawn behind primary) */}
             {isCompareMode && compareNorm.map(s => {
               if (!s.values.length) return null;
               const path = s.values.map((v, i) =>
@@ -380,18 +392,15 @@ export function PriceChart({
               return <path key={s.brand} d={path} fill="none" stroke={s.color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.85"/>;
             })}
 
-            {/* Primary area fill */}
             <path d={fillPath} fill={`url(#${fillId})`}/>
-            {/* Primary price line */}
             <path d={linePath} fill="none" stroke={`url(#${strokeId})`} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
 
-            {/* SMA line (non-compare mode only) */}
             {showMA && !isCompareMode && smaPath && (
               <path d={smaPath} fill="none" stroke="#93c5fd" strokeWidth="1.25" strokeDasharray="5 3" opacity="0.65"/>
             )}
           </g>
 
-          {/* Feature 1 — alert threshold lines */}
+          {/* Alert threshold lines */}
           {visibleAlerts.map(alert => {
             const price      = Number(alert.thresholdPrice);
             const ay         = yS(price);
@@ -404,17 +413,14 @@ export function PriceChart({
             const labelBdr   = isInactive ? 'rgba(90,91,101,0.35)' : isGte ? 'rgba(34,197,94,0.38)' : 'rgba(239,68,68,0.38)';
             return (
               <g key={alert.id}>
-                {/* Dashed horizontal line */}
                 <line x1={PC_PAD.l} x2={PC_W - PC_PAD.r} y1={clampedY} y2={clampedY}
                   stroke={lineColor} strokeWidth="1" strokeDasharray="5 4"/>
-                {/* Y-axis price pill */}
                 <rect x={1} y={clampedY - 8} width={PC_PAD.l - 4} height={16} rx={3}
                   fill={labelBg} stroke={labelBdr} strokeWidth="0.75"/>
                 <text x={PC_PAD.l - 6} y={clampedY + 3.5}
                   textAnchor="end" fill={labelColor} fontSize={8} fontFamily="var(--font-mono)" fontWeight="700">
                   {(price / 1_000_000).toFixed(2)}
                 </text>
-                {/* Right-edge condition tag */}
                 <text x={PC_W - PC_PAD.r - 5} y={clampedY - 4}
                   textAnchor="end" fill={labelColor} fontSize={8} fontFamily="var(--font-mono)" fontWeight="600" opacity="0.85">
                   {isGte ? '≥' : '≤'} alert
@@ -423,20 +429,20 @@ export function PriceChart({
             );
           })}
 
-          {/* Vertical crosshair line */}
+          {/* Vertical crosshair */}
           {safeIdx !== null && (
             <line x1={xS(safeIdx)} x2={xS(safeIdx)} y1={PC_PAD.t} y2={PC_PAD.t + PC_IH}
               stroke="rgba(255,255,255,0.15)" strokeWidth="1"/>
           )}
 
-          {/* Feature 2 — horizontal crosshair line */}
+          {/* Horizontal crosshair */}
           {safeIdx !== null && tpValue !== null && (
             <line x1={PC_PAD.l} x2={PC_W - PC_PAD.r}
               y1={yS(tpValue)} y2={yS(tpValue)}
               stroke="rgba(255,255,255,0.10)" strokeWidth="1" strokeDasharray="3 5"/>
           )}
 
-          {/* Feature 2 — Y-axis hover price pill */}
+          {/* Y-axis hover price pill */}
           {safeIdx !== null && tpValue !== null && (
             <g>
               <rect x={1} y={yS(tpValue) - 9} width={PC_PAD.l - 4} height={18} rx={3}
@@ -458,37 +464,35 @@ export function PriceChart({
 
         {/* Tooltip overlay */}
         {safeIdx !== null && tp && tpValue !== null && (
-          <div style={{
-            position: 'absolute', top: 8,
-            ...(ttXPct < 58
-              ? { left:  `calc(${ttXPct.toFixed(1)}% + 14px)` }
-              : { right: `calc(${(100 - ttXPct).toFixed(1)}% + 14px)` }),
-            background: 'rgba(10,10,15,0.96)', border: '1px solid rgba(255,255,255,0.1)',
-            borderRadius: 8, padding: '10px 14px', minWidth: 160,
-            pointerEvents: 'none', zIndex: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.7)',
-          }}>
-            <div style={{ font: '800 18px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums', color: 'var(--chalk)', marginBottom: 5 }}>
+          <div
+            className="absolute top-2 bg-[rgba(10,10,15,0.96)] border border-[rgba(255,255,255,0.1)] rounded-lg p-[10px_14px] min-w-[160px] pointer-events-none z-20 shadow-[0_4px_20px_rgba(0,0,0,0.7)]"
+            style={ttXPct < 58
+              ? { left: `calc(${ttXPct.toFixed(1)}% + 14px)` }
+              : { right: `calc(${(100 - ttXPct).toFixed(1)}% + 14px)` }
+            }
+          >
+            <div className="font-display text-[18px] leading-none font-extrabold tabular-nums text-chalk mb-[5px]">
               {isCompareMode
                 ? `${tpValue >= 0 ? '+' : ''}${tpValue.toFixed(3)}%`
                 : (tpRawPrice! / 1_000_000).toFixed(2) + 'M₫'}
             </div>
             {isCompareMode && tpRawPrice && (
-              <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', marginBottom: 3 }}>
+              <div className="font-mono text-[10px] leading-none text-mute mb-[3px]">
                 {(tpRawPrice / 1_000_000).toFixed(2)}M₫ actual
               </div>
             )}
-            <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', marginBottom: 5, lineHeight: 1.4 }}>{fmtDT(tp.recordedAt)}</div>
+            <div className="font-mono text-[10px] leading-[1.4] text-mute mb-[5px]">{fmtDT(tp.recordedAt)}</div>
             {tpDelta !== null && (
-              <div className="mono" style={{ fontSize: 11, fontWeight: 700, color: tpDelta >= 0 ? 'var(--up)' : 'var(--down)' }}>
+              <div className={cn('font-mono text-[11px] leading-none font-bold', tpDelta >= 0 ? 'text-up' : 'text-down')}>
                 {tpDelta >= 0 ? '+' : ''}
                 {isCompareMode ? tpDelta.toFixed(3) + 'pp' : (tpDelta / 1_000_000).toFixed(3) + 'M₫'}
                 {tpDeltaPct !== null && !isCompareMode && (
-                  <span style={{ marginLeft: 5, opacity: 0.75 }}>({tpDeltaPct >= 0 ? '+' : ''}{tpDeltaPct.toFixed(3)}%)</span>
+                  <span className="ml-[5px] opacity-75">({tpDeltaPct >= 0 ? '+' : ''}{tpDeltaPct.toFixed(3)}%)</span>
                 )}
               </div>
             )}
             {onAddAlertAtPrice && !isCompareMode && (
-              <div className="mono" style={{ fontSize: 9, color: 'rgba(212,175,55,0.6)', marginTop: 8, paddingTop: 7, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+              <div className="font-mono text-[9px] leading-none text-[rgba(212,175,55,0.6)] mt-2 pt-[7px] border-t border-[rgba(255,255,255,0.06)]">
                 click to set alert here
               </div>
             )}

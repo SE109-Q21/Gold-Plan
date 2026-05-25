@@ -5,10 +5,9 @@ import { useAlerts, useToggleAlert, useDeleteAlert, useAlertHistory } from '@/li
 import { useSmartAlerts, useCreateSmartAlert, useToggleSmartAlert, useDeleteSmartAlert } from '@/lib/smart-alerts.api';
 import type { PriceAlertDto, SmartAlertDto, CreateSmartAlertDto, SmartAlertCondition } from '@gpls/shared';
 import { PushNotificationButton } from '@/components/PushNotificationButton';
+import { cn } from '@/lib/utils';
 
 type TabId = 'rules' | 'history' | 'smart';
-
-// ─── Confirm delete modal ──────────────────────────────────────────────────────
 
 function ConfirmDeleteModal({ message, onConfirm, onClose }: {
   message: string;
@@ -17,64 +16,31 @@ function ConfirmDeleteModal({ message, onConfirm, onClose }: {
 }) {
   return (
     <div
-      style={{
-        position: 'fixed', inset: 0, zIndex: 1100,
-        background: 'rgba(11,11,15,0.80)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: 20,
-      }}
+      className="fixed inset-0 z-[1100] bg-[rgba(11,11,15,0.80)] flex items-center justify-center p-5"
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div style={{
-        width: 380,
-        background: 'var(--ink-2)', border: '1px solid var(--line)',
-        borderRadius: 14, padding: '28px 28px 24px',
-        display: 'flex', flexDirection: 'column', gap: 20,
-      }}>
-        {/* Icon + title */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: 8, flexShrink: 0,
-            background: 'rgba(229,72,77,0.12)', border: '1px solid rgba(229,72,77,0.25)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
+      <div className="w-[380px] bg-ink-2 border border-line rounded-[14px] px-7 pt-7 pb-6 flex flex-col gap-5">
+        <div className="flex items-start gap-[14px]">
+          <div className="w-9 h-9 rounded-lg shrink-0 bg-[rgba(229,72,77,0.12)] border border-[rgba(229,72,77,0.25)] flex items-center justify-center">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--down)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14"/>
             </svg>
           </div>
           <div>
-            <div style={{ font: '700 16px/1 var(--font-display)', color: 'var(--chalk)', marginBottom: 6 }}>
-              Xóa alert
-            </div>
-            <div style={{ font: '400 13px/1.5 var(--font-display)', color: 'var(--mute)' }}>
-              {message}
-            </div>
+            <div className="text-[16px] leading-none font-bold font-sans text-chalk mb-[6px]">Xóa alert</div>
+            <div className="text-[13px] leading-[1.5] font-sans text-mute">{message}</div>
           </div>
         </div>
-
-        {/* Actions */}
-        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+        <div className="flex gap-2 justify-end">
           <button
             onClick={onClose}
-            style={{
-              height: 36, padding: '0 16px',
-              background: 'var(--ink-3)', border: '1px solid var(--line)',
-              borderRadius: 8, cursor: 'pointer',
-              font: '700 12px/1 var(--font-mono)', letterSpacing: '0.04em',
-              color: 'var(--bone)',
-            }}
+            className="h-9 px-4 bg-ink-3 border border-line rounded-lg cursor-pointer font-mono text-[12px] leading-none font-bold tracking-[0.04em] text-bone"
           >
             Hủy
           </button>
           <button
             onClick={() => { onConfirm(); onClose(); }}
-            style={{
-              height: 36, padding: '0 16px',
-              background: 'rgba(229,72,77,0.15)', border: '1px solid rgba(229,72,77,0.4)',
-              borderRadius: 8, cursor: 'pointer',
-              font: '700 12px/1 var(--font-mono)', letterSpacing: '0.04em',
-              color: 'var(--down)',
-            }}
+            className="h-9 px-4 bg-[rgba(229,72,77,0.15)] border border-[rgba(229,72,77,0.4)] rounded-lg cursor-pointer font-mono text-[12px] leading-none font-bold tracking-[0.04em] text-down"
           >
             Xóa
           </button>
@@ -84,43 +50,35 @@ function ConfirmDeleteModal({ message, onConfirm, onClose }: {
   );
 }
 
-// ─── Shared helpers ────────────────────────────────────────────────────────────
-
 function Toggle({ on, onChange, disabled }: { on: boolean; onChange: () => void; disabled?: boolean }) {
   return (
     <button
       onClick={onChange}
       disabled={disabled}
-      style={{
-        width: 38, height: 22, padding: 2,
-        background: on ? 'var(--gold)' : 'var(--ink-3)',
-        border: `1px solid ${on ? 'var(--gold)' : 'var(--line)'}`,
-        borderRadius: 99, cursor: disabled ? 'default' : 'pointer',
-        display: 'flex', alignItems: 'center', opacity: disabled ? 0.5 : 1,
-      }}
+      className={cn(
+        'w-[38px] h-[22px] p-0.5 rounded-full flex items-center border transition-colors duration-[180ms]',
+        on ? 'bg-gold border-gold' : 'bg-ink-3 border-line',
+        disabled ? 'opacity-50 cursor-default' : 'cursor-pointer',
+      )}
     >
-      <span style={{
-        width: 16, height: 16, borderRadius: 99,
-        background: on ? '#0B0B0F' : '#5a5b65',
-        transform: on ? 'translateX(16px)' : 'translateX(0)',
-        transition: 'transform 180ms var(--ease)',
-      }}/>
+      <span
+        className={cn(
+          'w-4 h-4 rounded-full transition-transform duration-[180ms]',
+          on ? 'bg-gold-ink translate-x-4' : 'bg-[#5a5b65] translate-x-0',
+        )}
+      />
     </button>
   );
 }
 
 function SkeletonRow() {
   return (
-    <div style={{
-      display: 'grid', gridTemplateColumns: '64px 2fr 1.4fr 1fr 100px 130px',
-      padding: '16px 22px', alignItems: 'center', borderTop: '1px solid var(--hairline)',
-    }}>
+    <div
+      className="grid px-[22px] py-4 items-center border-t border-hairline"
+      style={{ gridTemplateColumns: '64px 2fr 1.4fr 1fr 100px 130px' }}
+    >
       {[64, 140, 90, 60, 80, 80].map((w, i) => (
-        <div key={i} style={{
-          height: 14, width: w, borderRadius: 4,
-          background: 'var(--ink-3)',
-          animation: 'pulse 1.5s ease-in-out infinite',
-        }}/>
+        <div key={i} className="h-[14px] rounded bg-ink-3 animate-pulse" style={{ width: w }}/>
       ))}
     </div>
   );
@@ -135,21 +93,14 @@ function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '.');
 }
 
-// ─── Natural language preview ──────────────────────────────────────────────────
-
-function buildNaturalLanguage(
-  brand: string,
-  cond: SmartAlertCondition | null,
-): string {
+function buildNaturalLanguage(brand: string, cond: SmartAlertCondition | null): string {
   if (!cond) return '';
   const b = brand || 'SJC';
   if (cond.type === 'TREND') {
     const p = cond.params as { n?: number; direction?: string };
     const n = p.n ?? 3;
     const dir = p.direction ?? 'up';
-    return dir === 'up'
-      ? `${b} tăng giá ${n} lần liên tiếp`
-      : `${b} giảm giá ${n} lần liên tiếp`;
+    return dir === 'up' ? `${b} tăng giá ${n} lần liên tiếp` : `${b} giảm giá ${n} lần liên tiếp`;
   }
   if (cond.type === 'SPREAD') {
     const p = cond.params as { thresholdVnd?: number };
@@ -165,19 +116,13 @@ function buildNaturalLanguage(
   return '';
 }
 
-function buildFullPreview(
-  brand: string,
-  cond1: SmartAlertCondition | null,
-  cond2: SmartAlertCondition | null,
-): string {
+function buildFullPreview(brand: string, cond1: SmartAlertCondition | null, cond2: SmartAlertCondition | null): string {
   const s1 = buildNaturalLanguage(brand, cond1);
   const s2 = buildNaturalLanguage(brand, cond2);
   if (!s1) return '';
   if (s2) return `${s1} VÀ ${s2}`;
   return s1;
 }
-
-// ─── Condition builder sub-form ────────────────────────────────────────────────
 
 type ConditionDraft = {
   type: 'TREND' | 'SPREAD' | 'THRESHOLD';
@@ -207,78 +152,71 @@ function toSmartAlertCondition(draft: ConditionDraft): SmartAlertCondition {
   return { type: 'THRESHOLD', params: { condition: draft.thresholdDir, priceVnd: Number(draft.thresholdPrice) || 0 } };
 }
 
-function ConditionForm({ value, onChange }: { value: ConditionDraft; onChange: (v: ConditionDraft) => void }) {
-  const chipStyle = (active: boolean): React.CSSProperties => ({
-    height: 28, padding: '0 12px',
-    background: active ? 'var(--gold)' : 'var(--ink-3)',
-    border: `1px solid ${active ? 'var(--gold)' : 'var(--line)'}`,
-    borderRadius: 6, cursor: 'pointer',
-    font: '700 11px/1 var(--font-mono)', letterSpacing: '0.08em',
-    color: active ? '#0B0B0F' : 'var(--bone)',
-  });
+function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        'h-7 px-3 rounded-md border cursor-pointer font-mono text-[11px] leading-none font-bold tracking-[0.08em]',
+        active ? 'bg-gold border-gold text-gold-ink' : 'bg-ink-3 border-line text-bone',
+      )}
+    >
+      {children}
+    </button>
+  );
+}
 
-  const inputStyle: React.CSSProperties = {
-    height: 36, padding: '0 12px',
-    background: 'var(--ink-3)', border: '1px solid var(--line)',
-    borderRadius: 6, color: 'var(--chalk)',
-    font: '500 13px/1 var(--font-mono)', width: '100%',
-    outline: 'none',
-  };
+function ConditionForm({ value, onChange }: { value: ConditionDraft; onChange: (v: ConditionDraft) => void }) {
+  const inputCls = 'h-9 px-3 bg-ink-3 border border-line rounded-md text-chalk font-mono text-[13px] leading-none w-full outline-none';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      {/* Type selector */}
-      <div style={{ display: 'flex', gap: 6 }}>
+    <div className="flex flex-col gap-[10px]">
+      <div className="flex gap-[6px]">
         {(['TREND', 'SPREAD', 'THRESHOLD'] as const).map(t => (
-          <button key={t} style={chipStyle(value.type === t)} onClick={() => onChange({ ...value, type: t })}>
+          <Chip key={t} active={value.type === t} onClick={() => onChange({ ...value, type: t })}>
             {t === 'TREND' ? 'Trend' : t === 'SPREAD' ? 'Spread' : 'Price Threshold'}
-          </button>
+          </Chip>
         ))}
       </div>
 
-      {/* TREND params */}
       {value.type === 'TREND' && (
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-          <span style={{ font: '500 12px/1 var(--font-display)', color: 'var(--mute)' }}>N =</span>
-          <div style={{ display: 'flex', gap: 4 }}>
+        <div className="flex gap-3 items-center">
+          <span className="text-[12px] leading-none font-sans font-medium text-mute">N =</span>
+          <div className="flex gap-1">
             {[2, 3, 4, 5].map(n => (
-              <button key={n} style={chipStyle(value.trendN === n)} onClick={() => onChange({ ...value, trendN: n })}>
-                {n}
-              </button>
+              <Chip key={n} active={value.trendN === n} onClick={() => onChange({ ...value, trendN: n })}>{n}</Chip>
             ))}
           </div>
-          <div style={{ display: 'flex', gap: 4 }}>
+          <div className="flex gap-1">
             {(['up', 'down'] as const).map(d => (
-              <button key={d} style={chipStyle(value.trendDir === d)} onClick={() => onChange({ ...value, trendDir: d })}>
+              <Chip key={d} active={value.trendDir === d} onClick={() => onChange({ ...value, trendDir: d })}>
                 {d === 'up' ? '↑ Up' : '↓ Down'}
-              </button>
+              </Chip>
             ))}
           </div>
         </div>
       )}
 
-      {/* SPREAD params */}
       {value.type === 'SPREAD' && (
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <span style={{ font: '500 12px/1 var(--font-display)', color: 'var(--mute)', whiteSpace: 'nowrap' }}>Threshold (VND)</span>
+        <div className="flex gap-2 items-center">
+          <span className="text-[12px] leading-none font-sans font-medium text-mute whitespace-nowrap">Threshold (VND)</span>
           <input
             type="number"
             placeholder="e.g. 200000"
             value={value.spreadThreshold}
             onChange={e => onChange({ ...value, spreadThreshold: e.target.value })}
-            style={inputStyle}
+            className={inputCls}
           />
         </div>
       )}
 
-      {/* THRESHOLD params */}
       {value.type === 'THRESHOLD' && (
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <div style={{ display: 'flex', gap: 4 }}>
+        <div className="flex gap-2 items-center">
+          <div className="flex gap-1">
             {([['lte', '≤'], ['gte', '≥']] as const).map(([v, label]) => (
-              <button key={v} style={chipStyle(value.thresholdDir === v)} onClick={() => onChange({ ...value, thresholdDir: v })}>
+              <Chip key={v} active={value.thresholdDir === v} onClick={() => onChange({ ...value, thresholdDir: v })}>
                 {label}
-              </button>
+              </Chip>
             ))}
           </div>
           <input
@@ -286,7 +224,7 @@ function ConditionForm({ value, onChange }: { value: ConditionDraft; onChange: (
             placeholder="e.g. 79000000"
             value={value.thresholdPrice}
             onChange={e => onChange({ ...value, thresholdPrice: e.target.value })}
-            style={inputStyle}
+            className={inputCls}
           />
         </div>
       )}
@@ -294,10 +232,8 @@ function ConditionForm({ value, onChange }: { value: ConditionDraft; onChange: (
   );
 }
 
-// ─── Builder modal ─────────────────────────────────────────────────────────────
-
-const BRANDS = ['SJC', 'DOJI', 'PNJ', 'BAO_TIN'] as const;
-const GOLD_TYPES = ['MIEN_SJC', 'NHAN_9999', 'VANG_24K', 'VANG_18K'] as const;
+const BRANDS_LIST = ['SJC', 'DOJI', 'PNJ', 'BAO_TIN'] as const;
+const GOLD_TYPES_LIST = ['MIEN_SJC', 'NHAN_9999', 'VANG_24K', 'VANG_18K'] as const;
 
 function BuilderModal({ onClose }: { onClose: () => void }) {
   const [brand, setBrand] = useState<string>('SJC');
@@ -307,7 +243,6 @@ function BuilderModal({ onClose }: { onClose: () => void }) {
   const [cond2, setCond2] = useState<ConditionDraft>(defaultCond());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   const createAlert = useCreateSmartAlert();
 
   const preview = buildFullPreview(
@@ -335,117 +270,77 @@ function BuilderModal({ onClose }: { onClose: () => void }) {
     }
   };
 
-  const chipStyle = (active: boolean): React.CSSProperties => ({
-    height: 28, padding: '0 12px',
-    background: active ? 'var(--gold)' : 'var(--ink-3)',
-    border: `1px solid ${active ? 'var(--gold)' : 'var(--line)'}`,
-    borderRadius: 6, cursor: 'pointer',
-    font: '700 11px/1 var(--font-mono)', letterSpacing: '0.08em',
-    color: active ? '#0B0B0F' : 'var(--bone)',
-  });
-
-  const labelStyle: React.CSSProperties = {
-    font: '700 10px/1 var(--font-mono)', letterSpacing: '0.14em',
-    textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 8,
-  };
+  const labelCls = 'font-mono text-[10px] leading-none font-bold tracking-[0.14em] uppercase text-mute mb-2';
 
   return (
     <div
-      style={{
-        position: 'fixed', inset: 0, zIndex: 1000,
-        background: 'rgba(11,11,15,0.85)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: 20,
-      }}
+      className="fixed inset-0 z-[1000] bg-[rgba(11,11,15,0.85)] flex items-center justify-center p-5"
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div style={{
-        width: 500, maxHeight: '90vh', overflowY: 'auto',
-        background: 'var(--ink-2)', border: '1px solid var(--line)',
-        borderRadius: 14, padding: '24px 28px',
-        display: 'flex', flexDirection: 'column', gap: 20,
-      }}>
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 style={{ font: '800 20px/1 var(--font-display)', margin: 0 }}>New Smart Alert</h2>
-          <button
-            onClick={onClose}
-            style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--mute)', font: '700 18px/1 var(--font-mono)' }}
-          >
-            ×
-          </button>
+      <div className="w-[500px] max-h-[90vh] overflow-y-auto bg-ink-2 border border-line rounded-[14px] px-7 py-6 flex flex-col gap-5">
+        <div className="flex justify-between items-center">
+          <h2 className="text-[20px] leading-none font-extrabold font-sans m-0">New Smart Alert</h2>
+          <button onClick={onClose} className="bg-transparent border-none cursor-pointer text-mute font-mono text-[18px] leading-none font-bold">×</button>
         </div>
 
-        {/* Brand */}
         <div>
-          <div style={labelStyle}>Brand</div>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            {BRANDS.map(b => (
-              <button key={b} style={chipStyle(brand === b)} onClick={() => setBrand(b)}>{b}</button>
+          <div className={labelCls}>Brand</div>
+          <div className="flex gap-[6px] flex-wrap">
+            {BRANDS_LIST.map(b => (
+              <Chip key={b} active={brand === b} onClick={() => setBrand(b)}>{b}</Chip>
             ))}
           </div>
         </div>
 
-        {/* Gold Type */}
         <div>
-          <div style={labelStyle}>Gold Type</div>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            {GOLD_TYPES.map(g => (
-              <button key={g} style={chipStyle(goldType === g)} onClick={() => setGoldType(g)}>{g}</button>
+          <div className={labelCls}>Gold Type</div>
+          <div className="flex gap-[6px] flex-wrap">
+            {GOLD_TYPES_LIST.map(g => (
+              <Chip key={g} active={goldType === g} onClick={() => setGoldType(g)}>{g}</Chip>
             ))}
           </div>
         </div>
 
-        {/* Condition 1 */}
         <div>
-          <div style={labelStyle}>Condition 1</div>
+          <div className={labelCls}>Condition 1</div>
           <ConditionForm value={cond1} onChange={setCond1} />
         </div>
 
-        {/* AND condition 2 toggle */}
-        <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+        <label className="flex items-center gap-[10px] cursor-pointer">
           <input
             type="checkbox"
             checked={hasCond2}
             onChange={e => setHasCond2(e.target.checked)}
-            style={{ width: 16, height: 16, accentColor: 'var(--gold)' }}
+            className="w-4 h-4 accent-gold"
           />
-          <span style={{ font: '500 13px/1 var(--font-display)', color: 'var(--bone)' }}>Add condition 2 (AND)</span>
+          <span className="text-[13px] leading-none font-sans font-medium text-bone">Add condition 2 (AND)</span>
         </label>
 
-        {/* Condition 2 */}
         {hasCond2 && (
           <div>
-            <div style={labelStyle}>Condition 2</div>
+            <div className={labelCls}>Condition 2</div>
             <ConditionForm value={cond2} onChange={setCond2} />
           </div>
         )}
 
-        {/* Preview */}
         {preview && (
-          <div style={{
-            background: 'var(--ink-3)', border: '1px solid var(--line)',
-            borderRadius: 8, padding: '12px 16px',
-          }}>
-            <div style={{ font: '700 10px/1 var(--font-mono)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 6 }}>Preview</div>
-            <div style={{ font: '500 14px/1.4 var(--font-display)', color: 'var(--gold)' }}>{preview}</div>
+          <div className="bg-ink-3 border border-line rounded-lg px-4 py-3">
+            <div className={labelCls + ' mb-[6px]'}>Preview</div>
+            <div className="text-[14px] leading-[1.4] font-sans font-medium text-gold">{preview}</div>
           </div>
         )}
 
         {error && (
-          <div style={{ font: '500 13px/1.4 var(--font-display)', color: 'var(--down)' }}>{error}</div>
+          <div className="text-[13px] leading-[1.4] font-sans font-medium text-down">{error}</div>
         )}
 
-        {/* Submit */}
         <button
           onClick={handleSubmit}
           disabled={isSubmitting}
-          style={{
-            height: 44, background: 'var(--gold)', color: '#0B0B0F',
-            border: '1px solid var(--gold)', borderRadius: 10, cursor: isSubmitting ? 'default' : 'pointer',
-            font: '700 14px/1 var(--font-mono)', letterSpacing: '0.04em', textTransform: 'uppercase',
-            opacity: isSubmitting ? 0.7 : 1,
-          }}
+          className={cn(
+            'h-11 bg-gold text-gold-ink border border-gold rounded-[10px] font-mono text-[14px] leading-none font-bold tracking-[0.04em] uppercase',
+            isSubmitting ? 'cursor-default opacity-70' : 'cursor-pointer',
+          )}
         >
           {isSubmitting ? 'Creating…' : 'Create Smart Alert'}
         </button>
@@ -453,8 +348,6 @@ function BuilderModal({ onClose }: { onClose: () => void }) {
     </div>
   );
 }
-
-// ─── Smart Alerts panel ────────────────────────────────────────────────────────
 
 function SmartAlertsPanel() {
   const { data: alerts = [], isLoading } = useSmartAlerts();
@@ -466,19 +359,10 @@ function SmartAlertsPanel() {
   const handleToggle = (id: string) => toggleAlert.mutate(id);
   const handleDelete = (id: string) => setPendingDeleteId(id);
 
-  const statusChip = (status: SmartAlertDto['status']): React.CSSProperties => {
-    if (status === 'active') return {
-      background: 'rgba(212,175,55,0.15)', color: 'var(--gold)',
-      border: '1px solid rgba(212,175,55,0.4)',
-    };
-    if (status === 'triggered') return {
-      background: 'rgba(88,200,150,0.12)', color: 'var(--up)',
-      border: '1px solid rgba(88,200,150,0.4)',
-    };
-    return {
-      background: 'var(--ink-3)', color: 'var(--mute)',
-      border: '1px solid var(--line)',
-    };
+  const statusChipCls = (status: SmartAlertDto['status']) => {
+    if (status === 'active') return 'bg-[rgba(212,175,55,0.15)] text-gold border border-[rgba(212,175,55,0.4)]';
+    if (status === 'triggered') return 'bg-[rgba(88,200,150,0.12)] text-up border border-[rgba(88,200,150,0.4)]';
+    return 'bg-ink-3 text-mute border border-line';
   };
 
   return (
@@ -492,92 +376,64 @@ function SmartAlertsPanel() {
         />
       )}
 
-      <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, padding: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 22px', borderBottom: '1px solid var(--hairline)' }}>
-          <h3 style={{ font: '700 16px/1 var(--font-display)', margin: 0 }}>smart alerts</h3>
+      <div className="bg-ink-2 border border-line rounded-[14px]">
+        <div className="flex items-center justify-between px-[22px] py-4 border-b border-hairline">
+          <h3 className="text-[16px] leading-none font-bold font-sans m-0">smart alerts</h3>
           <button
             onClick={() => setShowModal(true)}
-            style={{
-              height: 34, padding: '0 14px', display: 'inline-flex', alignItems: 'center', gap: 6,
-              background: 'var(--gold)', color: '#0B0B0F',
-              border: '1px solid var(--gold)', borderRadius: 8, cursor: 'pointer',
-              font: '700 11px/1 var(--font-mono)', letterSpacing: '0.08em', textTransform: 'uppercase',
-            }}
+            className="h-[34px] px-[14px] inline-flex items-center gap-[6px] bg-gold text-gold-ink border border-gold rounded-lg cursor-pointer font-mono text-[11px] leading-none font-bold tracking-[0.08em] uppercase"
           >
             + New Smart Alert
           </button>
         </div>
 
-        {/* Header row */}
-        <div style={{
-          display: 'grid', gridTemplateColumns: '1fr auto auto',
-          padding: '12px 22px', font: '700 10px/1 var(--font-mono)', color: 'var(--mute)',
-          letterSpacing: '0.14em', textTransform: 'uppercase',
-          background: 'var(--ink-3)', borderBottom: '1px solid var(--hairline)',
-        }}>
+        <div
+          className="grid px-[22px] py-3 font-mono text-[10px] text-mute tracking-[0.14em] uppercase bg-ink-3 border-b border-hairline"
+          style={{ gridTemplateColumns: '1fr auto auto' }}
+        >
           <span>description</span>
-          <span style={{ marginRight: 48 }}>status</span>
+          <span className="mr-12">status</span>
           <span>actions</span>
         </div>
 
         {isLoading && [0, 1, 2].map(i => (
-          <div key={i} style={{
-            display: 'grid', gridTemplateColumns: '1fr auto auto',
-            padding: '16px 22px', borderTop: '1px solid var(--hairline)', alignItems: 'center', gap: 12,
-          }}>
-            <div style={{ height: 14, borderRadius: 4, background: 'var(--ink-3)', animation: 'pulse 1.5s ease-in-out infinite', width: '60%' }}/>
-            <div style={{ height: 22, width: 60, borderRadius: 4, background: 'var(--ink-3)', animation: 'pulse 1.5s ease-in-out infinite' }}/>
-            <div style={{ height: 22, width: 80, borderRadius: 4, background: 'var(--ink-3)', animation: 'pulse 1.5s ease-in-out infinite' }}/>
+          <div
+            key={i}
+            className="grid px-[22px] py-4 border-t border-hairline items-center gap-3"
+            style={{ gridTemplateColumns: '1fr auto auto' }}
+          >
+            <div className="h-[14px] rounded bg-ink-3 animate-pulse w-[60%]"/>
+            <div className="h-[22px] w-[60px] rounded bg-ink-3 animate-pulse"/>
+            <div className="h-[22px] w-[80px] rounded bg-ink-3 animate-pulse"/>
           </div>
         ))}
 
         {!isLoading && alerts.length === 0 && (
-          <div style={{ padding: '48px 22px', textAlign: 'center', color: 'var(--mute)', font: '500 14px/1.5 var(--font-display)' }}>
-            No smart alerts yet — click <span style={{ color: 'var(--gold)' }}>+ New Smart Alert</span> to get started
+          <div className="px-[22px] py-12 text-center text-mute text-[14px] leading-[1.5] font-sans font-medium">
+            No smart alerts yet — click <span className="text-gold">+ New Smart Alert</span> to get started
           </div>
         )}
 
         {!isLoading && alerts.map((a, i) => (
           <div
             key={a.id}
-            style={{
-              display: 'grid', gridTemplateColumns: '1fr auto auto',
-              padding: '14px 22px', alignItems: 'center', gap: 12,
-              borderTop: i === 0 ? 'none' : '1px solid var(--hairline)',
-              opacity: a.status === 'inactive' ? 0.55 : 1,
-            }}
+            className={cn(
+              'grid px-[22px] py-[14px] items-center gap-3',
+              i !== 0 && 'border-t border-hairline',
+              a.status === 'inactive' && 'opacity-55',
+            )}
+            style={{ gridTemplateColumns: '1fr auto auto' }}
           >
-            {/* Description */}
-            <div style={{ font: '500 14px/1.4 var(--font-display)', color: 'var(--chalk)' }}>
-              {a.naturalLanguage}
-            </div>
-
-            {/* Status chip */}
-            <span style={{
-              font: '700 9px/1 var(--font-mono)', letterSpacing: '0.14em', textTransform: 'uppercase',
-              padding: '4px 8px', borderRadius: 4,
-              ...statusChip(a.status),
-            }}>
+            <div className="text-[14px] leading-[1.4] font-sans font-medium text-chalk">{a.naturalLanguage}</div>
+            <span className={cn('font-mono text-[9px] leading-none font-bold tracking-[0.14em] uppercase px-2 py-1 rounded', statusChipCls(a.status))}>
               {a.status}
             </span>
-
-            {/* Actions */}
-            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-              <Toggle
-                on={a.status === 'active'}
-                onChange={() => handleToggle(a.id)}
-                disabled={toggleAlert.isPending}
-              />
+            <div className="flex gap-[6px] items-center">
+              <Toggle on={a.status === 'active'} onChange={() => handleToggle(a.id)} disabled={toggleAlert.isPending}/>
               <button
                 onClick={() => handleDelete(a.id)}
                 disabled={deleteAlert.isPending}
-                style={{
-                  width: 28, height: 32, background: 'transparent',
-                  border: '1px solid transparent', borderRadius: 6,
-                  cursor: 'pointer', color: 'var(--down)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  opacity: deleteAlert.isPending ? 0.5 : 1,
-                }}
+                className={cn('w-7 h-8 bg-transparent border border-transparent rounded-md cursor-pointer text-down flex items-center justify-center', deleteAlert.isPending && 'opacity-50')}
               >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14"/>
@@ -590,8 +446,6 @@ function SmartAlertsPanel() {
     </>
   );
 }
-
-// ─── Main AlertsPage ───────────────────────────────────────────────────────────
 
 export function AlertsPage({ onOpenAdd }: { onOpenAdd: () => void }) {
   const [tab, setTab] = useState<TabId>('rules');
@@ -607,254 +461,229 @@ export function AlertsPage({ onOpenAdd }: { onOpenAdd: () => void }) {
   const activeCount = alerts.filter(a => a.status === 'active').length;
   const triggeredCount = history.length;
 
-  const tabStyle = (active: boolean): React.CSSProperties => ({
-    height: 34, padding: '0 16px',
-    background: active ? 'var(--ink-3)' : 'transparent',
-    border: `1px solid ${active ? 'var(--line)' : 'transparent'}`,
-    borderRadius: 8, cursor: 'pointer',
-    font: '700 11px/1 var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase',
-    color: active ? 'var(--chalk)' : 'var(--mute)',
-  });
-
   return (
     <>
-    {pendingDeleteId && (
-      <ConfirmDeleteModal
-        message="Bạn có chắc muốn xóa alert này không? Hành động này không thể hoàn tác."
-        onConfirm={() => deleteAlert.mutate(pendingDeleteId)}
-        onClose={() => setPendingDeleteId(null)}
-      />
-    )}
-    <div style={{ padding: '24px 28px 40px', display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div>
-          <h1 style={{ font: '800 36px/1 var(--font-display)', margin: 0, letterSpacing: '-0.025em' }}>price alerts</h1>
-          <p style={{ font: '400 14px/1.5 var(--font-display)', color: 'var(--mute)', margin: '8px 0 0', maxWidth: 480 }}>
-            notified when the price crosses your threshold. email within 2 min, push within 30 sec.
-          </p>
+      {pendingDeleteId && (
+        <ConfirmDeleteModal
+          message="Bạn có chắc muốn xóa alert này không? Hành động này không thể hoàn tác."
+          onConfirm={() => deleteAlert.mutate(pendingDeleteId)}
+          onClose={() => setPendingDeleteId(null)}
+        />
+      )}
+      <div className="px-7 pt-6 pb-10 flex flex-col gap-5">
+        {/* Header */}
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-[36px] leading-none font-extrabold font-sans m-0 tracking-[-0.025em]">price alerts</h1>
+            <p className="text-[14px] leading-[1.5] font-sans text-mute mt-2 mb-0 max-w-[480px]">
+              notified when the price crosses your threshold. email within 2 min, push within 30 sec.
+            </p>
+          </div>
+          <div className="flex gap-[10px] items-center">
+            <PushNotificationButton />
+            <button
+              onClick={onOpenAdd}
+              className="h-11 px-[18px] inline-flex items-center gap-2 bg-gold text-gold-ink border border-gold rounded-[10px] cursor-pointer font-mono text-[14px] leading-none font-bold tracking-[0.04em] uppercase"
+            >
+              + new alert
+            </button>
+          </div>
         </div>
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          <PushNotificationButton />
-          <button
-            onClick={onOpenAdd}
-            style={{
-              height: 44, padding: '0 18px', display: 'inline-flex', alignItems: 'center', gap: 8,
-              background: 'var(--gold)', color: '#0B0B0F',
-              border: '1px solid var(--gold)', borderRadius: 10, cursor: 'pointer',
-              font: '700 14px/1 var(--font-mono)', letterSpacing: '0.04em', textTransform: 'uppercase',
-            }}
-          >
-            + new alert
-          </button>
-        </div>
-      </div>
 
-      {/* Stats bar */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
-        {[
-          { lbl: 'Active',    val: activeCount,                   gold: true  },
-          { lbl: 'Triggered', val: triggeredCount,                 gold: false },
-          { lbl: 'Slots',     val: `${alerts.length} / 10`,        gold: false },
-          { lbl: 'Cooldown',  val: '30 min',                       gold: false },
-        ].map(s => (
-          <div key={s.lbl} style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, padding: 18 }}>
-            <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 8 }}>{s.lbl}</div>
-            <div style={{ font: '800 30px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums', color: s.gold ? 'var(--gold)' : 'var(--chalk)' }}>{s.val}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Tab switcher */}
-      <div style={{ display: 'flex', gap: 6 }}>
-        <button style={tabStyle(tab === 'rules')}   onClick={() => setTab('rules')}>Active rules</button>
-        <button style={tabStyle(tab === 'history')} onClick={() => setTab('history')}>Trigger history</button>
-        <button style={tabStyle(tab === 'smart')}   onClick={() => setTab('smart')}>Smart alerts</button>
-      </div>
-
-      {/* ── Rules tab ── */}
-      {tab === 'rules' && (
-        <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, padding: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 22px', borderBottom: '1px solid var(--hairline)' }}>
-            <h3 style={{ font: '700 16px/1 var(--font-display)', margin: 0 }}>active rules</h3>
-          </div>
-          {/* Header row */}
-          <div style={{
-            display: 'grid', gridTemplateColumns: '80px 2fr 1.4fr 1fr 110px 130px',
-            padding: '12px 22px', font: '700 10px/1 var(--font-mono)', color: 'var(--mute)',
-            letterSpacing: '0.14em', textTransform: 'uppercase',
-            background: 'var(--ink-3)', borderBottom: '1px solid var(--hairline)',
-          }}>
-            <span>brand</span>
-            <span>type / condition</span>
-            <span style={{ textAlign: 'right' }}>threshold</span>
-            <span>repeat</span>
-            <span>status</span>
-            <span style={{ textAlign: 'right' }}>actions</span>
-          </div>
-
-          {isLoading && [0, 1, 2].map(i => <SkeletonRow key={i}/>)}
-
-          {!isLoading && alerts.length === 0 && (
-            <div style={{ padding: '48px 22px', textAlign: 'center', color: 'var(--mute)', font: '500 14px/1.5 var(--font-display)' }}>
-              no alerts yet — click <span style={{ color: 'var(--gold)' }}>+ new alert</span> to get started
+        {/* Stats bar */}
+        <div className="grid grid-cols-4 gap-[14px]">
+          {[
+            { lbl: 'Active',    val: activeCount,             gold: true  },
+            { lbl: 'Triggered', val: triggeredCount,           gold: false },
+            { lbl: 'Slots',     val: `${alerts.length} / 10`, gold: false },
+            { lbl: 'Cooldown',  val: '30 min',                 gold: false },
+          ].map(s => (
+            <div key={s.lbl} className="bg-ink-2 border border-line rounded-[14px] p-[18px]">
+              <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-2">{s.lbl}</div>
+              <div className={cn('text-[30px] leading-none font-extrabold font-sans tabular-nums', s.gold ? 'text-gold' : 'text-chalk')}>
+                {s.val}
+              </div>
             </div>
-          )}
+          ))}
+        </div>
 
-          {!isLoading && alerts.map((a, i) => {
-            const isActive = a.status === 'active';
-            const isFired  = a.status === 'triggered';
-            return (
+        {/* Tab switcher */}
+        <div className="flex gap-[6px]">
+          {([
+            { id: 'rules',   label: 'Active rules' },
+            { id: 'history', label: 'Trigger history' },
+            { id: 'smart',   label: 'Smart alerts' },
+          ] as const).map(t => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={cn(
+                'h-[34px] px-4 rounded-lg cursor-pointer font-mono text-[11px] leading-none font-bold tracking-[0.1em] uppercase border',
+                tab === t.id ? 'bg-ink-3 border-line text-chalk' : 'bg-transparent border-transparent text-mute',
+              )}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Rules tab */}
+        {tab === 'rules' && (
+          <div className="bg-ink-2 border border-line rounded-[14px]">
+            <div className="flex items-center justify-between px-[22px] py-4 border-b border-hairline">
+              <h3 className="text-[16px] leading-none font-bold font-sans m-0">active rules</h3>
+            </div>
+            <div
+              className="grid px-[22px] py-3 font-mono text-[10px] text-mute tracking-[0.14em] uppercase bg-ink-3 border-b border-hairline"
+              style={{ gridTemplateColumns: '80px 2fr 1.4fr 1fr 110px 130px' }}
+            >
+              <span>brand</span>
+              <span>type / condition</span>
+              <span className="text-right">threshold</span>
+              <span>repeat</span>
+              <span>status</span>
+              <span className="text-right">actions</span>
+            </div>
+
+            {isLoading && [0, 1, 2].map(i => <SkeletonRow key={i}/>)}
+
+            {!isLoading && alerts.length === 0 && (
+              <div className="px-[22px] py-12 text-center text-mute text-[14px] leading-[1.5] font-sans font-medium">
+                no alerts yet — click <span className="text-gold">+ new alert</span> to get started
+              </div>
+            )}
+
+            {!isLoading && alerts.map((a, i) => {
+              const isActive = a.status === 'active';
+              const isFired  = a.status === 'triggered';
+              return (
+                <div
+                  key={a.id}
+                  className={cn(
+                    'grid px-[22px] py-4 items-center',
+                    i !== 0 && 'border-t border-hairline',
+                    !isActive && 'opacity-55',
+                  )}
+                  style={{ gridTemplateColumns: '80px 2fr 1.4fr 1fr 110px 130px' }}
+                >
+                  <span className="font-mono text-[11px] font-bold text-gold tracking-[0.1em]">{a.brand}</span>
+
+                  <div>
+                    <div className="text-[14px] leading-[1.1] font-sans font-medium mb-1">{a.goldType}</div>
+                    <span className={cn(
+                      'font-mono text-[10px] font-bold px-[6px] py-[3px] rounded-[3px] tracking-[0.08em] uppercase',
+                      a.condition === 'gte'
+                        ? 'text-up bg-[rgba(88,200,150,0.10)]'
+                        : 'text-down bg-[rgba(229,72,77,0.10)]',
+                    )}>
+                      {a.condition === 'gte' ? 'crosses ↑' : 'crosses ↓'}
+                    </span>
+                  </div>
+
+                  <div className="text-right">
+                    <div className="text-[16px] leading-none font-bold font-sans tabular-nums">{fmtTarget(a)}</div>
+                    <div className="font-mono text-[10px] text-mute mt-1">created {fmtDate(a.createdAt)}</div>
+                  </div>
+
+                  <span className="font-mono text-[11px] text-bone">· {a.repeatMode ? 'repeat' : 'once'}</span>
+
+                  <div>
+                    {isFired
+                      ? <span className="font-mono text-[9px] leading-none font-bold tracking-[0.14em] uppercase text-gold-ink bg-gold px-[7px] py-1 rounded-[3px]">
+                          fired · {a.lastTriggeredAt ? fmtDate(a.lastTriggeredAt) : '—'}
+                        </span>
+                      : <span className={cn(
+                          'font-mono text-[9px] leading-none font-bold tracking-[0.14em] uppercase px-[7px] py-1 rounded-[3px] border',
+                          isActive ? 'text-live border-[rgba(157,204,110,0.4)]' : 'text-mute border-line',
+                        )}>
+                          {isActive ? 'waiting' : 'paused'}
+                        </span>
+                    }
+                  </div>
+
+                  <div className="flex justify-end gap-1 items-center">
+                    <Toggle on={isActive} onChange={() => handleToggle(a.id)} disabled={toggleAlert.isPending}/>
+                    <button
+                      onClick={() => handleDelete(a.id)}
+                      disabled={deleteAlert.isPending}
+                      className={cn('w-7 h-8 bg-transparent border border-transparent rounded-md cursor-pointer text-down flex items-center justify-center', deleteAlert.isPending && 'opacity-50')}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* History tab */}
+        {tab === 'history' && (
+          <div className="bg-ink-2 border border-line rounded-[14px]">
+            <div className="px-[22px] py-4 border-b border-hairline">
+              <h3 className="text-[16px] leading-none font-bold font-sans m-0">trigger history</h3>
+            </div>
+            <div
+              className="grid px-[22px] py-3 font-mono text-[10px] text-mute tracking-[0.14em] uppercase bg-ink-3 border-b border-hairline"
+              style={{ gridTemplateColumns: '2fr 1.4fr 1.4fr 1.4fr' }}
+            >
+              <span>alert id</span>
+              <span className="text-right">price at trigger</span>
+              <span className="text-right">triggered at</span>
+              <span className="text-right">email sent</span>
+            </div>
+
+            {histLoading && [0, 1, 2].map(i => (
               <div
-                key={a.id}
-                style={{
-                  display: 'grid', gridTemplateColumns: '80px 2fr 1.4fr 1fr 110px 130px',
-                  padding: '16px 22px', alignItems: 'center',
-                  borderTop: i === 0 ? 'none' : '1px solid var(--hairline)',
-                  opacity: isActive ? 1 : 0.55,
-                }}
+                key={i}
+                className="grid px-[22px] py-4 border-t border-hairline"
+                style={{ gridTemplateColumns: '2fr 1.4fr 1.4fr 1.4fr' }}
               >
-                {/* Brand */}
-                <span className="mono" style={{ fontSize: 11, fontWeight: 700, color: 'var(--gold)', letterSpacing: '0.1em' }}>{a.brand}</span>
+                {[120, 80, 100, 100].map((w, j) => (
+                  <div
+                    key={j}
+                    className="h-[14px] rounded bg-ink-3 animate-pulse"
+                    style={{ width: w, justifySelf: j === 0 ? 'start' : 'end' }}
+                  />
+                ))}
+              </div>
+            ))}
 
-                {/* Type + condition */}
-                <div>
-                  <div style={{ font: '500 14px/1.1 var(--font-display)', marginBottom: 4 }}>{a.goldType}</div>
-                  <span className="mono" style={{
-                    fontSize: 10, fontWeight: 700,
-                    color: a.condition === 'gte' ? 'var(--up)' : 'var(--down)',
-                    padding: '3px 6px', borderRadius: 3, letterSpacing: '0.08em', textTransform: 'uppercase',
-                    background: a.condition === 'gte' ? 'rgba(88,200,150,0.10)' : 'rgba(229,72,77,0.10)',
-                  }}>
-                    {a.condition === 'gte' ? 'crosses ↑' : 'crosses ↓'}
-                  </span>
+            {!histLoading && history.length === 0 && (
+              <div className="px-[22px] py-12 text-center text-mute text-[14px] leading-[1.5] font-sans font-medium">
+                no trigger history yet
+              </div>
+            )}
+
+            {!histLoading && history.map((h, i) => (
+              <div
+                key={h.id}
+                className={cn('grid px-[22px] py-4 items-center', i !== 0 && 'border-t border-hairline')}
+                style={{ gridTemplateColumns: '2fr 1.4fr 1.4fr 1.4fr' }}
+              >
+                <span className="font-mono text-[11px] text-mute">{h.alertId.slice(0, 8)}…</span>
+                <div className="text-right text-[14px] leading-none font-bold font-sans tabular-nums">
+                  {Number(h.priceAtTrigger).toLocaleString('en-US')}₫
                 </div>
-
-                {/* Target */}
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ font: '700 16px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>{fmtTarget(a)}</div>
-                  <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', marginTop: 4 }}>created {fmtDate(a.createdAt)}</div>
+                <div className="font-mono text-right text-[11px] text-bone">
+                  {new Date(h.triggeredAt).toLocaleString('en-US', { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
                 </div>
-
-                {/* Repeat */}
-                <span className="mono" style={{ fontSize: 11, color: 'var(--bone)' }}>· {a.repeatMode ? 'repeat' : 'once'}</span>
-
-                {/* Status */}
-                <div>
-                  {isFired
-                    ? <span style={{ font: '700 9px/1 var(--font-mono)', letterSpacing: '0.14em', textTransform: 'uppercase', color: '#0B0B0F', background: 'var(--gold)', padding: '4px 7px', borderRadius: 3 }}>
-                        fired · {a.lastTriggeredAt ? fmtDate(a.lastTriggeredAt) : '—'}
-                      </span>
-                    : <span style={{
-                        font: '700 9px/1 var(--font-mono)', letterSpacing: '0.14em', textTransform: 'uppercase',
-                        color: isActive ? 'var(--live)' : 'var(--mute)',
-                        border: `1px solid ${isActive ? 'rgba(157,204,110,0.4)' : 'var(--line)'}`,
-                        padding: '4px 7px', borderRadius: 3,
-                      }}>
-                        {isActive ? 'waiting' : 'paused'}
-                      </span>
+                <div className="font-mono text-right text-[11px]">
+                  {h.emailSentAt
+                    ? <span className="text-live">sent</span>
+                    : <span className="text-mute">pending</span>
                   }
                 </div>
-
-                {/* Actions */}
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 4, alignItems: 'center' }}>
-                  <Toggle
-                    on={isActive}
-                    onChange={() => handleToggle(a.id)}
-                    disabled={toggleAlert.isPending}
-                  />
-                  <button
-                    onClick={() => handleDelete(a.id)}
-                    disabled={deleteAlert.isPending}
-                    style={{
-                      width: 28, height: 32, background: 'transparent',
-                      border: '1px solid transparent', borderRadius: 6,
-                      cursor: 'pointer', color: 'var(--down)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      opacity: deleteAlert.isPending ? 0.5 : 1,
-                    }}
-                  >
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14"/>
-                    </svg>
-                  </button>
-                </div>
               </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* ── History tab ── */}
-      {tab === 'history' && (
-        <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, padding: 0 }}>
-          <div style={{ padding: '16px 22px', borderBottom: '1px solid var(--hairline)' }}>
-            <h3 style={{ font: '700 16px/1 var(--font-display)', margin: 0 }}>trigger history</h3>
+            ))}
           </div>
-          {/* Header */}
-          <div style={{
-            display: 'grid', gridTemplateColumns: '2fr 1.4fr 1.4fr 1.4fr',
-            padding: '12px 22px', font: '700 10px/1 var(--font-mono)', color: 'var(--mute)',
-            letterSpacing: '0.14em', textTransform: 'uppercase',
-            background: 'var(--ink-3)', borderBottom: '1px solid var(--hairline)',
-          }}>
-            <span>alert id</span>
-            <span style={{ textAlign: 'right' }}>price at trigger</span>
-            <span style={{ textAlign: 'right' }}>triggered at</span>
-            <span style={{ textAlign: 'right' }}>email sent</span>
-          </div>
+        )}
 
-          {histLoading && [0, 1, 2].map(i => (
-            <div key={i} style={{
-              display: 'grid', gridTemplateColumns: '2fr 1.4fr 1.4fr 1.4fr',
-              padding: '16px 22px', borderTop: '1px solid var(--hairline)',
-            }}>
-              {[120, 80, 100, 100].map((w, j) => (
-                <div key={j} style={{
-                  height: 14, width: w, borderRadius: 4,
-                  background: 'var(--ink-3)',
-                  animation: 'pulse 1.5s ease-in-out infinite',
-                  justifySelf: j === 0 ? 'start' : 'end',
-                }}/>
-              ))}
-            </div>
-          ))}
-
-          {!histLoading && history.length === 0 && (
-            <div style={{ padding: '48px 22px', textAlign: 'center', color: 'var(--mute)', font: '500 14px/1.5 var(--font-display)' }}>
-              no trigger history yet
-            </div>
-          )}
-
-          {!histLoading && history.map((h, i) => (
-            <div
-              key={h.id}
-              style={{
-                display: 'grid', gridTemplateColumns: '2fr 1.4fr 1.4fr 1.4fr',
-                padding: '16px 22px', alignItems: 'center',
-                borderTop: i === 0 ? 'none' : '1px solid var(--hairline)',
-              }}
-            >
-              <span className="mono" style={{ fontSize: 11, color: 'var(--mute)' }}>{h.alertId.slice(0, 8)}…</span>
-              <div style={{ textAlign: 'right', font: '700 14px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>
-                {Number(h.priceAtTrigger).toLocaleString('en-US')}₫
-              </div>
-              <div className="mono" style={{ textAlign: 'right', fontSize: 11, color: 'var(--bone)' }}>
-                {new Date(h.triggeredAt).toLocaleString('en-US', { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
-              </div>
-              <div className="mono" style={{ textAlign: 'right', fontSize: 11 }}>
-                {h.emailSentAt
-                  ? <span style={{ color: 'var(--live)' }}>sent</span>
-                  : <span style={{ color: 'var(--mute)' }}>pending</span>
-                }
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* ── Smart Alerts tab ── */}
-      {tab === 'smart' && <SmartAlertsPanel />}
-    </div>
+        {/* Smart Alerts tab */}
+        {tab === 'smart' && <SmartAlertsPanel />}
+      </div>
     </>
   );
 }

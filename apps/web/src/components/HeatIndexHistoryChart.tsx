@@ -10,7 +10,6 @@ import {
 } from 'recharts';
 import { useHeatIndexHistory } from '@/lib/heat-index.api';
 
-// Runtime shape returned by the API (service-local DTO)
 interface HeatIndexHistoryItem {
   score: number;
   label: string;
@@ -29,48 +28,17 @@ function formatVi(iso: string): string {
   });
 }
 
+const CARD_CLS = 'bg-ink-2 border border-[rgba(212,175,55,0.2)] rounded-[12px] p-5';
+const TITLE_CLS = 'font-mono text-[11px] font-bold tracking-[0.1em] uppercase text-gold m-0 mb-4';
+
 export function HeatIndexHistoryChart() {
   const { data, isLoading } = useHeatIndexHistory(7);
 
   if (isLoading) {
     return (
-      <div
-        style={{
-          background: 'var(--ink-2)',
-          border: '1px solid rgba(212,175,55,0.2)',
-          borderRadius: 12,
-          padding: 20,
-        }}
-      >
-        <p
-          className="mono"
-          style={{
-            fontSize: 11,
-            fontWeight: 700,
-            letterSpacing: '0.1em',
-            textTransform: 'uppercase',
-            color: 'var(--gold)',
-            margin: '0 0 16px',
-          }}
-        >
-          Lịch sử Heat Index — 7 ngày
-        </p>
-        <div
-          style={{
-            height: 200,
-            borderRadius: 8,
-            background:
-              'linear-gradient(90deg, var(--ink-3) 25%, var(--ink-2) 50%, var(--ink-3) 75%)',
-            backgroundSize: '200% 100%',
-            animation: 'shimmer 1.5s infinite',
-          }}
-        />
-        <style>{`
-          @keyframes shimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-          }
-        `}</style>
+      <div className={CARD_CLS}>
+        <p className={TITLE_CLS}>Lịch sử Heat Index — 7 ngày</p>
+        <div className="h-[200px] rounded-lg bg-ink-3 animate-pulse" />
       </div>
     );
   }
@@ -79,37 +47,9 @@ export function HeatIndexHistoryChart() {
 
   if (items.length === 0) {
     return (
-      <div
-        style={{
-          background: 'var(--ink-2)',
-          border: '1px solid rgba(212,175,55,0.2)',
-          borderRadius: 12,
-          padding: 20,
-        }}
-      >
-        <p
-          className="mono"
-          style={{
-            fontSize: 11,
-            fontWeight: 700,
-            letterSpacing: '0.1em',
-            textTransform: 'uppercase',
-            color: 'var(--gold)',
-            margin: '0 0 16px',
-          }}
-        >
-          Lịch sử Heat Index — 7 ngày
-        </p>
-        <div
-          style={{
-            height: 200,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'var(--mute)',
-            font: '500 13px/1 var(--font-mono)',
-          }}
-        >
+      <div className={CARD_CLS}>
+        <p className={TITLE_CLS}>Lịch sử Heat Index — 7 ngày</p>
+        <div className="h-[200px] flex items-center justify-center text-mute font-mono text-[13px] leading-none font-medium">
           Chưa có dữ liệu lịch sử
         </div>
       </div>
@@ -122,27 +62,8 @@ export function HeatIndexHistoryChart() {
   }));
 
   return (
-    <div
-      style={{
-        background: 'var(--ink-2)',
-        border: '1px solid rgba(212,175,55,0.2)',
-        borderRadius: 12,
-        padding: 20,
-      }}
-    >
-      <p
-        className="mono"
-        style={{
-          fontSize: 11,
-          fontWeight: 700,
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-          color: 'var(--gold)',
-          margin: '0 0 16px',
-        }}
-      >
-        Lịch sử Heat Index — 7 ngày
-      </p>
+    <div className={CARD_CLS}>
+      <p className={TITLE_CLS}>Lịch sử Heat Index — 7 ngày</p>
       <ResponsiveContainer width="100%" height={200}>
         <LineChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: -24 }}>
           <XAxis

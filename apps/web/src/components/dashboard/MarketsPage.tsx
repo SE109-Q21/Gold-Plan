@@ -17,6 +17,7 @@ import { useExchangeRates } from '@/lib/exchange-rate.api';
 import { useAlerts, useCreateAlert } from '@/lib/alerts.api';
 import type { GoldBrand, GoldType } from '@gpls/shared';
 import { useAuth } from '@/contexts/auth-context';
+import { cn } from '@/lib/utils';
 
 const ASSETS = ['XAU/USD', 'XAU/VND', 'SJC', 'DOJI', 'PNJ'] as const;
 type Range = HistoryRange;
@@ -26,7 +27,6 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
 
 const GOLD_TYPES: GoldType[] = ['MIEN_SJC', 'NHAN_9999', 'VANG_24K', 'VANG_18K'];
 const BRANDS: GoldBrand[] = ['SJC', 'DOJI', 'PNJ', 'BAO_TIN'];
-
 
 const COMPARE_COLORS: Record<string, string> = {
   DOJI:    '#60a5fa',
@@ -49,23 +49,28 @@ function QuickAlertPanel({
   const fmtP = (v: number) => (v / 1_000_000).toFixed(2) + 'M₫';
 
   return (
-    <div style={{ background: 'var(--ink-2)', border: '1px solid rgba(212,175,55,0.35)', borderRadius: 12, padding: '18px 22px', display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 160 }}>
-        <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase' }}>New alert · SJC MIEN_SJC</div>
-        <div style={{ font: '800 26px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums', color: 'var(--chalk)' }}>{fmtP(price)}</div>
+    <div className="bg-ink-2 border border-[rgba(212,175,55,0.35)] rounded-xl px-[22px] py-[18px] flex items-center gap-5 flex-wrap">
+      <div className="flex flex-col gap-1 min-w-[160px]">
+        <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase">New alert · SJC MIEN_SJC</div>
+        <div className="text-[26px] leading-none font-extrabold font-sans tabular-nums text-chalk">{fmtP(price)}</div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 2 }}>Condition</div>
-        <div style={{ display: 'flex', gap: 6 }}>
+      <div className="flex flex-col gap-[6px]">
+        <div className="font-mono text-[9px] text-mute tracking-[0.12em] uppercase mb-0.5">Condition</div>
+        <div className="flex gap-[6px]">
           {(['gte', 'lte'] as const).map(c => {
             const active = condition === c;
-            const color  = c === 'gte' ? '#22c55e' : '#ef4444';
+            const color = c === 'gte' ? '#22c55e' : '#ef4444';
             return (
               <button
                 key={c}
                 onClick={() => setCondition(c)}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 34, padding: '0 14px', border: `1px solid ${active ? color : 'var(--line)'}`, borderRadius: 6, background: active ? (c === 'gte' ? 'rgba(34,197,94,0.10)' : 'rgba(239,68,68,0.10)') : 'transparent', color: active ? color : 'var(--mute)', font: '700 11px/1 var(--font-mono)', cursor: 'pointer', transition: 'all 140ms' }}
+                className="inline-flex items-center gap-[6px] h-[34px] px-[14px] rounded-md font-mono text-[11px] leading-none font-bold cursor-pointer transition-all duration-[140ms]"
+                style={{
+                  border: `1px solid ${active ? color : 'var(--line)'}`,
+                  background: active ? (c === 'gte' ? 'rgba(34,197,94,0.10)' : 'rgba(239,68,68,0.10)') : 'transparent',
+                  color: active ? color : 'var(--mute)',
+                }}
               >
                 {c === 'gte' ? '≥ rises above' : '≤ drops below'}
               </button>
@@ -74,17 +79,20 @@ function QuickAlertPanel({
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
+      <div className="flex gap-2 ml-auto">
         <button
           onClick={handleCreate}
           disabled={createAlert.isPending}
-          style={{ display: 'inline-flex', alignItems: 'center', height: 36, padding: '0 18px', border: '1px solid rgba(212,175,55,0.6)', borderRadius: 6, background: 'rgba(212,175,55,0.12)', color: 'var(--gold)', font: '700 11px/1 var(--font-mono)', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: createAlert.isPending ? 'wait' : 'pointer', opacity: createAlert.isPending ? 0.6 : 1 }}
+          className={cn(
+            'inline-flex items-center h-9 px-[18px] border border-[rgba(212,175,55,0.6)] rounded-md bg-[rgba(212,175,55,0.12)] text-gold font-mono text-[11px] leading-none font-bold tracking-[0.08em] uppercase',
+            createAlert.isPending ? 'cursor-wait opacity-60' : 'cursor-pointer',
+          )}
         >
           {createAlert.isPending ? 'Creating…' : 'Create Alert'}
         </button>
         <button
           onClick={onClose}
-          style={{ display: 'inline-flex', alignItems: 'center', height: 36, padding: '0 14px', border: '1px solid var(--line)', borderRadius: 6, background: 'transparent', color: 'var(--mute)', font: '700 11px/1 var(--font-mono)', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer' }}
+          className="inline-flex items-center h-9 px-[14px] border border-line rounded-md bg-transparent text-mute font-mono text-[11px] leading-none font-bold tracking-[0.08em] uppercase cursor-pointer"
         >
           Cancel
         </button>
@@ -108,29 +116,32 @@ function SpreadRankingSection() {
   };
 
   return (
-    <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, padding: 22 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-        <h3 style={{ font: '700 16px/1 var(--font-display)', margin: 0 }}>spread ranking</h3>
+    <div className="bg-ink-2 border border-line rounded-[14px] p-[22px]">
+      <div className="flex justify-between items-center mb-[14px]">
+        <h3 className="text-[16px] leading-none font-bold font-sans m-0">spread ranking</h3>
         <span
           onMouseEnter={() => setShowTip(true)}
           onMouseLeave={() => setShowTip(false)}
-          style={{ position: 'relative', cursor: 'help', font: '700 11px/1 var(--font-mono)', color: 'var(--mute)', background: 'var(--ink-3)', border: '1px solid var(--line)', borderRadius: '50%', width: 18, height: 18, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+          className="relative cursor-help font-mono text-[11px] leading-none font-bold text-mute bg-ink-3 border border-line rounded-full w-[18px] h-[18px] inline-flex items-center justify-center shrink-0"
         >
           ?
           {showTip && (
-            <span style={{ position: 'absolute', bottom: 'calc(100% + 6px)', right: 0, width: 220, background: 'var(--ink-4)', border: '1px solid var(--line)', borderRadius: 8, padding: '8px 10px', font: '500 11px/1.5 var(--font-mono)', color: 'var(--chalk)', zIndex: 10, pointerEvents: 'none', whiteSpace: 'normal' }}>
+            <span className="absolute bottom-[calc(100%+6px)] right-0 w-[220px] bg-ink-4 border border-line rounded-lg px-[10px] py-2 font-mono text-[11px] leading-[1.5] font-medium text-chalk z-10 pointer-events-none">
               Spread is how much you lose if you buy and sell immediately. Smaller spread = less cost.
             </span>
           )}
         </span>
       </div>
 
-      <div style={{ display: 'flex', gap: 4, marginBottom: 18, flexWrap: 'wrap' }}>
+      <div className="flex gap-1 mb-[18px] flex-wrap">
         {GOLD_TYPES.map(gt => (
           <button
             key={gt}
             onClick={() => setGoldType(gt)}
-            style={{ display: 'inline-flex', alignItems: 'center', height: 32, padding: '0 10px', border: `1px solid ${goldType === gt ? 'var(--gold)' : 'var(--line)'}`, borderRadius: 0, background: goldType === gt ? 'var(--gold)' : 'transparent', color: goldType === gt ? '#0B0B0F' : 'var(--bone)', font: '700 11px/1 var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}
+            className={cn(
+              'inline-flex items-center h-8 px-[10px] border rounded-none font-mono text-[11px] leading-none font-bold tracking-[0.1em] uppercase cursor-pointer',
+              goldType === gt ? 'border-gold bg-gold text-gold-ink' : 'border-line bg-transparent text-bone',
+            )}
           >
             {gt}
           </button>
@@ -138,15 +149,15 @@ function SpreadRankingSection() {
       </div>
 
       {isLoading && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div className="flex flex-col gap-[14px]">
           {[0, 1, 2].map(i => (
-            <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                <div style={{ height: 12, width: 48, background: 'var(--ink-3)', borderRadius: 2, opacity: 0.6 }} />
-                <div style={{ height: 12, width: 56, background: 'var(--ink-3)', borderRadius: 2, opacity: 0.6 }} />
+            <div key={i} className="flex flex-col gap-[6px]">
+              <div className="flex justify-between mb-1">
+                <div className="h-3 w-12 bg-ink-3 rounded-sm opacity-60"/>
+                <div className="h-3 w-14 bg-ink-3 rounded-sm opacity-60"/>
               </div>
-              <div style={{ height: 6, background: 'var(--ink-3)', borderRadius: 2, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${70 - i * 20}%`, background: 'var(--ink-4)', borderRadius: 2, opacity: 0.5 }} />
+              <div className="h-[6px] bg-ink-3 rounded-sm overflow-hidden">
+                <div className="h-full bg-ink-4 rounded-sm opacity-50" style={{ width: `${70 - i * 20}%` }}/>
               </div>
             </div>
           ))}
@@ -154,32 +165,33 @@ function SpreadRankingSection() {
       )}
 
       {!isLoading && (!data || data.length === 0) && (
-        <div style={{ padding: '24px 0', textAlign: 'center', font: '500 13px/1 var(--font-mono)', color: 'var(--mute)' }}>
-          No data available
-        </div>
+        <div className="py-6 text-center font-mono text-[13px] leading-none font-medium text-mute">No data available</div>
       )}
 
       {!isLoading && data && data.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div className="flex flex-col gap-[14px]">
           {data.map((item, i) => (
             <div key={item.brand}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ font: '700 12px/1 var(--font-mono)', color: item.isMostEfficient ? 'var(--up)' : 'var(--chalk)' }}>
+              <div className="flex justify-between items-center mb-[6px]">
+                <div className="flex items-center gap-2">
+                  <span className={cn('font-mono text-[12px] leading-none font-bold', item.isMostEfficient ? 'text-up' : 'text-chalk')}>
                     {item.brand}
                   </span>
                   {item.isMostEfficient && (
-                    <span style={{ font: '700 9px/1 var(--font-mono)', letterSpacing: '0.08em', textTransform: 'uppercase', background: 'rgba(88,200,150,0.15)', color: 'var(--up)', border: '1px solid rgba(88,200,150,0.3)', borderRadius: 4, padding: '2px 6px' }}>
+                    <span className="font-mono text-[9px] leading-none font-bold tracking-[0.08em] uppercase bg-[rgba(88,200,150,0.15)] text-up border border-[rgba(88,200,150,0.3)] rounded px-[6px] py-0.5">
                       most efficient
                     </span>
                   )}
                 </div>
-                <span style={{ font: '700 12px/1 var(--font-mono)', fontVariantNumeric: 'tabular-nums', color: 'var(--chalk)' }}>
+                <span className="font-mono text-[12px] leading-none font-bold tabular-nums text-chalk">
                   {fmtSpread(item.spreadVnd)}
                 </span>
               </div>
-              <div style={{ height: 6, background: 'var(--ink-3)', borderRadius: 2, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${(item.spreadVnd / maxSpread) * 100}%`, background: barColor(i, item.isMostEfficient), borderRadius: 2, transition: 'width 0.3s ease' }} />
+              <div className="h-[6px] bg-ink-3 rounded-sm overflow-hidden">
+                <div
+                  className="h-full rounded-sm transition-[width] duration-300 ease-in-out"
+                  style={{ width: `${(item.spreadVnd / maxSpread) * 100}%`, background: barColor(i, item.isMostEfficient) }}
+                />
               </div>
             </div>
           ))}
@@ -210,29 +222,35 @@ function SpreadHistoryChart() {
   const fmtVnd = (v: number) => (v / 1_000_000).toFixed(2) + 'M';
 
   return (
-    <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, padding: 22 }}>
-      <div style={{ marginBottom: 14 }}>
-        <h3 style={{ font: '700 16px/1 var(--font-display)', margin: '0 0 4px' }}>7-day spread trend</h3>
+    <div className="bg-ink-2 border border-line rounded-[14px] p-[22px]">
+      <div className="mb-[14px]">
+        <h3 className="text-[16px] leading-none font-bold font-sans m-0 mb-1">7-day spread trend</h3>
       </div>
 
-      <div style={{ display: 'flex', gap: 4, marginBottom: 8, flexWrap: 'wrap' }}>
+      <div className="flex gap-1 mb-2 flex-wrap">
         {BRANDS.map(b => (
           <button
             key={b}
             onClick={() => setBrand(b)}
-            style={{ display: 'inline-flex', alignItems: 'center', height: 28, padding: '0 8px', border: `1px solid ${brand === b ? 'var(--gold)' : 'var(--line)'}`, borderRadius: 0, background: brand === b ? 'var(--gold)' : 'transparent', color: brand === b ? '#0B0B0F' : 'var(--bone)', font: '700 10px/1 var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}
+            className={cn(
+              'inline-flex items-center h-7 px-2 border rounded-none font-mono text-[10px] leading-none font-bold tracking-[0.1em] uppercase cursor-pointer',
+              brand === b ? 'border-gold bg-gold text-gold-ink' : 'border-line bg-transparent text-bone',
+            )}
           >
             {b}
           </button>
         ))}
       </div>
 
-      <div style={{ display: 'flex', gap: 4, marginBottom: 18, flexWrap: 'wrap' }}>
+      <div className="flex gap-1 mb-[18px] flex-wrap">
         {GOLD_TYPES.map(gt => (
           <button
             key={gt}
             onClick={() => setGoldType(gt)}
-            style={{ display: 'inline-flex', alignItems: 'center', height: 28, padding: '0 8px', border: `1px solid ${goldType === gt ? 'var(--gold)' : 'var(--line)'}`, borderRadius: 0, background: goldType === gt ? 'var(--gold)' : 'transparent', color: goldType === gt ? '#0B0B0F' : 'var(--bone)', font: '700 10px/1 var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}
+            className={cn(
+              'inline-flex items-center h-7 px-2 border rounded-none font-mono text-[10px] leading-none font-bold tracking-[0.1em] uppercase cursor-pointer',
+              goldType === gt ? 'border-gold bg-gold text-gold-ink' : 'border-line bg-transparent text-bone',
+            )}
           >
             {gt}
           </button>
@@ -240,20 +258,15 @@ function SpreadHistoryChart() {
       </div>
 
       {isLoading && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 4 }}>
+        <div className="flex flex-col gap-[10px] pt-1">
           {[80, 55, 70].map((w, i) => (
-            <div
-              key={i}
-              style={{ height: 14, width: `${w}%`, background: 'var(--ink-3)', borderRadius: 3, opacity: 0.55 }}
-            />
+            <div key={i} className="h-[14px] bg-ink-3 rounded-[3px] opacity-55" style={{ width: `${w}%` }}/>
           ))}
         </div>
       )}
 
       {!isLoading && (!chartData || chartData.length === 0) && (
-        <div style={{ padding: '32px 0', textAlign: 'center', font: '500 13px/1 var(--font-mono)', color: 'var(--mute)' }}>
-          No data available
-        </div>
+        <div className="py-8 text-center font-mono text-[13px] leading-none font-medium text-mute">No data available</div>
       )}
 
       {!isLoading && chartData.length > 0 && (
@@ -344,12 +357,7 @@ export function MarketsPage({ currency = 'VND' }: { currency?: string }) {
       const hh = String(d.getHours()).padStart(2, '0');
       const mm = String(d.getMinutes()).padStart(2, '0');
       const ss = String(d.getSeconds()).padStart(2, '0');
-      return {
-        t: `${hh}:${mm}:${ss}`,
-        p: pt.buyPrice,
-        diff,
-        down: diff < 0,
-      };
+      return { t: `${hh}:${mm}:${ss}`, p: pt.buyPrice, diff, down: diff < 0 };
     });
   })();
 
@@ -382,38 +390,60 @@ export function MarketsPage({ currency = 'VND' }: { currency?: string }) {
   };
 
   return (
-    <div style={{ padding: '24px 28px 40px', display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="px-7 pt-6 pb-10 flex flex-col gap-5">
+      <div className="flex justify-between items-center">
         <div>
-          <h1 style={{ font: '800 36px/1 var(--font-display)', margin: 0, letterSpacing: '-0.025em' }}>markets</h1>
-          <div className="mono" style={{ fontSize: 11, color: 'var(--mute)', marginTop: 8 }}>interactive chart · hover to inspect · auto-refresh 5 min during trading hours</div>
+          <h1 className="text-[36px] leading-none font-extrabold font-sans m-0 tracking-[-0.025em]">markets</h1>
+          <div className="font-mono text-[11px] text-mute mt-2">interactive chart · hover to inspect · auto-refresh 5 min during trading hours</div>
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 6 }}>
+      {/* Asset tabs */}
+      <div className="flex gap-[6px]">
         {ASSETS.map(a => (
-          <button key={a} onClick={() => setAsset(a)} style={{ display: 'inline-flex', alignItems: 'center', height: 34, padding: '0 14px', border: `1px solid ${asset === a ? 'var(--gold)' : 'var(--line)'}`, borderRadius: 0, background: asset === a ? 'var(--gold)' : 'transparent', color: asset === a ? '#0B0B0F' : 'var(--bone)', font: '700 11px/1 var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}>{a}</button>
+          <button
+            key={a}
+            onClick={() => setAsset(a)}
+            className={cn(
+              'inline-flex items-center h-[34px] px-[14px] border rounded-none font-mono text-[11px] leading-none font-bold tracking-[0.1em] uppercase cursor-pointer',
+              asset === a ? 'border-gold bg-gold text-gold-ink' : 'border-line bg-transparent text-bone',
+            )}
+          >{a}</button>
         ))}
       </div>
 
-      <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, padding: 28 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+      {/* Main chart card */}
+      <div className="bg-ink-2 border border-line rounded-[14px] p-7">
+        <div className="flex justify-between items-start mb-5">
           <div>
-            <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 8 }}>{asset} · 24K · spot</div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
-              <span style={{ font: '800 56px/0.95 var(--font-display)', letterSpacing: '-0.03em', fontVariantNumeric: 'tabular-nums' }}>{fmt(hoverVal)}</span>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, font: '700 14px/1 var(--font-mono)', color: change >= 0 ? 'var(--up)' : 'var(--down)', background: change >= 0 ? 'rgba(88,200,150,0.10)' : 'rgba(229,72,77,0.10)', padding: '7px 10px', borderRadius: 4 }}>
+            <div className="font-mono text-[10px] text-mute tracking-[0.14em] uppercase mb-2">{asset} · 24K · spot</div>
+            <div className="flex items-baseline gap-[14px]">
+              <span className="text-[56px] leading-[0.95] font-extrabold font-sans tracking-[-0.03em] tabular-nums">{fmt(hoverVal)}</span>
+              <span className={cn(
+                'inline-flex items-center gap-[6px] font-mono text-[14px] leading-none font-bold px-[10px] py-[7px] rounded',
+                change >= 0 ? 'text-up bg-[rgba(88,200,150,0.10)]' : 'text-down bg-[rgba(229,72,77,0.10)]',
+              )}>
                 {change >= 0 ? '▲' : '▼'} {Math.abs(changePct).toFixed(2)}% · {range}
               </span>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+          <div className="flex gap-1 items-center">
             {RANGES.map(r => (
-              <button key={r} onClick={() => setRange(r)} style={{ display: 'inline-flex', alignItems: 'center', height: 32, padding: '0 10px', border: `1px solid ${range === r ? 'var(--gold)' : 'var(--line)'}`, borderRadius: 0, background: range === r ? 'var(--gold)' : 'transparent', color: range === r ? '#0B0B0F' : 'var(--bone)', font: '700 11px/1 var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}>{r}</button>
+              <button
+                key={r}
+                onClick={() => setRange(r)}
+                className={cn(
+                  'inline-flex items-center h-8 px-[10px] border rounded-none font-mono text-[11px] leading-none font-bold tracking-[0.1em] uppercase cursor-pointer',
+                  range === r ? 'border-gold bg-gold text-gold-ink' : 'border-line bg-transparent text-bone',
+                )}
+              >{r}</button>
             ))}
             <button
               onClick={() => { setShowCompare(v => !v); setPendingAlertPrice(null); }}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 5, height: 32, padding: '0 10px', border: `1px solid ${showCompare ? 'rgba(147,197,253,0.5)' : 'var(--line)'}`, borderRadius: 0, background: showCompare ? 'rgba(147,197,253,0.08)' : 'transparent', color: showCompare ? '#93c5fd' : 'var(--bone)', font: '700 11px/1 var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer', marginLeft: 4 }}
+              className={cn(
+                'inline-flex items-center gap-[5px] h-8 px-[10px] border rounded-none font-mono text-[11px] leading-none font-bold tracking-[0.1em] uppercase cursor-pointer ml-1',
+                showCompare ? 'border-[rgba(147,197,253,0.5)] bg-[rgba(147,197,253,0.08)] text-[#93c5fd]' : 'border-line bg-transparent text-bone',
+              )}
             >
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M3 3v18h18"/><path d="M7 16l4-4 4 4 5-5"/></svg>
               compare
@@ -422,7 +452,10 @@ export function MarketsPage({ currency = 'VND' }: { currency?: string }) {
               <button
                 onClick={handleExportCsv}
                 disabled={csvLoading}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, height: 32, padding: '0 10px', border: '1px solid var(--line)', borderRadius: 0, background: 'transparent', color: csvLoading ? 'var(--mute)' : 'var(--bone)', font: '700 11px/1 var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: csvLoading ? 'not-allowed' : 'pointer', marginLeft: 4, opacity: csvLoading ? 0.6 : 1 }}
+                className={cn(
+                  'inline-flex items-center gap-[5px] h-8 px-[10px] border border-line rounded-none font-mono text-[11px] leading-none font-bold tracking-[0.1em] uppercase ml-1',
+                  csvLoading ? 'cursor-not-allowed text-mute opacity-60' : 'cursor-pointer text-bone bg-transparent',
+                )}
               >
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 {csvLoading ? '…' : 'csv'}
@@ -440,14 +473,14 @@ export function MarketsPage({ currency = 'VND' }: { currency?: string }) {
           compareData={compareData}
         />
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', marginTop: 22, paddingTop: 18, borderTop: '1px solid var(--hairline)' }}>
+        <div className="grid grid-cols-2 mt-[22px] pt-[18px] border-t border-hairline">
           {[
-            { l: 'σ Vol',  v: vol ?? '—',   tint: 'var(--gold)' },
-            { l: 'Signal', v: 'Buy bias', tint: 'var(--up)'   },
+            { l: 'σ Vol',  v: vol ?? '—',   tint: 'text-gold' },
+            { l: 'Signal', v: 'Buy bias', tint: 'text-up'   },
           ].map((s, i) => (
-            <div key={s.l} style={{ paddingLeft: i === 0 ? 0 : 20, borderLeft: i === 0 ? 'none' : '1px solid var(--hairline)' }}>
-              <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 6 }}>{s.l}</div>
-              <div style={{ font: '700 18px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums', color: s.tint ?? 'var(--chalk)' }}>{s.v}</div>
+            <div key={s.l} className={cn('', i !== 0 && 'pl-5 border-l border-hairline')}>
+              <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-[6px]">{s.l}</div>
+              <div className={cn('text-[18px] leading-none font-bold font-sans tabular-nums', s.tint)}>{s.v}</div>
             </div>
           ))}
         </div>
@@ -461,19 +494,25 @@ export function MarketsPage({ currency = 'VND' }: { currency?: string }) {
         />
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+      <div className="grid grid-cols-2 gap-5">
         <SpreadRankingSection />
 
-        <div style={{ background: 'var(--ink-2)', border: '1px solid var(--line)', borderRadius: 14, padding: 22 }}>
-          <h3 style={{ font: '700 16px/1 var(--font-display)', margin: '0 0 14px' }}>recent prices</h3>
+        <div className="bg-ink-2 border border-line rounded-[14px] p-[22px]">
+          <h3 className="text-[16px] leading-none font-bold font-sans m-0 mb-[14px]">recent prices</h3>
           {ticks.length === 0 && (
-            <div style={{ padding: '24px 0', textAlign: 'center', font: '500 12px/1 var(--font-mono)', color: 'var(--mute)' }}>loading…</div>
+            <div className="py-6 text-center font-mono text-[12px] leading-none font-medium text-mute">loading…</div>
           )}
           {ticks.map((r, i) => (
-            <div key={r.t} style={{ display: 'grid', gridTemplateColumns: '90px 1fr 90px', padding: '8px 0', borderTop: i === 0 ? 'none' : '1px solid var(--hairline)', font: '500 12px/1 var(--font-mono)' }}>
-              <span style={{ color: 'var(--mute)' }}>{r.t}</span>
-              <span style={{ font: '500 13px/1 var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>{fmt(r.p)}</span>
-              <span style={{ textAlign: 'right', color: r.down ? 'var(--down)' : 'var(--up)', fontWeight: 700 }}>{r.down ? '▼' : '▲'} {(r.diff >= 0 ? '+' : '') + fmt(Math.abs(r.diff))}</span>
+            <div
+              key={r.t}
+              className={cn('grid py-2 font-mono text-[12px] leading-none font-medium', i !== 0 && 'border-t border-hairline')}
+              style={{ gridTemplateColumns: '90px 1fr 90px' }}
+            >
+              <span className="text-mute">{r.t}</span>
+              <span className="text-[13px] font-sans tabular-nums">{fmt(r.p)}</span>
+              <span className={cn('text-right font-bold', r.down ? 'text-down' : 'text-up')}>
+                {r.down ? '▼' : '▲'} {(r.diff >= 0 ? '+' : '') + fmt(Math.abs(r.diff))}
+              </span>
             </div>
           ))}
         </div>

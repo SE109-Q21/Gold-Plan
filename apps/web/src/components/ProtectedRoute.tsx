@@ -17,8 +17,8 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (isLoading || !user) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--ink)' }}>
-        <div style={{ color: 'var(--mute)', fontFamily: 'var(--font-mono)', fontSize: 12 }}>Loading…</div>
+      <div className="flex items-center justify-center h-screen bg-ink">
+        <div className="font-mono text-[12px] leading-none text-mute">Loading…</div>
       </div>
     );
   }
