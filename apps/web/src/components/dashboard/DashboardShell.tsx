@@ -265,11 +265,20 @@ function Sidebar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
       {/* Live status */}
       <div className="px-4 py-[14px] border-t border-hairline">
         <div className="flex items-center gap-2">
-          <span className="w-[7px] h-[7px] rounded-full bg-live shadow-[0_0_8px_var(--live)] shrink-0"/>
+          <span className="relative flex h-[7px] w-[7px] shrink-0">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-live opacity-60"/>
+            <span className="relative inline-flex rounded-full h-[7px] w-[7px] bg-live shadow-[0_0_8px_var(--live)]"/>
+          </span>
           <span className="font-mono text-[10px] text-bone tracking-[0.1em] uppercase">Trực tiếp · ICT</span>
         </div>
         <div className="font-mono text-[9px] text-mute mt-2 leading-[1.5]">
-          làm mới sau 04:48<br/>sjc · doji · pnj
+          {intl
+            ? `cập nhật ${(() => {
+                const m = Math.floor((Date.now() - new Date(intl.recordedAt).getTime()) / 60_000);
+                return m < 1 ? 'vừa xong' : `${m} phút trước`;
+              })()}`
+            : 'cập nhật tự động'}
+          <br/>sjc · doji · pnj · bảo tín
         </div>
       </div>
 
@@ -453,7 +462,10 @@ function TopBar({ currency, onCurrency, onTab }: { currency: string; onCurrency:
       <div className="flex items-center gap-4 shrink-0">
         {/* Live badge */}
         <span className="inline-flex items-center gap-[6px] text-[10px] leading-none font-bold font-mono tracking-[0.12em] uppercase text-live border border-[rgba(157,204,110,0.4)] px-[10px] py-[6px] rounded">
-          <span className="w-1.5 h-1.5 rounded-full bg-live"/>
+          <span className="relative flex h-[6px] w-[6px] shrink-0">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-live opacity-60"/>
+            <span className="relative inline-flex rounded-full h-[6px] w-[6px] bg-live"/>
+          </span>
           live
         </span>
 
