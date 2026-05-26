@@ -8,6 +8,7 @@ import type { GoldType } from '@gpls/shared';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 // Icons (Lucide-style inline SVG)
 function IconHome({ s = 20 }: { s?: number }) {
@@ -471,6 +472,9 @@ function TopBar({ currency, onCurrency, onTab }: { currency: string; onCurrency:
           ))}
         </div>
 
+        {/* Theme toggle */}
+        <ThemeToggle />
+
         {/* Bell with dropdown */}
         <div ref={bellRef} className="relative">
           <Button
@@ -590,7 +594,7 @@ export function DashboardShell({ children, tab, onTab, currency, onCurrency }: D
       <Sidebar tab={tab} onChange={onTab}/>
       <div className="flex-1 flex flex-col min-w-0">
         <TopBar currency={currency} onCurrency={onCurrency} onTab={onTab}/>
-        <main className="flex-1 overflow-auto bg-[#0a0a0d]">
+        <main className="flex-1 overflow-auto bg-ink">
           {children}
         </main>
       </div>

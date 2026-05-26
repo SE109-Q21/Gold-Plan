@@ -24,6 +24,22 @@
   --radius: 0.5rem;
 }
 
+html.light {
+  --ink:       #F5F3EE;
+  --ink-2:     #FFFFFF;
+  --ink-3:     #EEECEA;
+  --ink-4:     #E4E1DB;
+  --line:      #D8D4CC;
+  --hairline:  #E8E5E0;
+  --mute:      #998F80;
+  --bone:      #48433B;
+  --chalk:     #1C1814;
+  --gold-glow: rgba(212, 175, 55, 0.10);
+  --up:        #1A7A4E;
+  --down:      #C02830;
+  --live:      #3B8A1C;
+}
+
 * { box-sizing: border-box; }
 html, body { margin: 0; background: var(--ink); color: var(--chalk); font-family: var(--font-display); -webkit-font-smoothing: antialiased; }
 .display { font-family: var(--font-display); font-variant-numeric: tabular-nums; letter-spacing: -0.025em; }
