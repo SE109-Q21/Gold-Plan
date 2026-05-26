@@ -72,7 +72,7 @@ function QuickAlertPanel({
                   color: active ? color : 'var(--mute)',
                 }}
               >
-                {c === 'gte' ? '≥ rises above' : '≤ drops below'}
+                {c === 'gte' ? '≥ tăng lên trên' : '≤ giảm xuống dưới'}
               </button>
             );
           })}
@@ -85,14 +85,14 @@ function QuickAlertPanel({
           disabled={createAlert.isPending}
           className="h-9 px-[18px] border border-[rgba(212,175,55,0.6)] bg-[rgba(212,175,55,0.12)] text-gold hover:bg-[rgba(212,175,55,0.20)] hover:text-gold font-mono text-[11px] font-bold tracking-[0.08em] uppercase"
         >
-          {createAlert.isPending ? 'Creating…' : 'Create Alert'}
+          {createAlert.isPending ? 'Đang tạo…' : 'Tạo cảnh báo'}
         </Button>
         <Button
           variant="outline"
           onClick={onClose}
           className="h-9 px-[14px] border-line bg-transparent text-mute hover:bg-ink-3 hover:text-bone font-mono text-[11px] font-bold tracking-[0.08em] uppercase"
         >
-          Cancel
+          Hủy
         </Button>
       </div>
     </div>
@@ -116,7 +116,7 @@ function SpreadRankingSection() {
   return (
     <div className="bg-ink-2 border border-line rounded-[14px] p-[22px]">
       <div className="flex justify-between items-center mb-[14px]">
-        <h3 className="text-[16px] leading-none font-bold font-sans m-0">spread ranking</h3>
+        <h3 className="text-[16px] leading-none font-bold font-sans m-0">xếp hạng spread</h3>
         <span
           onMouseEnter={() => setShowTip(true)}
           onMouseLeave={() => setShowTip(false)}
@@ -164,7 +164,7 @@ function SpreadRankingSection() {
       )}
 
       {!isLoading && (!data || data.length === 0) && (
-        <div className="py-6 text-center font-mono text-[13px] leading-none font-medium text-mute">No data available</div>
+        <div className="py-6 text-center font-mono text-[13px] leading-none font-medium text-mute">Không có dữ liệu</div>
       )}
 
       {!isLoading && data && data.length > 0 && (
@@ -178,7 +178,7 @@ function SpreadRankingSection() {
                   </span>
                   {item.isMostEfficient && (
                     <span className="font-mono text-[9px] leading-none font-bold tracking-[0.08em] uppercase bg-[rgba(88,200,150,0.15)] text-up border border-[rgba(88,200,150,0.3)] rounded px-[6px] py-0.5">
-                      most efficient
+                      hiệu quả nhất
                     </span>
                   )}
                 </div>
@@ -227,7 +227,7 @@ function SpreadHistoryChart() {
   return (
     <div className="bg-ink-2 border border-line rounded-[14px] p-[22px]">
       <div className="mb-[14px]">
-        <h3 className="text-[16px] leading-none font-bold font-sans m-0 mb-1">7-day spread trend</h3>
+        <h3 className="text-[16px] leading-none font-bold font-sans m-0 mb-1">xu hướng spread 7 ngày</h3>
       </div>
 
       <div className="flex gap-1 mb-2 flex-wrap">
@@ -271,7 +271,7 @@ function SpreadHistoryChart() {
       )}
 
       {!isLoading && (!chartData || chartData.length === 0) && (
-        <div className="py-8 text-center font-mono text-[13px] leading-none font-medium text-mute">No data available</div>
+        <div className="py-8 text-center font-mono text-[13px] leading-none font-medium text-mute">Không có dữ liệu</div>
       )}
 
       {!isLoading && chartData.length > 0 && (
@@ -400,8 +400,8 @@ export function MarketsPage({ currency = 'VND' }: { currency?: string }) {
     <div className="px-7 pt-6 pb-10 flex flex-col gap-5">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-[36px] leading-none font-extrabold font-sans m-0 tracking-[-0.025em]">markets</h1>
-          <div className="font-mono text-[11px] text-mute mt-2">interactive chart · hover to inspect · auto-refresh 5 min during trading hours</div>
+          <h1 className="text-[36px] leading-none font-extrabold font-sans m-0 tracking-[-0.025em]">thị trường</h1>
+          <div className="font-mono text-[11px] text-mute mt-2">biểu đồ tương tác · di chuột để xem · tự làm mới 5 phút trong giờ giao dịch</div>
         </div>
       </div>
 
@@ -456,7 +456,7 @@ export function MarketsPage({ currency = 'VND' }: { currency?: string }) {
               )}
             >
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M3 3v18h18"/><path d="M7 16l4-4 4 4 5-5"/></svg>
-              compare
+              so sánh
             </Button>
             {user && (
               <Button
@@ -509,9 +509,9 @@ export function MarketsPage({ currency = 'VND' }: { currency?: string }) {
         <SpreadRankingSection />
 
         <div className="bg-ink-2 border border-line rounded-[14px] p-[22px]">
-          <h3 className="text-[16px] leading-none font-bold font-sans m-0 mb-[14px]">recent prices</h3>
+          <h3 className="text-[16px] leading-none font-bold font-sans m-0 mb-[14px]">giá gần đây</h3>
           {ticks.length === 0 && (
-            <div className="py-6 text-center font-mono text-[12px] leading-none font-medium text-mute">loading…</div>
+            <div className="py-6 text-center font-mono text-[12px] leading-none font-medium text-mute">đang tải…</div>
           )}
           {ticks.map((r, i) => (
             <div

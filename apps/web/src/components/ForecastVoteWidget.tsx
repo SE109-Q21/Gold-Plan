@@ -15,9 +15,9 @@ function fmtTime(iso: string) {
 type Direction = 'up' | 'flat' | 'down';
 
 const DIRECTION_CONFIG: Record<Direction, { label: string; arrow: string; color: string; bg: string; borderAlpha: string }> = {
-  up:   { label: 'Up',   arrow: '↑', color: '#22c55e', bg: 'rgba(34,197,94,0.12)',   borderAlpha: 'rgba(34,197,94,0.25)' },
-  flat: { label: 'Flat', arrow: '→', color: '#D4AF37', bg: 'rgba(212,175,55,0.12)',  borderAlpha: 'rgba(212,175,55,0.25)' },
-  down: { label: 'Down', arrow: '↓', color: '#ef4444', bg: 'rgba(239,68,68,0.12)',   borderAlpha: 'rgba(239,68,68,0.25)' },
+  up:   { label: 'Tăng',  arrow: '↑', color: '#22c55e', bg: 'rgba(34,197,94,0.12)',   borderAlpha: 'rgba(34,197,94,0.25)' },
+  flat: { label: 'Đi ngang', arrow: '→', color: '#D4AF37', bg: 'rgba(212,175,55,0.12)',  borderAlpha: 'rgba(212,175,55,0.25)' },
+  down: { label: 'Giảm', arrow: '↓', color: '#ef4444', bg: 'rgba(239,68,68,0.12)',   borderAlpha: 'rgba(239,68,68,0.25)' },
 };
 
 const RESULT_COLOR: Record<Direction, string> = {
@@ -45,21 +45,21 @@ export function ForecastVoteWidget() {
     <div className="bg-ink-2 border border-[rgba(212,175,55,0.2)] rounded-[12px] p-5">
       {/* Header */}
       <div className="flex justify-between items-baseline mb-4">
-        <h3 className="font-display text-[16px] leading-none font-bold m-0">Community forecast</h3>
+        <h3 className="font-display text-[16px] leading-none font-bold m-0">Dự báo cộng đồng</h3>
         {session && !session.sessionClosed && (
           <span className="font-mono text-[10px] text-mute tracking-[0.08em]">
-            Closes at {fmtTime(session.closesAt)}
+            Đóng lúc {fmtTime(session.closesAt)}
           </span>
         )}
       </div>
 
       {isLoading && (
-        <div className="font-mono text-[13px] leading-none font-medium text-mute py-3">Loading…</div>
+        <div className="font-mono text-[13px] leading-none font-medium text-mute py-3">Đang tải…</div>
       )}
 
       {!isLoading && !session && (
         <div className="font-mono text-[13px] leading-[1.5] font-medium text-mute py-2">
-          No forecast session today
+          Hôm nay chưa có phiên dự báo
         </div>
       )}
 
@@ -67,7 +67,7 @@ export function ForecastVoteWidget() {
       {!isLoading && session?.sessionClosed && session.actualResult && (
         <div className="py-3">
           <div className="font-mono text-[11px] text-mute tracking-[0.12em] uppercase mb-2">
-            Today&apos;s result
+            Kết quả hôm nay
           </div>
           <div className="flex items-center gap-[10px]">
             <span
@@ -88,7 +88,7 @@ export function ForecastVoteWidget() {
               className="mt-[10px] font-mono text-[12px] leading-none font-medium"
               style={{ color: session.userVote === session.actualResult ? '#22c55e' : '#ef4444' }}
             >
-              {session.userVote === session.actualResult ? '✓ You got it right!' : '✗ You got it wrong.'}
+              {session.userVote === session.actualResult ? '✓ Bạn dự đoán đúng!' : '✗ Bạn dự đoán sai.'}
             </div>
           )}
         </div>
@@ -128,7 +128,7 @@ export function ForecastVoteWidget() {
                   onClick={() => router.push('/auth/login?from=%2F')}
                   className="bg-transparent border-0 p-0 cursor-pointer font-mono text-[11px] leading-[1.4] text-gold mt-2 underline text-left"
                 >
-                  Sign in to vote →
+                  Đăng nhập để bỏ phiếu →
                 </button>
               )}
             </div>
@@ -167,14 +167,14 @@ export function ForecastVoteWidget() {
                   </div>
                 );
               })}
-              <div className="font-mono text-[10px] text-mute mt-1">{session.totalVotes} votes</div>
+              <div className="font-mono text-[10px] text-mute mt-1">{session.totalVotes} lượt bình chọn</div>
             </div>
           )}
 
           {/* Voted but no ratios */}
           {hasVoted && !ratios && (
             <div className="font-mono text-[13px] leading-[1.5] font-medium text-mute py-2">
-              Voted:{' '}
+              Đã bình chọn:{' '}
               <strong style={{ color: (DIRECTION_CONFIG[session.userVote as Direction] ?? DIRECTION_CONFIG['flat']).color }}>
                 {(DIRECTION_CONFIG[session.userVote as Direction] ?? DIRECTION_CONFIG['flat']).label}
               </strong>

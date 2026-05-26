@@ -102,7 +102,7 @@ export function AiChatWidget() {
     return (
       <Button
         onClick={() => setOpen(true)}
-        aria-label="Open AI Assistant"
+        aria-label="Mở trợ lý AI"
         size="icon"
         className="fixed bottom-7 right-7 z-[1000] w-14 h-14 rounded-full bg-gold shadow-[0_4px_20px_rgba(212,175,55,0.4)] transition-shadow hover:bg-gold/90"
       >
@@ -126,14 +126,14 @@ export function AiChatWidget() {
             </svg>
           </div>
           <span className="font-display text-[13px] leading-none font-bold text-chalk tracking-[-0.01em]">
-            AI Assistant
+            Trợ lý AI
           </span>
         </div>
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setOpen(false)}
-          aria-label="Close"
+          aria-label="Đóng"
           className="w-auto h-auto px-[6px] py-[2px] text-mute font-mono text-[16px] leading-none font-medium hover:bg-transparent hover:text-bone"
         >
           ✕
@@ -143,7 +143,7 @@ export function AiChatWidget() {
       {/* Guest counter */}
       <div className="px-4 py-[6px] border-b border-hairline shrink-0">
         <span className={cn('font-mono text-[10px] tracking-[0.08em]', user ? 'text-up' : 'text-gold')}>
-          {user ? 'unlimited questions' : `${remaining} / 10 questions today`}
+          {user ? 'không giới hạn câu hỏi' : `${remaining} / 10 câu hỏi hôm nay`}
         </span>
       </div>
 
@@ -184,7 +184,7 @@ export function AiChatWidget() {
               </div>
               {showDisclaimer && (
                 <div className="italic font-sans text-[10px] leading-[1.4] font-medium text-mute max-w-[85%] pl-1">
-                  For reference only — not financial advice.
+                  Chỉ mang tính tham khảo — không phải tư vấn tài chính.
                 </div>
               )}
             </div>
@@ -197,7 +197,7 @@ export function AiChatWidget() {
       {/* Limit reached banner */}
       {limitReached && !user && (
         <div className="px-[14px] py-2 bg-[rgba(212,175,55,0.08)] border-t border-[rgba(212,175,55,0.2)] font-sans text-[11px] leading-[1.4] font-medium text-gold text-center shrink-0">
-          Register for unlimited questions
+          Đăng ký để hỏi không giới hạn
         </div>
       )}
 

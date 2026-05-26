@@ -90,17 +90,17 @@ function IconShield({ s = 20 }: { s?: number }) {
 export { IconHome, IconChart, IconBell, IconUser, IconSearch, IconPlus, IconConvert, IconPortfolio, IconTrophy, IconNewspaper, IconClock, IconShield };
 
 const NAV_ITEMS = [
-  { id: 'home',        label: 'Overview',       Icon: IconHome,      href: null,                requiresAuth: false, adminOnly: false },
-  { id: 'chart',       label: 'Markets',        Icon: IconChart,     href: null,                requiresAuth: false, adminOnly: false },
-  { id: 'alerts',      label: 'Alerts',         Icon: IconBell,      href: null,                requiresAuth: true,  adminOnly: false },
-  { id: 'profile',     label: 'Account',        Icon: IconUser,      href: null,                requiresAuth: true,  adminOnly: false },
-  { id: 'portfolio',   label: 'Portfolio',      Icon: IconPortfolio, href: '/portfolio',        requiresAuth: true,  adminOnly: false },
-  { id: 'converter',   label: 'Converter',      Icon: IconConvert,   href: '/tools/converter',  requiresAuth: false, adminOnly: false },
-  { id: 'leaderboard', label: 'Leaderboard',    Icon: IconTrophy,    href: '/leaderboard',      requiresAuth: false, adminOnly: false },
-  { id: 'spread',      label: 'Spread Ranking', Icon: IconChart,     href: '/tools/spread',     requiresAuth: false, adminOnly: false },
-  { id: 'digest',      label: 'Digest Archive', Icon: IconNewspaper, href: '/digest/archive',   requiresAuth: false, adminOnly: false },
-  { id: 'history',     label: 'Price History',  Icon: IconClock,     href: '/profile/history',  requiresAuth: true,  adminOnly: false },
-  { id: 'admin',       label: 'Admin',          Icon: IconShield,    href: '/admin',            requiresAuth: true,  adminOnly: true  },
+  { id: 'home',        label: 'Tổng quan',          Icon: IconHome,      href: null,                requiresAuth: false, adminOnly: false },
+  { id: 'chart',       label: 'Thị trường',         Icon: IconChart,     href: null,                requiresAuth: false, adminOnly: false },
+  { id: 'alerts',      label: 'Cảnh báo',           Icon: IconBell,      href: null,                requiresAuth: true,  adminOnly: false },
+  { id: 'profile',     label: 'Tài khoản',          Icon: IconUser,      href: null,                requiresAuth: true,  adminOnly: false },
+  { id: 'portfolio',   label: 'Danh mục',           Icon: IconPortfolio, href: '/portfolio',        requiresAuth: true,  adminOnly: false },
+  { id: 'converter',   label: 'Quy đổi',            Icon: IconConvert,   href: '/tools/converter',  requiresAuth: false, adminOnly: false },
+  { id: 'leaderboard', label: 'Bảng xếp hạng',      Icon: IconTrophy,    href: '/leaderboard',      requiresAuth: false, adminOnly: false },
+  { id: 'spread',      label: 'Xếp hạng spread',    Icon: IconChart,     href: '/tools/spread',     requiresAuth: false, adminOnly: false },
+  { id: 'digest',      label: 'Kho digest',         Icon: IconNewspaper, href: '/digest/archive',   requiresAuth: false, adminOnly: false },
+  { id: 'history',     label: 'Lịch sử giá',        Icon: IconClock,     href: '/profile/history',  requiresAuth: true,  adminOnly: false },
+  { id: 'admin',       label: 'Quản trị',           Icon: IconShield,    href: '/admin',            requiresAuth: true,  adminOnly: true  },
 ] as const;
 
 type Tab = 'home' | 'chart' | 'alerts' | 'profile';
@@ -148,7 +148,7 @@ function Sidebar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
 
       {/* Nav */}
       <nav className="flex flex-col gap-0.5 px-3 py-4 flex-1">
-        <div className="font-mono text-[9px] text-mute tracking-[0.16em] uppercase px-3 pt-1 pb-2">Workspace</div>
+        <div className="font-mono text-[9px] text-mute tracking-[0.16em] uppercase px-3 pt-1 pb-2">Không gian làm việc</div>
         {NAV_ITEMS.filter(it => !it.href && !it.adminOnly && (!it.requiresAuth || !!user)).map(it => {
           const active = tab === it.id;
           const handleClick = () => onChange(it.id as Tab);
@@ -174,7 +174,7 @@ function Sidebar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
         })}
 
         <>
-          <div className="font-mono text-[9px] text-mute tracking-[0.16em] uppercase px-3 pt-5 pb-2">Tools</div>
+          <div className="font-mono text-[9px] text-mute tracking-[0.16em] uppercase px-3 pt-5 pb-2">Công cụ</div>
           {NAV_ITEMS.filter(it => !!it.href && !it.adminOnly && (!it.requiresAuth || !!user)).map(it => {
             const handleClick = () => router.push(it.href as string);
             return (
@@ -195,7 +195,7 @@ function Sidebar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
 
         {user?.role === 'admin' && (
           <>
-            <div className="font-mono text-[9px] text-mute tracking-[0.16em] uppercase px-3 pt-5 pb-2">Admin</div>
+            <div className="font-mono text-[9px] text-mute tracking-[0.16em] uppercase px-3 pt-5 pb-2">Quản trị</div>
             {NAV_ITEMS.filter(it => it.adminOnly).map(it => {
               const handleClick = () => router.push(it.href as string);
               return (
@@ -215,7 +215,7 @@ function Sidebar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
           </>
         )}
 
-        <div className="font-mono text-[9px] text-mute tracking-[0.16em] uppercase px-3 pt-5 pb-2">Watchlist</div>
+        <div className="font-mono text-[9px] text-mute tracking-[0.16em] uppercase px-3 pt-5 pb-2">Theo dõi</div>
         {watchlist.map(w => (
           <div key={w.code} className="flex justify-between items-center px-3 py-2 rounded-md">
             <span className="font-mono text-[11px] font-bold text-bone">{w.code}</span>
@@ -231,7 +231,7 @@ function Sidebar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
           <span className="font-mono text-[10px] text-bone tracking-[0.1em] uppercase">live · ict</span>
         </div>
         <div className="font-mono text-[9px] text-mute mt-2 leading-[1.5]">
-          next refresh in 04:48<br/>sjc · doji · pnj
+          làm mới sau 04:48<br/>sjc · doji · pnj
         </div>
       </div>
 
@@ -262,7 +262,7 @@ function Sidebar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
             onClick={() => router.push('/auth/login')}
             className="w-full h-[34px] bg-gold rounded-lg text-[11px] leading-none font-bold font-sans text-gold-ink tracking-[0.04em] hover:bg-gold/90 hover:text-gold-ink"
           >
-            Log in
+            Đăng nhập
           </Button>
         )}
       </div>
@@ -296,16 +296,16 @@ function TopBar({ currency, onCurrency, onTab }: { currency: string; onCurrency:
     : '';
 
   const SEARCH_ITEMS = [
-    { label: 'Overview',       type: 'page',  action: () => { onTab('home');    setSearchOpen(false); setSearchQuery(''); } },
-    { label: 'Markets',        type: 'page',  action: () => { onTab('chart');   setSearchOpen(false); setSearchQuery(''); } },
-    { label: 'Alerts',         type: 'page',  action: () => { onTab('alerts');  setSearchOpen(false); setSearchQuery(''); } },
-    { label: 'Account',        type: 'page',  action: () => { onTab('profile'); setSearchOpen(false); setSearchQuery(''); } },
-    { label: 'Portfolio',      type: 'tool',  action: () => { router.push('/portfolio');       setSearchOpen(false); setSearchQuery(''); } },
-    { label: 'Converter',      type: 'tool',  action: () => { router.push('/tools/converter'); setSearchOpen(false); setSearchQuery(''); } },
-    { label: 'Leaderboard',    type: 'tool',  action: () => { router.push('/leaderboard');     setSearchOpen(false); setSearchQuery(''); } },
-    { label: 'Spread Ranking', type: 'tool',  action: () => { router.push('/tools/spread');    setSearchOpen(false); setSearchQuery(''); } },
-    { label: 'Digest Archive', type: 'tool',  action: () => { router.push('/digest/archive');  setSearchOpen(false); setSearchQuery(''); } },
-    { label: 'Price History',  type: 'tool',  action: () => { router.push('/profile/history'); setSearchOpen(false); setSearchQuery(''); } },
+    { label: 'Tổng quan',       type: 'trang', action: () => { onTab('home');    setSearchOpen(false); setSearchQuery(''); } },
+    { label: 'Thị trường',     type: 'trang', action: () => { onTab('chart');   setSearchOpen(false); setSearchQuery(''); } },
+    { label: 'Cảnh báo',       type: 'trang', action: () => { onTab('alerts');  setSearchOpen(false); setSearchQuery(''); } },
+    { label: 'Tài khoản',      type: 'trang', action: () => { onTab('profile'); setSearchOpen(false); setSearchQuery(''); } },
+    { label: 'Danh mục',       type: 'công cụ', action: () => { router.push('/portfolio');       setSearchOpen(false); setSearchQuery(''); } },
+    { label: 'Quy đổi',        type: 'công cụ', action: () => { router.push('/tools/converter'); setSearchOpen(false); setSearchQuery(''); } },
+    { label: 'Bảng xếp hạng', type: 'công cụ', action: () => { router.push('/leaderboard');     setSearchOpen(false); setSearchQuery(''); } },
+    { label: 'Xếp hạng spread', type: 'công cụ', action: () => { router.push('/tools/spread');    setSearchOpen(false); setSearchQuery(''); } },
+    { label: 'Kho digest',     type: 'công cụ', action: () => { router.push('/digest/archive');  setSearchOpen(false); setSearchQuery(''); } },
+    { label: 'Lịch sử giá',   type: 'công cụ', action: () => { router.push('/profile/history'); setSearchOpen(false); setSearchQuery(''); } },
     { label: 'SJC',            type: 'brand', action: () => { onTab('chart');   setSearchOpen(false); setSearchQuery(''); } },
     { label: 'DOJI',           type: 'brand', action: () => { onTab('chart');   setSearchOpen(false); setSearchQuery(''); } },
     { label: 'PNJ',            type: 'brand', action: () => { onTab('chart');   setSearchOpen(false); setSearchQuery(''); } },
@@ -383,7 +383,7 @@ function TopBar({ currency, onCurrency, onTab }: { currency: string; onCurrency:
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             onFocus={() => setSearchOpen(true)}
-            placeholder="search assets, brands, alerts…"
+            placeholder="tìm kiếm tài sản, thương hiệu, cảnh báo…"
             className="flex-1 bg-transparent border-0 shadow-none text-[12px] leading-none font-normal font-mono text-chalk placeholder:text-mute h-auto p-0 focus-visible:ring-0"
           />
           {!searchOpen && (
@@ -407,7 +407,7 @@ function TopBar({ currency, onCurrency, onTab }: { currency: string; onCurrency:
         )}
         {searchOpen && filteredItems.length === 0 && (
           <div className="absolute top-[calc(100%+6px)] left-0 right-0 bg-ink-2 border border-line rounded-[10px] z-[300] px-[14px] py-5 text-center shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
-            <span className="font-mono text-[11px] text-mute">no results for &quot;{searchQuery}&quot;</span>
+            <span className="font-mono text-[11px] text-mute">không tìm thấy kết quả cho &quot;{searchQuery}&quot;</span>
           </div>
         )}
       </div>
@@ -453,19 +453,19 @@ function TopBar({ currency, onCurrency, onTab }: { currency: string; onCurrency:
           {bellOpen && (
             <div className="absolute top-[calc(100%+8px)] right-0 w-[300px] bg-ink-2 border border-line rounded-xl z-[200] overflow-hidden">
               <div className="flex items-center justify-between px-4 py-3 border-b border-line">
-                <span className="font-mono text-[9px] leading-none font-bold tracking-[0.12em] uppercase text-mute">Notifications</span>
+                <span className="font-mono text-[9px] leading-none font-bold tracking-[0.12em] uppercase text-mute">Thông báo</span>
                 <Button
                   variant="ghost"
                   onClick={() => {}}
                   className="h-auto px-0 py-0 font-mono text-[11px] leading-none font-semibold text-gold hover:bg-transparent hover:text-gold"
                 >
-                  all →
+                  tất cả →
                 </Button>
               </div>
               <div className="flex flex-col items-center justify-center px-5 py-8 gap-[10px]">
                 <span className="text-gold"><IconBell s={28}/></span>
-                <span className="text-[13px] text-chalk font-semibold">No notifications yet</span>
-                <span className="text-[11px] text-mute text-center leading-[1.5]">Alerts you set up will appear here</span>
+                <span className="text-[13px] text-chalk font-semibold">Chưa có thông báo</span>
+                <span className="text-[11px] text-mute text-center leading-[1.5]">Các cảnh báo bạn thiết lập sẽ hiển thị ở đây</span>
               </div>
             </div>
           )}
@@ -487,7 +487,7 @@ function TopBar({ currency, onCurrency, onTab }: { currency: string; onCurrency:
               onClick={() => router.push('/auth/login')}
               className="h-8 px-[14px] bg-gold rounded-full text-[11px] leading-none font-bold font-sans text-gold-ink tracking-[0.04em] hover:bg-gold/90 hover:text-gold-ink"
             >
-              Log in
+              Đăng nhập
             </Button>
           )}
           {avatarOpen && user && (
@@ -520,7 +520,7 @@ function TopBar({ currency, onCurrency, onTab }: { currency: string; onCurrency:
                   className="w-full justify-start gap-[10px] px-4 py-[10px] h-auto text-chalk text-[13px] leading-none font-medium font-sans hover:bg-ink-3 hover:text-chalk transition-colors"
                 >
                   <IconUser s={14}/>
-                  Profile &amp; settings
+                  Hồ sơ &amp; cài đặt
                 </Button>
                 <div className="h-px bg-line my-1"/>
                 <Button
@@ -528,7 +528,7 @@ function TopBar({ currency, onCurrency, onTab }: { currency: string; onCurrency:
                   onClick={() => { logout(); setAvatarOpen(false); }}
                   className="w-full justify-start gap-[10px] px-4 py-[10px] h-auto text-[#e05252] text-[13px] leading-none font-medium font-sans hover:bg-ink-3 hover:text-[#e05252] transition-colors"
                 >
-                  Log out
+                  Đăng xuất
                 </Button>
               </div>
             </div>

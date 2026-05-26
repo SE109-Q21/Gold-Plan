@@ -66,7 +66,7 @@ export function AddAlertModal({ open, onClose }: Props) {
           const msg =
             (err as { response?: { data?: { message?: string | string[] } } })?.response?.data?.message;
           if (Array.isArray(msg)) setError(msg.join(', '));
-          else setError(msg ?? 'Failed to create alert. Please try again.');
+          else setError(msg ?? 'Tạo cảnh báo thất bại. Vui lòng thử lại.');
         },
       },
     );
@@ -80,34 +80,34 @@ export function AddAlertModal({ open, onClose }: Props) {
       <DialogContent className="w-[520px] bg-ink-2 border-line text-chalk p-7 gap-0">
         <DialogHeader className="mb-5">
           <DialogTitle className="font-display text-[24px] leading-none font-bold tracking-[-0.015em] text-chalk">
-            new price alert
+            cảnh báo giá mới
           </DialogTitle>
           <DialogDescription className="font-mono text-[11px] text-mute mt-[6px]">
-            email + push when threshold is crossed
+            gửi email + thông báo khi vượt ngưỡng
           </DialogDescription>
         </DialogHeader>
 
         {/* Brand */}
-        <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-2">brand</div>
+        <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-2">thương hiệu</div>
         <div className="flex mb-[18px] rounded-lg overflow-hidden border border-line">
           {BRANDS.map(b => <Chip key={b.value} label={b.label} active={brand === b.value} onClick={() => setBrand(b.value)}/>)}
         </div>
 
         {/* Gold type */}
-        <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-2">gold type</div>
+        <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-2">loại vàng</div>
         <div className="flex mb-[18px] rounded-lg overflow-hidden border border-line">
           {GOLD_TYPES.map(g => <Chip key={g.value} label={g.label} active={goldType === g.value} onClick={() => setGoldType(g.value)}/>)}
         </div>
 
         {/* Condition */}
-        <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-2">condition</div>
+        <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-2">điều kiện</div>
         <div className="flex mb-[18px] rounded-lg overflow-hidden border border-line">
-          <Chip label="≥ rises above" active={cond === 'gte'} onClick={() => setCond('gte')}/>
-          <Chip label="≤ drops below" active={cond === 'lte'} onClick={() => setCond('lte')}/>
+          <Chip label="≥ tăng lên trên" active={cond === 'gte'} onClick={() => setCond('gte')}/>
+          <Chip label="≤ giảm xuống dưới" active={cond === 'lte'} onClick={() => setCond('lte')}/>
         </div>
 
         {/* Threshold price */}
-        <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-2">threshold price (VND)</div>
+        <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-2">ngưỡng giá (VND)</div>
         <div className="flex items-center gap-[10px] bg-ink-3 border border-line rounded-[10px] py-1 px-2 pl-4 mb-[18px]">
           <span className="font-display text-[24px] leading-none font-bold text-gold">₫</span>
           <Input
@@ -128,17 +128,17 @@ export function AddAlertModal({ open, onClose }: Props) {
             className="border-line data-[state=checked]:bg-gold data-[state=checked]:border-gold data-[state=checked]:text-gold-ink"
           />
           <Label htmlFor="repeatMode" className="font-sans text-[13px] leading-none font-medium text-bone cursor-pointer">
-            repeat (re-arm after each trigger)
+            lặp lại (kích hoạt lại sau mỗi lần báo)
           </Label>
         </div>
 
         {/* Summary */}
         <div className="p-[12px_14px] bg-ink-3 border border-line rounded-lg font-mono text-[11px] leading-[1.5] text-mute mb-[18px]">
-          notify when{' '}
+          thông báo khi{' '}
           <span className="text-gold">
             {brandLabel} · {goldTypeLabel} {cond === 'gte' ? '≥' : '≤'} ₫{threshold.toLocaleString('en-US')}
           </span>
-          . repeat: {repeatMode ? 'yes' : 'no'}
+          . lặp lại: {repeatMode ? 'có' : 'không'}
         </div>
 
         {/* Error */}
@@ -157,7 +157,7 @@ export function AddAlertModal({ open, onClose }: Props) {
             disabled={createAlert.isPending}
             className="flex-1 h-[46px] bg-ink-3 border-line text-chalk hover:bg-ink-4 hover:text-chalk font-mono text-[14px] font-bold tracking-[0.04em] uppercase"
           >
-            cancel
+            hủy
           </Button>
           <Button
             type="button"
@@ -171,9 +171,9 @@ export function AddAlertModal({ open, onClose }: Props) {
             {createAlert.isPending ? (
               <>
                 <span className="w-[14px] h-[14px] border-2 border-mute border-t-gold rounded-full animate-spin inline-block"/>
-                creating…
+                đang tạo…
               </>
-            ) : 'create alert'}
+            ) : 'tạo cảnh báo'}
           </Button>
         </div>
       </DialogContent>

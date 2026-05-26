@@ -107,17 +107,17 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (newPw.length < 8) { setError('New password must be at least 8 characters'); return; }
-    if (!/[A-Z]/.test(newPw)) { setError('New password needs at least 1 uppercase letter'); return; }
-    if (!/[0-9]/.test(newPw)) { setError('New password needs at least 1 digit'); return; }
-    if (newPw !== confirm) { setError('Passwords do not match'); return; }
-    if (!getAccessToken()) { setError('Not authenticated'); return; }
+    if (newPw.length < 8) { setError('Mật khẩu mới phải có ít nhất 8 ký tự'); return; }
+    if (!/[A-Z]/.test(newPw)) { setError('Mật khẩu mới cần ít nhất 1 chữ hoa'); return; }
+    if (!/[0-9]/.test(newPw)) { setError('Mật khẩu mới cần ít nhất 1 chữ số'); return; }
+    if (newPw !== confirm) { setError('Mật khẩu không khớp'); return; }
+    if (!getAccessToken()) { setError('Chưa xác thực'); return; }
     setLoading(true);
     try {
       await apiChangePassword(getAccessToken() ?? '', oldPw, newPw);
       setSuccess(true);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Change failed');
+      setError(err instanceof Error ? err.message : 'Đổi mật khẩu thất bại');
     } finally {
       setLoading(false);
     }
@@ -130,29 +130,29 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
     <Dialog open onOpenChange={o => !o && onClose()}>
       <DialogContent className="w-[360px] bg-ink-2 border-line text-chalk p-7 gap-0">
         <DialogHeader className="mb-5">
-          <DialogTitle className="font-display text-[16px] leading-none font-bold">Change password</DialogTitle>
+          <DialogTitle className="font-display text-[16px] leading-none font-bold">Đổi mật khẩu</DialogTitle>
         </DialogHeader>
         {success ? (
           <div>
-            <p className="text-up text-[14px]">Password updated successfully.</p>
+            <p className="text-up text-[14px]">Mật khẩu đã được cập nhật.</p>
             <Button onClick={onClose} className="mt-4 h-9 px-4 font-mono text-[11px] font-bold">
-              Close
+              Đóng
             </Button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-            <div className="flex flex-col gap-[5px]"><Label className={labelCls}>Current password</Label><Input type="password" value={oldPw} onChange={e => setOldPw(e.target.value)} required className={inputCls} autoComplete="current-password"/></div>
-            <div className="flex flex-col gap-[5px]"><Label className={labelCls}>New password</Label><Input type="password" value={newPw} onChange={e => setNewPw(e.target.value)} required className={inputCls} autoComplete="new-password"/></div>
-            <div className="flex flex-col gap-[5px]"><Label className={labelCls}>Confirm new password</Label><Input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} required className={inputCls} autoComplete="new-password"/></div>
+            <div className="flex flex-col gap-[5px]"><Label className={labelCls}>Mật khẩu hiện tại</Label><Input type="password" value={oldPw} onChange={e => setOldPw(e.target.value)} required className={inputCls} autoComplete="current-password"/></div>
+            <div className="flex flex-col gap-[5px]"><Label className={labelCls}>Mật khẩu mới</Label><Input type="password" value={newPw} onChange={e => setNewPw(e.target.value)} required className={inputCls} autoComplete="new-password"/></div>
+            <div className="flex flex-col gap-[5px]"><Label className={labelCls}>Xác nhận mật khẩu mới</Label><Input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} required className={inputCls} autoComplete="new-password"/></div>
             {error && (
               <div className="text-down text-[12px] px-[10px] py-2 bg-[rgba(229,72,77,0.1)] rounded-md">{error}</div>
             )}
             <div className="flex gap-2 justify-end mt-1">
               <Button type="button" variant="outline" onClick={onClose} className="h-[34px] px-[14px] bg-ink-3 border-line text-bone hover:bg-ink-4 hover:text-chalk font-mono text-[10px] font-bold">
-                Cancel
+                Hủy
               </Button>
               <Button type="submit" disabled={loading} className="h-[34px] px-[14px] font-mono text-[10px] font-bold">
-                {loading ? 'Saving…' : 'Update'}
+                {loading ? 'Đang lưu…' : 'Cập nhật'}
               </Button>
             </div>
           </form>
@@ -178,7 +178,7 @@ export function AccountPage() {
   const [deletingAccount, setDeletingAccount] = useState(false);
 
   async function handleDeleteAccount() {
-    if (!confirm('Delete your account? This is irreversible and all data will be purged.')) return;
+    if (!confirm('Xóa tài khoản? Hành động này không thể hoàn tác và toàn bộ dữ liệu sẽ bị xóa.')) return;
     if (!getAccessToken()) return;
     setDeletingAccount(true);
     try {
@@ -186,7 +186,7 @@ export function AccountPage() {
       await logout();
       router.push('/auth/login');
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : 'Delete failed');
+      alert(err instanceof Error ? err.message : 'Xóa tài khoản thất bại');
       setDeletingAccount(false);
     }
   }
@@ -197,7 +197,7 @@ export function AccountPage() {
   }
 
   async function handleClearHistory() {
-    if (!window.confirm('Clear all browsing history? This cannot be undone.')) return;
+    if (!window.confirm('Xóa toàn bộ lịch sử duyệt? Hành động này không thể hoàn tác.')) return;
     await clearHistory.mutateAsync();
   }
 
@@ -244,9 +244,9 @@ export function AccountPage() {
                 ? (portfolio.totalPnlVnd >= 0 ? 'text-up' : 'text-down')
                 : 'text-chalk';
               const stats = [
-                { l: 'Portfolio', v: totalValue, color: 'text-chalk' },
-                { l: 'P&L · 30d', v: pnl, color: pnlColor },
-                { l: 'Alerts', v: `${alerts.length} / 10`, color: 'text-chalk' },
+                { l: 'Danh mục', v: totalValue, color: 'text-chalk' },
+                { l: 'L/L · 30d', v: pnl, color: pnlColor },
+                { l: 'Cảnh báo', v: `${alerts.length} / 10`, color: 'text-chalk' },
               ];
               return (
                 <div className="grid grid-cols-3 mt-[22px] pt-[18px] border-t border-hairline">
@@ -264,11 +264,11 @@ export function AccountPage() {
           {/* Preferences */}
           <div className="bg-ink-2 border border-line rounded-[14px]">
             <div className="px-[22px] py-4">
-              <h3 className="font-display text-[16px] leading-none font-bold m-0">preferences</h3>
+              <h3 className="font-display text-[16px] leading-none font-bold m-0">tùy chỉnh</h3>
             </div>
-            <Row label="Display currency" detail="all prices render in this currency" right={<Segmented options={['USD', 'VND', 'EUR']} value="USD" onChange={() => {}}/>}/>
-            <Row label="Theme" detail="dark by default" right={<Segmented options={['DARK', 'LIGHT', 'AUTO']} value={theme} onChange={setTheme}/>}/>
-            <Row label="Unit of mass" detail="prices converted from troy oz" right={<Segmented options={['TROY OZ', 'TAEL', 'GRAM']} value={unit} onChange={setUnit}/>}/>
+            <Row label="Đơn vị tiền tệ" detail="tất cả giá hiển thị theo đơn vị này" right={<Segmented options={['USD', 'VND', 'EUR']} value="USD" onChange={() => {}}/>}/>
+            <Row label="Giao diện" detail="tối theo mặc định" right={<Segmented options={['DARK', 'LIGHT', 'AUTO']} value={theme} onChange={setTheme}/>}/>
+            <Row label="Đơn vị khối lượng" detail="giá quy đổi từ troy oz" right={<Segmented options={['TROY OZ', 'TAEL', 'GRAM']} value={unit} onChange={setUnit}/>}/>
             <Row
               label="Khôi phục mặc định"
               detail="đặt lại tất cả tuỳ chọn và vị trí ghim"
@@ -291,13 +291,13 @@ export function AccountPage() {
           {/* Notifications */}
           <div className="bg-ink-2 border border-line rounded-[14px]">
             <div className="px-[22px] py-4">
-              <h3 className="font-display text-[16px] leading-none font-bold m-0">notifications</h3>
+              <h3 className="font-display text-[16px] leading-none font-bold m-0">thông báo</h3>
             </div>
-            <Row label="Email alerts" detail="within 2 min of trigger" right={<Toggle on={notifEmail} onChange={() => setNotifEmail(!notifEmail)}/>}/>
-            <Row label="Push alerts" detail="browser push notifications" right={<PushNotificationButton />}/>
+            <Row label="Cảnh báo email" detail="trong vòng 2 phút khi kích hoạt" right={<Toggle on={notifEmail} onChange={() => setNotifEmail(!notifEmail)}/>}/>
+            <Row label="Thông báo đẩy" detail="push notification trình duyệt" right={<PushNotificationButton />}/>
             <Row
-              label="Morning digest"
-              detail="market summary at 07:30 · opt-in"
+              label="Bản tin buổi sáng"
+              detail="tóm tắt thị trường lúc 07:30 · tùy chọn"
               right={
                 <Toggle
                   on={notifDigest}
@@ -313,29 +313,29 @@ export function AccountPage() {
         <div className="flex flex-col gap-5">
           <div className="bg-ink-2 border border-line rounded-[14px]">
             <div className="px-[22px] py-4">
-              <h3 className="font-display text-[16px] leading-none font-bold m-0">security</h3>
+              <h3 className="font-display text-[16px] leading-none font-bold m-0">bảo mật</h3>
             </div>
-            <Row label="Password" detail="click to update your password" right={<SmallBtn onClick={() => setShowChangePw(true)}>change</SmallBtn>}/>
-            <Row label="Two-factor auth" detail="TOTP authenticator" right={<span className="font-mono text-[11px] text-up">· enabled</span>}/>
+            <Row label="Mật khẩu" detail="nhấn để cập nhật mật khẩu" right={<SmallBtn onClick={() => setShowChangePw(true)}>đổi</SmallBtn>}/>
+            <Row label="Xác thực 2 yếu tố" detail="TOTP authenticator" right={<span className="font-mono text-[11px] text-up">· bật</span>}/>
           </div>
 
           <div className="bg-ink-2 border border-line rounded-[14px]">
             <div className="px-[22px] py-4">
-              <h3 className="font-display text-[16px] leading-none font-bold m-0">data & api</h3>
+              <h3 className="font-display text-[16px] leading-none font-bold m-0">dữ liệu & api</h3>
             </div>
-            <Row label="Export history" detail="CSV · last 12 months" right={<SmallBtn>export</SmallBtn>}/>
-            <Row label="API key" detail="read-only · 1 active" right={<span className="font-mono text-[11px] text-mute">gt_live_••••a31f</span>}/>
+            <Row label="Xuất lịch sử" detail="CSV · 12 tháng gần nhất" right={<SmallBtn>xuất</SmallBtn>}/>
+            <Row label="API key" detail="chỉ đọc · 1 đang dùng" right={<span className="font-mono text-[11px] text-mute">gt_live_••••a31f</span>}/>
             <Row
-              label="Browsing History"
-              detail="View and clear your price viewing history"
-              right={<SmallBtn onClick={() => router.push('/profile/history')}>view →</SmallBtn>}
+              label="Lịch sử duyệt"
+              detail="Xem và xóa lịch sử xem giá"
+              right={<SmallBtn onClick={() => router.push('/profile/history')}>xem →</SmallBtn>}
             />
             <Row
-              label="Clear Browsing History"
-              detail="Remove all price viewing history"
+              label="Xóa lịch sử duyệt"
+              detail="Xóa toàn bộ lịch sử xem giá"
               right={
                 <SmallBtn danger disabled={clearHistory.isPending} onClick={handleClearHistory}>
-                  {clearHistory.isPending ? '…' : 'clear'}
+                  {clearHistory.isPending ? '…' : 'xóa'}
                 </SmallBtn>
               }
             />
@@ -343,26 +343,26 @@ export function AccountPage() {
 
           <div className="bg-ink-2 border border-[rgba(229,72,77,0.3)] rounded-[14px]">
             <div className="px-[22px] py-4">
-              <h3 className="font-display text-[16px] leading-none font-bold m-0 text-down">danger zone</h3>
+              <h3 className="font-display text-[16px] leading-none font-bold m-0 text-down">vùng nguy hiểm</h3>
             </div>
-            <Row label="Sign out" detail="end the session" right={<SmallBtn onClick={handleSignOut}>sign out</SmallBtn>}/>
+            <Row label="Đăng xuất" detail="kết thúc phiên làm việc" right={<SmallBtn onClick={handleSignOut}>đăng xuất</SmallBtn>}/>
             <Row
-              label="Delete account"
-              detail="irreversible · all data purged"
+              label="Xóa tài khoản"
+              detail="không thể hoàn tác · toàn bộ dữ liệu bị xóa"
               right={
                 <SmallBtn danger disabled={deletingAccount} onClick={handleDeleteAccount}>
-                  {deletingAccount ? '…' : 'delete'}
+                  {deletingAccount ? '…' : 'xóa'}
                 </SmallBtn>
               }
             />
           </div>
 
           <div className="bg-ink-2 border border-line rounded-[14px] p-[22px]">
-            <div className="stamp text-[10px] mb-2">about</div>
+            <div className="stamp text-[10px] mb-2">về ứng dụng</div>
             <div className="font-display text-[16px] leading-[1.2] font-bold mb-[6px]">GoldTracker · v2.4.1</div>
             <div className="font-mono text-[11px] text-mute leading-[1.5]">
-              data: kitco, gold-api, sjc, doji, pnj<br/>
-              refresh · 5 min during 07:00–17:00 (ict)
+              dữ liệu: kitco, gold-api, sjc, doji, pnj<br/>
+              làm mới · 5 phút trong 07:00–17:00 (ict)
             </div>
           </div>
         </div>

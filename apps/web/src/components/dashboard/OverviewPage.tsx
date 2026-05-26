@@ -49,8 +49,8 @@ function fmtUsd(n: number) { return '$' + n.toLocaleString('en-US', { minimumFra
 
 function minsAgo(iso: string): string {
   const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 60_000);
-  if (diff < 1) return 'just now';
-  return `${diff}m ago`;
+  if (diff < 1) return 'vừa xong';
+  return `${diff} phút trước`;
 }
 
 function HeatIndexGauge() {
@@ -109,9 +109,9 @@ function HeatIndexGauge() {
 function HeatIndexStats() {
   const { data } = useHeatIndex();
   const stats = [
-    { l: 'Velocity', v: data ? `${data.priceVelocity?.toFixed(1) ?? '—'}%` : '—' },
-    { l: 'Spread', v: data ? `${data.spreadSize != null ? (data.spreadSize / 1_000_000).toFixed(2) : '—'}M` : '—' },
-    { l: 'Crossings', v: data ? `${data.thresholdCrossings}` : '—' },
+    { l: 'Vận tốc', v: data ? `${data.priceVelocity?.toFixed(1) ?? '—'}%` : '—' },
+    { l: 'Chênh lệch', v: data ? `${data.spreadSize != null ? (data.spreadSize / 1_000_000).toFixed(2) : '—'}M` : '—' },
+    { l: 'Vượt ngưỡng', v: data ? `${data.thresholdCrossings}` : '—' },
   ];
   return (
     <div className="grid grid-cols-3 gap-3 mt-[18px] pt-[14px] border-t border-hairline">
@@ -135,7 +135,7 @@ function ExchangeRateCard() {
   return (
     <div className="bg-ink-2 border border-line rounded-[14px] px-6 py-[18px]">
       <div className="flex justify-between items-center mb-4">
-        <span className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase leading-none font-bold">exchange rates</span>
+        <span className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase leading-none font-bold">tỷ giá</span>
         <div className="flex items-center gap-2">
           {fx && (
             <>
@@ -147,7 +147,7 @@ function ExchangeRateCard() {
               </span>
             </>
           )}
-          {!fx && <span className="font-mono text-[9px] text-mute tracking-[0.08em] leading-none font-bold">loading…</span>}
+          {!fx && <span className="font-mono text-[9px] text-mute tracking-[0.08em] leading-none font-bold">đang tải…</span>}
         </div>
       </div>
       <div className="grid grid-cols-2 gap-4">
@@ -172,9 +172,9 @@ function ExchangeRateCard() {
 
 function daysAgo(iso: string): string {
   const d = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
-  if (d === 0) return 'today';
-  if (d === 1) return '1d ago';
-  return `${d}d ago`;
+  if (d === 0) return 'hôm nay';
+  if (d === 1) return '1 ngày trước';
+  return `${d} ngày trước`;
 }
 
 function PinIcon({ pinned, onClick }: { pinned: boolean; onClick: (e: React.MouseEvent) => void }) {
@@ -182,7 +182,7 @@ function PinIcon({ pinned, onClick }: { pinned: boolean; onClick: (e: React.Mous
     <Button
       variant="ghost"
       onClick={onClick}
-      title={pinned ? 'Unpin' : 'Pin'}
+      title={pinned ? 'Bỏ ghim' : 'Ghim'}
       className={cn(
         'w-auto h-auto px-1 py-0.5 text-[14px] leading-none shrink-0 hover:bg-transparent',
         pinned ? 'text-gold' : 'text-mute',
@@ -214,7 +214,7 @@ function DragHandle({ dragHandleProps }: { dragHandleProps?: React.HTMLAttribute
   return (
     <div
       {...dragHandleProps}
-      title="Drag to reorder"
+      title="Kéo để sắp xếp"
       className="flex items-center justify-center w-5 h-5 cursor-grab text-mute text-[13px] shrink-0 opacity-50 select-none touch-none"
     >
       ⠿
@@ -278,7 +278,7 @@ function PriceRow({
           {isLoggedIn && <BrowsingBadge brand={brand} goldType={goldType} />}
         </div>
         {isBestBuy && (
-          <div className="font-mono text-[9px] text-up tracking-[0.14em] uppercase mt-1">▲ best</div>
+          <div className="font-mono text-[9px] text-up tracking-[0.14em] uppercase mt-1">▲ tốt nhất</div>
         )}
       </div>
       <div className="text-right">
@@ -286,7 +286,7 @@ function PriceRow({
           {fmt(sellPrice)}
         </div>
         {isBestSell && (
-          <div className="font-mono text-[9px] text-gold tracking-[0.14em] uppercase mt-1">▼ lowest</div>
+          <div className="font-mono text-[9px] text-gold tracking-[0.14em] uppercase mt-1">▼ thấp nhất</div>
         )}
       </div>
       <div className="text-right">
@@ -450,11 +450,11 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
           >
             <div className="flex justify-between items-center mb-[18px]">
               <span className="stamp">XAU/USD · london spot · 24K</span>
-              <span className="font-mono text-[11px] text-mute">{intl ? 'live' : 'loading…'}</span>
+              <span className="font-mono text-[11px] text-mute">{intl ? 'live' : 'đang tải…'}</span>
             </div>
             <div className="flex items-end gap-8">
               <div>
-                <div className="font-mono text-[10px] text-mute tracking-[0.14em] uppercase mb-2">spot · per troy oz</div>
+                <div className="font-mono text-[10px] text-mute tracking-[0.14em] uppercase mb-2">giao ngay · mỗi troy oz</div>
                 <div className="flex items-baseline gap-2">
                   <span className="text-[76px] leading-[0.95] font-extrabold font-sans tracking-[-0.035em] tabular-nums">
                     ${intl ? Math.floor(intl.spotPriceUsd).toLocaleString() : '2,345'}
@@ -480,7 +480,7 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
               </div>
               <div className="flex-1 grid grid-cols-2 gap-3">
                 <div className="p-[14px] bg-ink-3 border border-line rounded-[10px]">
-                  <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-[6px]">per tael · vnd</div>
+                  <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-[6px]">mỗi lượng · vnd</div>
                   <div className="text-[22px] leading-none font-bold font-sans tabular-nums">
                     {intl ? (intl.spotPriceVnd / 1_000_000).toFixed(2) : '78.92'}
                     <span className="text-mute text-[14px] ml-1">M₫</span>
@@ -507,7 +507,7 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
           <div className="bg-ink-2 border border-line rounded-[14px] p-6">
             <div className="flex justify-between items-center mb-[14px]">
               <div>
-                <h3 className="text-[18px] leading-none font-bold font-sans m-0 tracking-[-0.01em]">Price history</h3>
+                <h3 className="text-[18px] leading-none font-bold font-sans m-0 tracking-[-0.01em]">Lịch sử giá</h3>
                 <div className="font-mono text-[11px] text-mute mt-[6px]">
                   SJC Miếng · <span className="text-chalk">{fmt(hoverVal)}</span>
                 </div>
@@ -537,17 +537,17 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
           {/* Brand spreads table */}
           <div className="bg-ink-2 border border-line rounded-[14px]">
             <div className="flex items-center justify-between px-6 py-[18px] border-b border-hairline">
-              <h3 className="text-[18px] leading-none font-bold font-sans m-0 tracking-[-0.01em]">Domestic brand spreads</h3>
-              <span className="font-mono text-[10px] text-mute tracking-[0.12em] uppercase">vnd per tael · best highlighted</span>
+              <h3 className="text-[18px] leading-none font-bold font-sans m-0 tracking-[-0.01em]">Chênh lệch các thương hiệu nội địa</h3>
+              <span className="font-mono text-[10px] text-mute tracking-[0.12em] uppercase">vnd mỗi lượng · tốt nhất nổi bật</span>
             </div>
             <div
               className="px-6 py-3 font-mono text-[10px] text-mute tracking-[0.14em] uppercase bg-ink-3 border-b border-hairline grid"
               style={{ gridTemplateColumns: '2fr 1fr 1fr 1fr' + (isLoggedIn ? ' 32px' : '') }}
             >
-              <span>brand</span>
-              <span className="text-right">buy</span>
-              <span className="text-right">sell</span>
-              <span className="text-right">spread</span>
+              <span>thương hiệu</span>
+              <span className="text-right">mua</span>
+              <span className="text-right">bán</span>
+              <span className="text-right">chênh lệch</span>
               {isLoggedIn && <span/>}
             </div>
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -606,8 +606,8 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
           {/* Karat strip */}
           <div className="bg-ink-2 border border-line rounded-[14px] p-5">
             <div className="flex justify-between items-baseline mb-[14px]">
-              <h3 className="text-[16px] leading-none font-bold font-sans m-0">By karat</h3>
-              <span className="font-mono text-[10px] text-mute tracking-[0.12em] uppercase">per oz · usd</span>
+              <h3 className="text-[16px] leading-none font-bold font-sans m-0">Theo karat</h3>
+              <span className="font-mono text-[10px] text-mute tracking-[0.12em] uppercase">mỗi oz · usd</span>
             </div>
             {KARATS.map((k, i) => {
               const price = intl ? intl.spotPriceUsd * k.multiplier : 0;
@@ -625,7 +625,7 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
                   <div className="text-[18px] leading-none font-extrabold font-sans text-gold tracking-[-0.02em]">{k.karat}</div>
                   <div>
                     <div className="text-[20px] leading-none font-bold font-sans tabular-nums">{price > 0 ? fmtUsd(price) : '…'}</div>
-                    <div className="font-mono text-[10px] text-mute mt-1">{k.pct}% purity</div>
+                    <div className="font-mono text-[10px] text-mute mt-1">{k.pct}% độ tinh khiết</div>
                   </div>
                   <Sparkline data={karatSpark.length > 0 ? karatSpark : [1,1,1,1,1,1,1,1,1,1,1,1]} w={80} h={28} dir={karatDir}/>
                   <div className={cn('font-mono text-[11px] text-right font-bold', karatDir === 'up' ? 'text-up' : 'text-down')}>{changeStr}</div>
@@ -637,7 +637,7 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
           {/* Market heat */}
           <div className="bg-ink-2 border border-line rounded-[14px] p-5">
             <div className="flex justify-between items-baseline mb-[14px]">
-              <h3 className="text-[16px] leading-none font-bold font-sans m-0">Market heat</h3>
+              <h3 className="text-[16px] leading-none font-bold font-sans m-0">Nhiệt độ thị trường</h3>
             </div>
             <HeatIndexGauge />
             <HeatIndexStats />
@@ -652,23 +652,23 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
           {/* Alerts widget */}
           <div className="bg-ink-2 border border-line rounded-[14px] p-5">
             <div className="flex justify-between items-baseline mb-[14px]">
-              <h3 className="text-[16px] leading-none font-bold font-sans m-0">Your alerts</h3>
+              <h3 className="text-[16px] leading-none font-bold font-sans m-0">Cảnh báo của bạn</h3>
               <Button
                 variant="ghost"
                 onClick={handleNavigateAlerts}
                 className="h-auto px-0 py-0 font-mono text-[11px] text-gold tracking-[0.08em] leading-none font-bold hover:bg-transparent hover:text-gold"
               >
-                view all →
+                xem tất cả →
               </Button>
             </div>
             {!isLoggedIn && (
               <div className="py-5 text-center text-mute font-mono text-[12px] leading-none font-medium">
-                sign in to see your alerts
+                đăng nhập để xem cảnh báo
               </div>
             )}
             {isLoggedIn && alertsData?.length === 0 && (
               <div className="py-5 text-center text-mute font-mono text-[12px] leading-none font-medium">
-                no alerts yet
+                chưa có cảnh báo
               </div>
             )}
             {isLoggedIn && (alertsData ?? []).slice(0, 3).map((a, i) => {
@@ -687,7 +687,7 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
                     'font-mono text-[9px] leading-none font-bold tracking-[0.14em] uppercase px-[7px] py-[4px] rounded-[3px] border',
                     isFired ? 'text-gold-ink bg-gold border-gold' : 'text-mute bg-transparent border-line',
                   )}>
-                    {isFired ? 'fired' : 'waiting'}
+                    {isFired ? 'đã kích hoạt' : 'đang chờ'}
                   </span>
                 </div>
               );
@@ -696,7 +696,7 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
               onClick={handleNavigateAlerts}
               className="w-full h-11 mt-[10px] gap-2 bg-gold text-gold-ink border border-gold rounded-[10px] font-mono text-[14px] leading-none font-bold tracking-[0.04em] uppercase hover:bg-gold/90 hover:text-gold-ink"
             >
-              <IconPlus s={15}/> new alert
+              <IconPlus s={15}/> thêm cảnh báo
             </Button>
           </div>
 

@@ -49,7 +49,7 @@ export function DigestCard() {
         <div className="flex items-center gap-2 font-display text-[13px] leading-none font-semibold text-chalk">
           <span>📊</span>
           <span>
-            Today&apos;s Digest
+            Bản tin hôm nay
             <span className="text-mute ml-[6px]">·</span>
             <span className="font-mono text-[11px] text-mute ml-[6px]">{fmtDate(digest.date)}</span>
           </span>
@@ -65,7 +65,7 @@ export function DigestCard() {
 
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={() => setExpanded(e => !e)} className="px-[10px] py-1 h-auto border-line bg-transparent text-bone hover:bg-ink-3 hover:text-chalk font-mono text-[11px] font-semibold tracking-[0.04em]">
-            {expanded ? '▲ collapse' : '▼ expand'}
+            {expanded ? '▲ thu gọn' : '▼ mở rộng'}
           </Button>
           <Button variant="ghost" size="icon" onClick={handleDismiss} aria-label="Dismiss digest" className="w-auto h-auto px-1 py-[2px] text-mute hover:bg-transparent hover:text-bone font-mono text-[14px] font-medium">
             ✕
@@ -77,14 +77,14 @@ export function DigestCard() {
       {expanded && (
         <div className="mt-4 pt-4 border-t border-hairline">
           <div className="font-display text-[15px] leading-none font-bold text-chalk mb-[14px]">
-            Market Digest — {fmtDate(digest.date)}
+            Bản tin thị trường — {fmtDate(digest.date)}
           </div>
 
           {/* 3-column price row */}
           <div className="grid grid-cols-3 gap-3 mb-[14px]">
             {[
-              { label: 'SJC Buy',  value: fmtVnd(digest.sjcBuyVnd) },
-              { label: 'SJC Sell', value: fmtVnd(digest.sjcSellVnd) },
+              { label: 'SJC Mua',  value: fmtVnd(digest.sjcBuyVnd) },
+              { label: 'SJC Bán', value: fmtVnd(digest.sjcSellVnd) },
               { label: 'XAU/USD',  value: `$${digest.xauUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` },
             ].map(({ label, value }) => (
               <div key={label} className="bg-ink-3 border border-line rounded-lg p-[10px_14px]">
@@ -102,7 +102,7 @@ export function DigestCard() {
                 ? 'text-up bg-[rgba(88,200,150,0.10)] border-up'
                 : 'text-down bg-[rgba(229,72,77,0.10)] border-down',
             )}>
-              SJC {pctSign}{digest.pctChangeSjc.toFixed(2)}% vs previous
+              SJC {pctSign}{digest.pctChangeSjc.toFixed(2)}% so với hôm qua
             </span>
           </div>
 
@@ -123,7 +123,7 @@ export function DigestCard() {
 
           <div className="mt-[14px] text-center">
             <Button variant="outline" onClick={() => setExpanded(false)} className="px-4 py-[5px] h-auto border-line bg-transparent text-mute hover:bg-ink-3 hover:text-bone font-mono text-[11px] font-semibold tracking-[0.04em]">
-              ▲ collapse
+              ▲ thu gọn
             </Button>
           </div>
         </div>
