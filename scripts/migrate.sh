@@ -3,10 +3,11 @@
 # PRISMA_MIGRATE_SKIP_ADVISORY_LOCK bypasses pg_advisory_lock — safe
 # because Railway deploys are serialized (no concurrent migrations).
 set -e
+export PRISMA_MIGRATE_SKIP_ADVISORY_LOCK=1
 MAX=5
 n=0
 until [ $n -ge $MAX ]; do
-  PRISMA_MIGRATE_SKIP_ADVISORY_LOCK=1 pnpm --filter api exec npx prisma migrate deploy && exit 0
+  pnpm --filter api exec npx prisma migrate deploy && exit 0
   n=$((n + 1))
   echo "migrate attempt $n/$MAX failed — waiting 10s before retry..."
   sleep 10
