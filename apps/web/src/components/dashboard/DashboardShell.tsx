@@ -407,7 +407,7 @@ function TopBar({ currency, onCurrency, onTab }: { currency: string; onCurrency:
   return (
     <header className="h-14 shrink-0 bg-ink-2 border-b border-line flex items-center gap-4 pr-5 pl-7">
       {/* Search bar */}
-      <div ref={searchRef} className="flex-1 max-w-[420px] relative">
+      <div ref={searchRef} className="flex-1 relative">
         <div
           onClick={() => { setSearchOpen(true); setTimeout(() => searchInputRef.current?.focus(), 0); }}
           className={cn(
@@ -450,7 +450,7 @@ function TopBar({ currency, onCurrency, onTab }: { currency: string; onCurrency:
         )}
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-4 shrink-0">
         {/* Live badge */}
         <span className="inline-flex items-center gap-[6px] text-[10px] leading-none font-bold font-mono tracking-[0.12em] uppercase text-live border border-[rgba(157,204,110,0.4)] px-[10px] py-[6px] rounded">
           <span className="w-1.5 h-1.5 rounded-full bg-live"/>
@@ -471,6 +471,9 @@ function TopBar({ currency, onCurrency, onTab }: { currency: string; onCurrency:
             >{c}</Button>
           ))}
         </div>
+
+        {/* Divider */}
+        <div className="w-px h-5 bg-line shrink-0" />
 
         {/* Theme toggle */}
         <ThemeToggle />
