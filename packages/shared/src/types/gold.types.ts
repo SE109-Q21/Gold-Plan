@@ -4,8 +4,6 @@ export type GoldType = 'MIEN_SJC' | 'NHAN_9999' | 'VANG_24K' | 'VANG_18K';
 
 export type PriceStatus = 'live' | 'recent' | 'outdated';
 
-export type HeatCategory = 'cold' | 'warm' | 'hot';
-
 export interface DomesticPriceDto {
   brand: GoldBrand;
   goldType: GoldType;
@@ -22,15 +20,6 @@ export interface InternationalPriceDto {
   spotPriceVnd: number;
   exchangeRate: number;
   recordedAt: string;
-}
-
-export interface HeatIndexDto {
-  value: number;           // 0–100
-  category: HeatCategory;
-  priceVelocity: number;   // normalised 0–100
-  spreadSize: number;      // VND
-  thresholdCrossings: number;
-  calculatedAt: string;
 }
 
 export interface SpreadDto {

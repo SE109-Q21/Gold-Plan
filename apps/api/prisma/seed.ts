@@ -181,29 +181,7 @@ async function main() {
     await prisma.exchangeRate.createMany({ data: exchangeRows.slice(i, i + 500) });
   }
 
-  // ── 4. Heat Index Records (365 days, 4× per day) ────────────────────────────
-  console.log('  → HeatIndexRecords');
-  const heatRows = [];
-  for (let day = DAYS_SJC; day >= 1; day--) {
-    const baseVal = rand(25, 80);
-    for (let slot = 0; slot < 4; slot++) {
-      const val = Math.min(100, Math.max(0, baseVal + rand(-8, 8)));
-      const category = val <= 33 ? 'cold' : val <= 66 ? 'warm' : 'hot';
-      heatRows.push({
-        indexValue: val, category,
-        priceVelocity: parseFloat((0.5 + Math.random() * 2.5).toFixed(4)),
-        spreadSize: BigInt(2_200_000 + rand(-200_000, 500_000)),
-        thresholdCrossings: rand(0, 5),
-        calculatedAt: new Date(daysAgo(day).getTime() + slot * 2 * 3_600_000),
-      });
-    }
-  }
-  heatRows.push({ indexValue: 62, category: 'warm', priceVelocity: 1.42, spreadSize: BigInt(2_500_000), thresholdCrossings: 2, calculatedAt: new Date() });
-  for (let i = 0; i < heatRows.length; i += 500) {
-    await prisma.heatIndexRecord.createMany({ data: heatRows.slice(i, i + 500) });
-  }
-
-  // ── 5. Users (3 fixed + 30 leaderboard users) ──────────────────────────────
+  // ── 4. Users (3 fixed + 30 leaderboard users) ──────────────────────────────
   console.log('  → Users');
   const passwordHash = await bcrypt.hash('Password123!', 10);
 

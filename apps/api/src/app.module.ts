@@ -16,7 +16,6 @@ import { ConverterModule } from './converter/converter.module';
 import { SpreadModule } from './spread/spread.module';
 import { AdminModule } from './admin/admin.module';
 import { AlertsModule } from './alerts/alerts.module';
-import { HeatIndexModule } from './heat-index/heat-index.module';
 import { DcaModule } from './dca/dca.module';
 import { PortfolioModule } from './portfolio/portfolio.module';
 import { BrowsingHistoryModule } from './browsing-history/browsing-history.module';
@@ -53,7 +52,6 @@ import { AssetsComparisonModule } from './assets-comparison/assets-comparison.mo
     SpreadModule,
     AdminModule,
     AlertsModule,
-    HeatIndexModule,
     DcaModule,
     PortfolioModule,
     BrowsingHistoryModule,

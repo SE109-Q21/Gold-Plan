@@ -121,20 +121,6 @@ model ExchangeRate {
   @@index([fromCurrency, toCurrency, recordedAt])
 }
 
-// ─── Heat Index (F03) ─────────────────────────────────────────────────────────
-
-model HeatIndexRecord {
-  id                 String   @id @default(cuid())
-  indexValue         Int
-  category           String
-  priceVelocity      Decimal  @db.Decimal(10, 4)
-  spreadSize         BigInt
-  thresholdCrossings Int
-  calculatedAt       DateTime @default(now())
-
-  @@index([calculatedAt])
-}
-
 // ─── Users & Auth (M06) ───────────────────────────────────────────────────────
 
 model User {
