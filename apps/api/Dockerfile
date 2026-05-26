@@ -37,4 +37,4 @@ COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
 COPY --from=builder /app/apps/api/prisma.config.ts ./apps/api/
 COPY scripts ./scripts
 EXPOSE 4000
-CMD ["sh", "-c", "sh scripts/migrate.sh && pnpm --filter api run start:prod"]
+CMD ["pnpm", "--filter", "api", "run", "start:prod"]
