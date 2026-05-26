@@ -249,22 +249,22 @@ function DcaSimulatorContent() {
           onClick={() => router.push('/')}
           className="text-mute flex items-center gap-[6px] font-mono text-[12px] font-semibold tracking-[0.08em] p-0 pb-6 h-auto hover:bg-transparent hover:text-bone"
         >
-          <IconArrowLeft s={14}/> back to dashboard
+          <IconArrowLeft s={14}/> quay lại dashboard
         </Button>
 
         <div className="mb-8">
           <h1 className="font-display text-[40px] leading-none font-extrabold tracking-[-0.03em] text-chalk m-0">
-            dca simulator
+            mô phỏng DCA
           </h1>
           <p className="font-display text-[14px] leading-[1.5] text-mute m-0 mt-2">
-            Compare Dollar-Cost Averaging vs Lump Sum investing in gold
+            So sánh đầu tư theo DCA vs Mua một lần vào vàng
           </p>
         </div>
 
         {/* Controls card */}
         <div className="bg-ink-2 border border-line rounded-[14px] p-[24px_28px] mb-6">
           <div className="mb-6">
-            <SectionLabel>Brand</SectionLabel>
+            <SectionLabel>Thương hiệu</SectionLabel>
             <div className="flex gap-2">
               {(['SJC', 'DOJI'] as Brand[]).map(b => (
                 <Chip key={b} label={b} selected={brand === b} onClick={() => { setBrand(b); setSubmitted(false); }}/>
@@ -273,7 +273,7 @@ function DcaSimulatorContent() {
           </div>
 
           <div className="mb-6">
-            <SectionLabel>Gold type (auto)</SectionLabel>
+            <SectionLabel>Loại vàng (tự động)</SectionLabel>
             <div className="inline-block border border-line bg-ink-3 text-mute font-mono text-[12px] leading-none font-bold tracking-[0.08em] px-4 py-2 rounded-md">
               {goldType}
             </div>
@@ -281,7 +281,7 @@ function DcaSimulatorContent() {
 
           <div className="flex gap-8 flex-wrap items-start">
             <div>
-              <SectionLabel>Start date</SectionLabel>
+              <SectionLabel>Ngày bắt đầu</SectionLabel>
               <Input
                 type="date"
                 max={maxDate}
@@ -292,16 +292,16 @@ function DcaSimulatorContent() {
             </div>
 
             <div>
-              <SectionLabel>Purchase frequency</SectionLabel>
+              <SectionLabel>Tần suất mua</SectionLabel>
               <div className="flex gap-2">
                 {(['weekly', 'monthly'] as Frequency[]).map(f => (
-                  <Chip key={f} label={f} selected={frequency === f} onClick={() => { setFrequency(f); setSubmitted(false); }}/>
+                  <Chip key={f} label={f === 'weekly' ? 'hàng tuần' : 'hàng tháng'} selected={frequency === f} onClick={() => { setFrequency(f); setSubmitted(false); }}/>
                 ))}
               </div>
             </div>
 
             <div>
-              <SectionLabel>Qty per purchase</SectionLabel>
+              <SectionLabel>Số lượng mỗi lần mua</SectionLabel>
               <div className="flex items-center gap-2">
                 <Input
                   type="number"
@@ -322,11 +322,11 @@ function DcaSimulatorContent() {
               disabled={!startDate}
               className="font-display text-[13px] font-bold tracking-[0.04em] px-7 py-3 h-auto"
             >
-              {isLoading ? 'Simulating…' : 'Simulate'}
+              {isLoading ? 'Đang mô phỏng…' : 'Mô phỏng'}
             </Button>
             {!startDate && (
               <span className="font-mono text-[11px] leading-none text-mute tracking-[0.06em]">
-                pick a start date to begin
+                chọn ngày bắt đầu để tiếp tục
               </span>
             )}
           </div>
@@ -336,14 +336,14 @@ function DcaSimulatorContent() {
         {isLoading && (
           <div className="text-center py-10 text-mute">
             <div className="w-7 h-7 border-2 border-line border-t-gold rounded-full mx-auto mb-3 animate-spin"/>
-            <div className="font-mono text-[12px] leading-none tracking-[0.08em]">running simulation…</div>
+            <div className="font-mono text-[12px] leading-none tracking-[0.08em]">đang chạy mô phỏng…</div>
           </div>
         )}
 
         {/* Error */}
         {error && !isLoading && (
           <div className="bg-[rgba(239,68,68,0.08)] border border-[rgba(239,68,68,0.3)] rounded-[10px] p-[16px_20px] font-display text-[13px] leading-[1.5] text-down mb-6">
-            {(error as Error).message ?? 'Failed to run simulation. Please try again.'}
+            {(error as Error).message ?? 'Chạy mô phỏng thất bại. Vui lòng thử lại.'}
           </div>
         )}
 
@@ -351,12 +351,12 @@ function DcaSimulatorContent() {
         {data && !isLoading && (
           <>
             <div className="flex gap-3 flex-wrap mb-4">
-              <StatCard label="Avg Cost" value={fmtMillions(data.averageCostVnd)} sub="per tael (DCA)"/>
-              <StatCard label="Total Gold" value={data.totalGoldTael.toFixed(2) + ' tael'}/>
-              <StatCard label="Total Spent" value={fmtMillions(data.totalSpentVnd)}/>
-              <StatCard label="Current Value" value={fmtMillions(data.currentValueVnd)}/>
+              <StatCard label="Giá vốn TB" value={fmtMillions(data.averageCostVnd)} sub="mỗi lượng (DCA)"/>
+              <StatCard label="Tổng vàng" value={data.totalGoldTael.toFixed(2) + ' lượng'}/>
+              <StatCard label="Tổng đã chi" value={fmtMillions(data.totalSpentVnd)}/>
+              <StatCard label="Giá trị hiện tại" value={fmtMillions(data.currentValueVnd)}/>
               <StatCard
-                label="DCA P&L"
+                label="L/L DCA"
                 value={`${pnlArrow(data.dcaPnlVnd)} ${fmtMillions(Math.abs(data.dcaPnlVnd))}`}
                 valueClass={pnlClass(data.dcaPnlVnd)}
                 sub={`${data.dcaPnlPct >= 0 ? '+' : ''}${data.dcaPnlPct.toFixed(2)}%`}
@@ -370,24 +370,24 @@ function DcaSimulatorContent() {
             )}>
               <div className="flex-1 min-w-[220px]">
                 <div className="font-mono text-[9px] leading-none font-bold tracking-[0.14em] uppercase text-mute mb-2">
-                  strategy comparison
+                  so sánh chiến lược
                 </div>
                 <div className="font-display text-[14px] leading-[1.4] font-semibold text-chalk">
                   {dcaWon
-                    ? <><span className="text-up">DCA wins</span> — higher return than lump sum</>
-                    : <><span className="text-gold">Lump Sum wins</span> — higher return than DCA</>
+                    ? <><span className="text-up">DCA thắng</span> — lợi nhuận cao hơn mua một lần</>
+                    : <><span className="text-gold">Mua một lần thắng</span> — lợi nhuận cao hơn DCA</>
                   }
                 </div>
               </div>
               <div className="flex gap-8">
                 <div>
-                  <div className="font-mono text-[9px] leading-none font-bold tracking-[0.12em] uppercase text-mute mb-[6px]">DCA return</div>
+                  <div className="font-mono text-[9px] leading-none font-bold tracking-[0.12em] uppercase text-mute mb-[6px]">lợi nhuận DCA</div>
                   <div className={cn('font-display text-[20px] leading-none font-bold [font-variant-numeric:tabular-nums]', pnlClass(data.dcaPnlPct))}>
                     {data.dcaPnlPct >= 0 ? '+' : ''}{data.dcaPnlPct.toFixed(2)}%
                   </div>
                 </div>
                 <div>
-                  <div className="font-mono text-[9px] leading-none font-bold tracking-[0.12em] uppercase text-mute mb-[6px]">Lump Sum return</div>
+                  <div className="font-mono text-[9px] leading-none font-bold tracking-[0.12em] uppercase text-mute mb-[6px]">lợi nhuận mua một lần</div>
                   <div className={cn('font-display text-[20px] leading-none font-bold [font-variant-numeric:tabular-nums]', pnlClass(data.lumpSumPnlPct))}>
                     {data.lumpSumPnlPct >= 0 ? '+' : ''}{data.lumpSumPnlPct.toFixed(2)}%
                   </div>
@@ -400,7 +400,7 @@ function DcaSimulatorContent() {
               <div className="bg-ink-2 border border-line rounded-[14px] p-[20px_24px]">
                 <div className="mb-4">
                   <div className="font-mono text-[12px] leading-none font-bold tracking-[0.08em] uppercase text-bone">
-                    Portfolio Value Over Time
+                    Giá trị danh mục theo thời gian
                   </div>
                   <div className="font-mono text-[11px] leading-[1.5] text-mute mt-1">
                     {data.dataPoints.length} data points · {data.dataPoints[0]?.date} → {data.dataPoints[data.dataPoints.length - 1]?.date}
@@ -412,9 +412,9 @@ function DcaSimulatorContent() {
 
             {/* Lump sum detail */}
             <div className="mt-4 p-[14px_20px] bg-[rgba(212,175,55,0.04)] border border-[rgba(212,175,55,0.12)] rounded-[10px] flex gap-[8px_40px] flex-wrap">
-              <LumpSumDetail label="Lump Sum cost" value={fmtVnd(data.lumpSumCostVnd)}/>
-              <LumpSumDetail label="Lump Sum current value" value={fmtVnd(data.lumpSumCurrentValueVnd)}/>
-              <LumpSumDetail label="Lump Sum P&L" value={`${data.lumpSumPnlPct >= 0 ? '+' : ''}${data.lumpSumPnlPct.toFixed(2)}%`}/>
+              <LumpSumDetail label="Chi phí mua một lần" value={fmtVnd(data.lumpSumCostVnd)}/>
+              <LumpSumDetail label="Giá trị hiện tại (mua 1 lần)" value={fmtVnd(data.lumpSumCurrentValueVnd)}/>
+              <LumpSumDetail label="L/L mua một lần" value={`${data.lumpSumPnlPct >= 0 ? '+' : ''}${data.lumpSumPnlPct.toFixed(2)}%`}/>
             </div>
 
             {/* Save to Portfolio */}

@@ -169,22 +169,22 @@ function ConverterContent() {
           onClick={() => router.push('/')}
           className="text-mute flex items-center gap-[6px] font-mono text-[12px] font-semibold tracking-[0.08em] p-0 pb-6 h-auto hover:bg-transparent hover:text-bone"
         >
-          <IconArrowLeft s={14}/> back to dashboard
+          <IconArrowLeft s={14}/> quay lại dashboard
         </Button>
 
         <div className="mb-8">
           <h1 className="font-display text-[40px] leading-none font-extrabold tracking-[-0.03em] text-chalk m-0">
-            gold converter
+            quy đổi vàng
           </h1>
           <p className="font-display text-[14px] leading-[1.5] text-mute m-0 mt-2">
-            Real-time conversion across units, purities, and currencies
+            Quy đổi thời gian thực giữa các đơn vị, độ tinh khiết và tiền tệ
           </p>
         </div>
 
         {/* Controls card */}
         <div className="bg-ink-2 border border-line rounded-[14px] p-[24px_28px]">
           <div className="mb-6">
-            <SectionLabel>Weight unit</SectionLabel>
+            <SectionLabel>Đơn vị khối lượng</SectionLabel>
             <div className="flex flex-wrap gap-2">
               {WEIGHT_UNITS.map(u => (
                 <Chip key={u.id} label={u.label} sub={u.sub} selected={unit === u.id} onClick={() => setUnit(u.id)}/>
@@ -193,7 +193,7 @@ function ConverterContent() {
           </div>
 
           <div className="mb-6">
-            <SectionLabel>Quantity</SectionLabel>
+            <SectionLabel>Số lượng</SectionLabel>
             <Input
               type="number"
               min="0"
@@ -205,7 +205,7 @@ function ConverterContent() {
           </div>
 
           <div className="mb-6">
-            <SectionLabel>Purity</SectionLabel>
+            <SectionLabel>Độ tinh khiết</SectionLabel>
             <div className="flex gap-2">
               {PURITIES.map(p => <Chip key={p} label={p} selected={purity === p} onClick={() => setPurity(p)}/>)}
             </div>
@@ -213,13 +213,13 @@ function ConverterContent() {
 
           <div className="flex gap-10 flex-wrap">
             <div>
-              <SectionLabel>Brand (price reference)</SectionLabel>
+              <SectionLabel>Thương hiệu (giá tham chiếu)</SectionLabel>
               <div className="flex gap-2">
                 {BRANDS.map(b => <Chip key={b.id} label={b.label} selected={brand === b.id} onClick={() => setBrand(b.id)}/>)}
               </div>
             </div>
             <div>
-              <SectionLabel>Gold type</SectionLabel>
+              <SectionLabel>Loại vàng</SectionLabel>
               <div className="border border-line bg-ink-3 text-mute font-mono text-[12px] leading-none font-bold tracking-[0.08em] px-4 py-2 rounded-md self-start">
                 {goldType}
               </div>
@@ -236,7 +236,7 @@ function ConverterContent() {
 
         {/* Results card */}
         <div className="bg-ink-2 border border-line rounded-[14px] p-[24px_28px]">
-          <SectionLabel>Conversion results</SectionLabel>
+          <SectionLabel>Kết quả quy đổi</SectionLabel>
           <div className="flex flex-col gap-0">
             {resultRows.map((row, idx) => (
               <div
@@ -263,17 +263,17 @@ function ConverterContent() {
 
         {/* Weight info */}
         <div className="mt-5 p-[16px_20px] bg-[rgba(212,175,55,0.04)] border border-[rgba(212,175,55,0.12)] rounded-[10px]">
-          <SectionLabel>Weight &amp; rate details</SectionLabel>
+          <SectionLabel>Chi tiết khối lượng &amp; tỷ giá</SectionLabel>
           <div className="flex flex-wrap gap-[8px_32px]">
-            <InfoItem label="Weight (g)" value={`${weightInGrams.toFixed(2)} g`} loading={false}/>
-            <InfoItem label="Weight (tael)" value={`${weightInTael.toFixed(3)} lượng`} loading={false}/>
+            <InfoItem label="Khối lượng (g)" value={`${weightInGrams.toFixed(2)} g`} loading={false}/>
+            <InfoItem label="Khối lượng (lượng)" value={`${weightInTael.toFixed(3)} lượng`} loading={false}/>
             <InfoItem
-              label="Price used"
-              value={isLoading ? '—' : pricePerTaelVnd > 0 ? `${pricePerTaelVnd.toLocaleString('vi-VN')} ₫/tael (${brand} · ${goldType})` : 'No price data'}
+              label="Giá dùng"
+              value={isLoading ? '—' : pricePerTaelVnd > 0 ? `${pricePerTaelVnd.toLocaleString('vi-VN')} ₫/lượng (${brand} · ${goldType})` : 'Không có dữ liệu giá'}
               loading={isLoading}
             />
             <InfoItem
-              label="Rates used"
+              label="Tỷ giá dùng"
               value={ratesLoading || !rates ? '—' : `1 USD = ${rates.usdVnd.toLocaleString('vi-VN')} ₫ · 1 EUR = ${rates.eurVnd.toLocaleString('vi-VN')} ₫`}
               loading={ratesLoading}
             />

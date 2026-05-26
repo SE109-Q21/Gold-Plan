@@ -53,7 +53,7 @@ function EntryRow({ entry, index }: { entry: LeaderboardEntryDto; index: number 
           'font-display text-[14px] leading-none',
           isTop3 ? 'font-bold text-chalk' : 'font-medium text-bone',
         )}>
-          {entry.displayName ?? `User ${entry.userId.slice(0, 6)}`}
+          {entry.displayName ?? `Người dùng ${entry.userId.slice(0, 6)}`}
         </span>
       </div>
       <div className="text-right">

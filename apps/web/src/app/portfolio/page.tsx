@@ -174,7 +174,7 @@ function PnlChart({ data, loading }: { data: { date: string; valueVnd: number }[
     return (
       <div className="flex items-center justify-center" style={{ height: H }}>
         <span className="font-mono text-[13px] leading-none font-medium text-mute tracking-[0.06em]">
-          no history yet
+          chưa có lịch sử
         </span>
       </div>
     );
@@ -313,7 +313,7 @@ function AllocationGroup({
           <Skeleton w="80%" h={12} radius={3}/>
         </div>
       ) : items.length === 0 ? (
-        <div className="font-mono text-[11px] leading-none font-medium text-mute">no data</div>
+        <div className="font-mono text-[11px] leading-none font-medium text-mute">không có dữ liệu</div>
       ) : (
         <>
           <DonutChart items={items}/>
@@ -398,8 +398,8 @@ function AddTransactionModal({ onClose }: { onClose: () => void }) {
     e.preventDefault();
     const qtyNum = parseFloat(qty);
     const priceNum = parseFloat(price);
-    if (!qtyNum || qtyNum <= 0) { setError('Quantity must be > 0'); return; }
-    if (!priceNum || priceNum <= 0) { setError('Price must be > 0'); return; }
+    if (!qtyNum || qtyNum <= 0) { setError('Số lượng phải lớn hơn 0'); return; }
+    if (!priceNum || priceNum <= 0) { setError('Giá phải lớn hơn 0'); return; }
     setError('');
     setSubmitting(true);
     try {
@@ -415,7 +415,7 @@ function AddTransactionModal({ onClose }: { onClose: () => void }) {
       await addTx.mutateAsync(payload);
       onClose();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to save transaction');
+      setError(err instanceof Error ? err.message : 'Lưu giao dịch thất bại');
     } finally {
       setSubmitting(false);
     }
@@ -426,17 +426,17 @@ function AddTransactionModal({ onClose }: { onClose: () => void }) {
       <DialogContent className="w-[480px] bg-ink-2 border-line text-chalk p-[28px_28px_24px] max-h-[90vh] overflow-y-auto gap-6">
         <DialogHeader>
           <DialogTitle className="font-display text-[18px] leading-none font-extrabold tracking-[-0.02em] text-chalk">
-            add transaction
+            thêm giao dịch
           </DialogTitle>
           <DialogDescription className="font-mono text-[12px] leading-none font-medium text-mute tracking-[0.04em]">
-            record a buy or sell
+            ghi lại giao dịch mua hoặc bán
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-[18px]">
           {/* Type */}
           <div>
-            <SectionLabel>Type</SectionLabel>
+            <SectionLabel>Loại</SectionLabel>
             <div className="flex gap-[6px]">
               {(['BUY', 'SELL'] as const).map(t => (
                 <Button
@@ -461,20 +461,20 @@ function AddTransactionModal({ onClose }: { onClose: () => void }) {
 
           {/* Brand */}
           <div>
-            <SectionLabel>Brand</SectionLabel>
+            <SectionLabel>Thương hiệu</SectionLabel>
             <ChipSel options={BRANDS} value={brand as typeof BRANDS[number]} onChange={setBrand}/>
           </div>
 
           {/* Gold Type */}
           <div>
-            <SectionLabel>Gold Type</SectionLabel>
+            <SectionLabel>Loại vàng</SectionLabel>
             <ChipSel options={GOLD_TYPES} value={goldType as typeof GOLD_TYPES[number]} onChange={setGoldType}/>
           </div>
 
           {/* Quantity & Price */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <SectionLabel>Quantity (tael)</SectionLabel>
+              <SectionLabel>Số lượng (lượng)</SectionLabel>
               <Input
                 type="number"
                 min="0.01"
@@ -487,7 +487,7 @@ function AddTransactionModal({ onClose }: { onClose: () => void }) {
               />
             </div>
             <div>
-              <SectionLabel>Price / Tael (VND)</SectionLabel>
+              <SectionLabel>Giá / Lượng (VND)</SectionLabel>
               <Input
                 type="number"
                 min="1"
@@ -503,7 +503,7 @@ function AddTransactionModal({ onClose }: { onClose: () => void }) {
 
           {/* Date */}
           <div>
-            <SectionLabel>Date</SectionLabel>
+            <SectionLabel>Ngày</SectionLabel>
             <Input
               type="date"
               value={date}
@@ -516,7 +516,7 @@ function AddTransactionModal({ onClose }: { onClose: () => void }) {
 
           {/* Note */}
           <div>
-            <SectionLabel>Note (optional)</SectionLabel>
+            <SectionLabel>Ghi chú (tùy chọn)</SectionLabel>
             <Input
               type="text"
               value={note}
@@ -539,7 +539,7 @@ function AddTransactionModal({ onClose }: { onClose: () => void }) {
             disabled={submitting}
             className="w-full h-11 font-display text-[13px] font-bold tracking-[0.04em]"
           >
-            {submitting ? 'Saving…' : `Record ${txType}`}
+            {submitting ? 'Đang lưu…' : `Ghi ${txType === 'BUY' ? 'MUA' : 'BÁN'}`}
           </Button>
         </form>
       </DialogContent>
@@ -579,8 +579,8 @@ function EditTransactionModal({ tx, onClose }: { tx: EditableTx; onClose: () => 
     e.preventDefault();
     const qtyNum = parseFloat(qty);
     const priceNum = parseFloat(price);
-    if (!qtyNum || qtyNum <= 0) { setError('Quantity must be > 0'); return; }
-    if (!priceNum || priceNum <= 0) { setError('Price must be > 0'); return; }
+    if (!qtyNum || qtyNum <= 0) { setError('Số lượng phải lớn hơn 0'); return; }
+    if (!priceNum || priceNum <= 0) { setError('Giá phải lớn hơn 0'); return; }
     setError('');
     setSubmitting(true);
     try {
@@ -596,7 +596,7 @@ function EditTransactionModal({ tx, onClose }: { tx: EditableTx; onClose: () => 
       });
       onClose();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to save transaction');
+      setError(err instanceof Error ? err.message : 'Lưu giao dịch thất bại');
     } finally {
       setSubmitting(false);
     }
@@ -607,16 +607,16 @@ function EditTransactionModal({ tx, onClose }: { tx: EditableTx; onClose: () => 
       <DialogContent className="w-[480px] bg-ink-2 border-line text-chalk p-[28px_28px_24px] max-h-[90vh] overflow-y-auto gap-6">
         <DialogHeader>
           <DialogTitle className="font-display text-[18px] leading-none font-extrabold tracking-[-0.02em] text-chalk">
-            edit transaction
+            sửa giao dịch
           </DialogTitle>
           <DialogDescription className="font-mono text-[12px] leading-none font-medium text-mute tracking-[0.04em]">
-            modify the details below
+            chỉnh sửa thông tin bên dưới
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-[18px]">
           <div>
-            <SectionLabel>Type</SectionLabel>
+            <SectionLabel>Loại</SectionLabel>
             <div className="flex gap-[6px]">
               {(['BUY', 'SELL'] as const).map(t => (
                 <Button
@@ -640,24 +640,24 @@ function EditTransactionModal({ tx, onClose }: { tx: EditableTx; onClose: () => 
           </div>
 
           <div>
-            <SectionLabel>Brand</SectionLabel>
+            <SectionLabel>Thương hiệu</SectionLabel>
             <ChipSel options={BRANDS} value={brand as typeof BRANDS[number]} onChange={setBrand}/>
           </div>
 
           <div>
-            <SectionLabel>Gold Type</SectionLabel>
+            <SectionLabel>Loại vàng</SectionLabel>
             <ChipSel options={GOLD_TYPES} value={goldType as typeof GOLD_TYPES[number]} onChange={setGoldType}/>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <SectionLabel>Quantity (tael)</SectionLabel>
+              <SectionLabel>Số lượng (lượng)</SectionLabel>
               <Input type="number" min="0.01" step="0.01" value={qty}
                 onChange={(e: { target: { value: string } }) => setQty(e.target.value)}
                 placeholder="e.g. 1.5" required className={INPUT_CLS}/>
             </div>
             <div>
-              <SectionLabel>Price / Tael (VND)</SectionLabel>
+              <SectionLabel>Giá / Lượng (VND)</SectionLabel>
               <Input type="number" min="1" step="1" value={price}
                 onChange={(e: { target: { value: string } }) => setPrice(e.target.value)}
                 placeholder="e.g. 79000000" required className={INPUT_CLS}/>
@@ -665,14 +665,14 @@ function EditTransactionModal({ tx, onClose }: { tx: EditableTx; onClose: () => 
           </div>
 
           <div>
-            <SectionLabel>Date</SectionLabel>
+            <SectionLabel>Ngày</SectionLabel>
             <Input type="date" value={date} max={today}
               onChange={(e: { target: { value: string } }) => setDate(e.target.value)}
               required className={INPUT_CLS}/>
           </div>
 
           <div>
-            <SectionLabel>Note (optional)</SectionLabel>
+            <SectionLabel>Ghi chú (tùy chọn)</SectionLabel>
             <Input type="text" value={note}
               onChange={(e: { target: { value: string } }) => setNote(e.target.value)}
               placeholder="e.g. Bought at SJC Hà Nội" className={INPUT_CLS}/>
@@ -689,7 +689,7 @@ function EditTransactionModal({ tx, onClose }: { tx: EditableTx; onClose: () => 
             disabled={submitting}
             className="w-full h-11 font-display text-[13px] font-bold tracking-[0.04em]"
           >
-            {submitting ? 'Saving…' : 'Save Changes'}
+            {submitting ? 'Đang lưu…' : 'Lưu thay đổi'}
           </Button>
         </form>
       </DialogContent>
@@ -737,27 +737,27 @@ function PortfolioContent() {
                 onClick={() => router.back()}
                 className="text-mute flex items-center gap-[6px] font-mono text-[12px] leading-none font-semibold tracking-[0.08em] p-0 pb-[14px] h-auto hover:bg-transparent hover:text-bone"
               >
-                <IconArrowLeft s={13}/> portfolio
+                <IconArrowLeft s={13}/> danh mục
               </Button>
               <h1 className="font-display text-[40px] leading-none font-extrabold tracking-[-0.035em] m-0">
-                my portfolio
+                danh mục của tôi
               </h1>
               <p className="font-display text-[13px] leading-[1.5] text-mute m-0 mt-2">
-                Track your gold holdings, P&amp;L, and transaction history
+                Theo dõi tài sản vàng, lãi/lỗ và lịch sử giao dịch
               </p>
             </div>
             <Button
               onClick={() => setShowModal(true)}
               className="flex items-center gap-[7px] h-10 font-display text-[13px] font-bold px-[18px] tracking-[0.02em] shrink-0 mt-[6px]"
             >
-              <IconPlus s={14}/> add transaction
+              <IconPlus s={14}/> thêm giao dịch
             </Button>
           </div>
 
           {/* ── Summary cards ── */}
           <div className="flex gap-3 mb-7 flex-wrap">
             <SummaryCard
-              label="Total Value"
+              label="Tổng giá trị"
               value={summary ? fmtM(summary.totalValueVnd) : '—'}
               subLabel={summary ? fmtVnd(summary.totalValueVnd) : undefined}
               loading={summaryLoading}
@@ -769,14 +769,14 @@ function PortfolioContent() {
               loading={summaryLoading}
             />
             <SummaryCard
-              label={`P&L ${summary ? pnlArrow : ''}`}
+              label={`L/L ${summary ? pnlArrow : ''}`}
               value={summary ? `${pnlPositive ? '+' : ''}${fmtM(summary.totalPnlVnd)}` : '—'}
               subLabel={summary ? fmtVnd(summary.totalPnlVnd) : undefined}
               colorClass={summary ? pnlClass : undefined}
               loading={summaryLoading}
             />
             <SummaryCard
-              label="P&L %"
+              label="L/L %"
               value={summary ? `${pnlPctPositive ? '+' : ''}${pnlPctValue.toFixed(2)}%` : '—'}
               colorClass={summary ? (pnlPctPositive ? 'text-up' : 'text-down') : undefined}
               loading={summaryLoading}
@@ -785,18 +785,18 @@ function PortfolioContent() {
 
           {/* ── P&L Chart ── */}
           <div className="bg-ink-2 border border-line rounded-xl p-[20px_24px] mb-7">
-            <SectionLabel>portfolio value history</SectionLabel>
+            <SectionLabel>lịch sử giá trị danh mục</SectionLabel>
             <PnlChart data={chartData ?? []} loading={chartLoading}/>
           </div>
 
           {/* ── Holdings table ── */}
           <div className="bg-ink-2 border border-line rounded-xl p-[20px_24px] mb-7 overflow-x-auto">
-            <SectionLabel>holdings</SectionLabel>
+            <SectionLabel>tài sản nắm giữ</SectionLabel>
             <table className="w-full border-collapse min-w-[700px]">
               <thead>
                 <tr>
-                  {['Brand', 'Gold Type', 'Net Qty', 'Avg Cost', 'Current Price', 'Value', 'P&L', 'P&L%'].map(h => (
-                    <th key={h} className={cn(TH_BASE, h === 'Brand' || h === 'Gold Type' ? 'text-left' : 'text-right')}>
+                  {[['Thương hiệu', true], ['Loại vàng', true], ['SL ròng', false], ['Giá vốn TB', false], ['Giá hiện tại', false], ['Giá trị', false], ['L/L', false], ['L/L%', false]].map(([h, left]) => (
+                    <th key={h as string} className={cn(TH_BASE, left ? 'text-left' : 'text-right')}>
                       {h}
                     </th>
                   ))}
@@ -816,7 +816,7 @@ function PortfolioContent() {
                 ) : !summary?.holdings.length ? (
                   <tr>
                     <td colSpan={8} className="p-8 text-center font-mono text-[13px] leading-none font-medium text-mute">
-                      no holdings yet — add a buy transaction to get started
+                      chưa có tài sản — thêm giao dịch mua để bắt đầu
                     </td>
                   </tr>
                 ) : (
@@ -847,17 +847,17 @@ function PortfolioContent() {
 
           {/* ── Allocation ── */}
           <div className="bg-ink-2 border border-line rounded-xl p-[20px_24px] mb-7">
-            <SectionLabel>allocation</SectionLabel>
+            <SectionLabel>phân bổ</SectionLabel>
             <div className="flex gap-12 flex-wrap">
-              <AllocationGroup title="by brand" items={allocByBrand} loading={allocLoading}/>
-              <AllocationGroup title="by gold type" items={allocByType} loading={allocLoading}/>
+              <AllocationGroup title="theo thương hiệu" items={allocByBrand} loading={allocLoading}/>
+              <AllocationGroup title="theo loại vàng" items={allocByType} loading={allocLoading}/>
             </div>
           </div>
 
           {/* ── Transactions ── */}
           <div className="bg-ink-2 border border-line rounded-xl p-[20px_24px] overflow-x-auto">
             <div className="flex items-center justify-between mb-4">
-              <SectionLabel>transactions</SectionLabel>
+              <SectionLabel>giao dịch</SectionLabel>
               {txData && txData.totalPages > 1 && (
                 <div className="font-mono text-[10px] text-mute tracking-[0.1em]">
                   page {txData.page} of {txData.totalPages}
@@ -867,7 +867,7 @@ function PortfolioContent() {
             <table className="w-full border-collapse min-w-[680px]">
               <thead>
                 <tr>
-                  {['Date', 'Type', 'Brand', 'Gold Type', 'Qty', 'Price/Tael', 'Note', ''].map((h, i) => (
+                  {['Ngày', 'Loại', 'Thương hiệu', 'Loại vàng', 'SL', 'Giá/Lượng', 'Ghi chú', ''].map((h, i) => (
                     <th key={i} className={cn(TH_BASE, i >= 4 ? 'text-right' : 'text-left')}>
                       {h}
                     </th>
@@ -888,7 +888,7 @@ function PortfolioContent() {
                 ) : !txData?.items.length ? (
                   <tr>
                     <td colSpan={8} className="p-8 text-center font-mono text-[13px] leading-none font-medium text-mute">
-                      no transactions yet
+                      chưa có giao dịch
                     </td>
                   </tr>
                 ) : (
@@ -959,7 +959,7 @@ function PortfolioContent() {
                   disabled={txPage <= 1}
                   className="h-8 px-[14px] border-line bg-transparent text-bone hover:bg-ink-3 font-mono text-[11px] font-semibold tracking-[0.06em]"
                 >
-                  Prev
+                  Trước
                 </Button>
                 <span className="font-mono text-[11px] text-mute">
                   {txPage} / {txData.totalPages}
@@ -971,7 +971,7 @@ function PortfolioContent() {
                   disabled={txPage >= txData.totalPages}
                   className="h-8 px-[14px] border-line bg-transparent text-bone hover:bg-ink-3 font-mono text-[11px] font-semibold tracking-[0.06em]"
                 >
-                  Next
+                  Tiếp
                 </Button>
               </div>
             )}

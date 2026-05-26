@@ -125,16 +125,16 @@ function DigestArchiveContent() {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M19 12H5M12 5l-7 7 7 7"/>
           </svg>
-          back
+          quay lại
         </Button>
 
         {/* Header */}
         <div className="mb-7">
           <h1 className="font-display text-[36px] leading-none font-extrabold m-0 mb-[10px] tracking-[-0.025em]">
-            Digest Archive
+            Kho lưu trữ bản tin
           </h1>
           <p className="font-sans text-[14px] leading-[1.5] text-mute m-0">
-            Morning gold market digests, weekdays at 7:30 AM ICT
+            Bản tin thị trường vàng buổi sáng, các ngày trong tuần lúc 07:30 ICT
           </p>
         </div>
 
@@ -142,7 +142,7 @@ function DigestArchiveContent() {
 
         {!isLoading && items.length === 0 && (
           <div className="py-16 text-center font-sans text-[15px] leading-[1.5] text-mute">
-            No digests available yet.
+            Chưa có bản tin nào.
           </div>
         )}
 
@@ -151,9 +151,9 @@ function DigestArchiveContent() {
         {/* Pagination */}
         {!isLoading && total > 0 && (
           <div className="flex items-center justify-between mt-6">
-            <Button variant="outline" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1} className="h-[34px] px-4 border-line bg-ink-2 text-chalk hover:bg-ink-3 font-mono text-[11px] font-bold tracking-[0.1em] uppercase">← Prev</Button>
-            <span className="font-sans text-[13px] leading-none text-mute">Page {page} of {totalPages}</span>
-            <Button variant="outline" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="h-[34px] px-4 border-line bg-ink-2 text-chalk hover:bg-ink-3 font-mono text-[11px] font-bold tracking-[0.1em] uppercase">Next →</Button>
+            <Button variant="outline" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1} className="h-[34px] px-4 border-line bg-ink-2 text-chalk hover:bg-ink-3 font-mono text-[11px] font-bold tracking-[0.1em] uppercase">← Trước</Button>
+            <span className="font-sans text-[13px] leading-none text-mute">Trang {page} / {totalPages}</span>
+            <Button variant="outline" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="h-[34px] px-4 border-line bg-ink-2 text-chalk hover:bg-ink-3 font-mono text-[11px] font-bold tracking-[0.1em] uppercase">Tiếp →</Button>
           </div>
         )}
       </div>

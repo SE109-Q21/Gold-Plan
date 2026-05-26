@@ -44,7 +44,7 @@ function SparkHistory({ brand, goldType, days }: { brand: GoldBrand; goldType: G
   if (data.length < 2) {
     return (
       <div className="h-[40px] flex items-center justify-center">
-        <span className="font-mono text-[11px] leading-none font-medium text-mute">no data</span>
+        <span className="font-mono text-[11px] leading-none font-medium text-mute">không có dữ liệu</span>
       </div>
     );
   }
@@ -76,7 +76,7 @@ function RankingTable({ items, days }: { items: SpreadRankingDto[]; days: number
   if (items.length === 0) {
     return (
       <div className="p-[48px_22px] text-center text-mute font-display text-[14px] leading-[1.5] font-medium">
-        No spread data available
+        Không có dữ liệu spread
       </div>
     );
   }
@@ -88,12 +88,12 @@ function RankingTable({ items, days }: { items: SpreadRankingDto[]; days: number
         style={{ gridTemplateColumns: ROW_COLS }}
       >
         <span>#</span>
-        <span>brand</span>
+        <span>thương hiệu</span>
         <span>spread %</span>
-        <span className="text-right">buy</span>
-        <span className="text-right">sell</span>
+        <span className="text-right">mua</span>
+        <span className="text-right">bán</span>
         <span className="text-right">spread ₫</span>
-        <span className="text-center">trend ({days}d)</span>
+        <span className="text-center">xu hướng ({days}d)</span>
       </div>
 
       {items.map((r, i) => (
@@ -162,11 +162,11 @@ export default function SpreadPage() {
         <div className="flex items-start justify-between">
           <div>
             <Button variant="ghost" onClick={() => router.back()} className="text-mute flex items-center gap-1 font-mono text-[12px] font-medium mb-3 p-0 h-auto hover:bg-transparent hover:text-bone">
-              ← Back
+              ← Quay lại
             </Button>
-            <h1 className="font-display text-[36px] leading-none font-extrabold m-0 tracking-[-0.025em]">spread ranking</h1>
+            <h1 className="font-display text-[36px] leading-none font-extrabold m-0 tracking-[-0.025em]">xếp hạng spread</h1>
             <p className="font-display text-[14px] leading-[1.5] text-mute m-0 mt-2 max-w-[480px]">
-              Compare buy/sell spreads across brands — lower spread = cheaper to trade.
+              So sánh spread mua/bán giữa các thương hiệu — spread thấp = giao dịch rẻ hơn.
             </p>
           </div>
         </div>
@@ -204,9 +204,9 @@ export default function SpreadPage() {
         {!isLoading && ranking.length > 0 && (
           <div className="grid grid-cols-3 gap-[14px]">
             {[
-              { lbl: 'Most efficient', val: bestSpread ? `${bestSpread.brand} · ${bestSpread.spreadPct.toFixed(2)}%` : '—', cls: 'text-gold' },
-              { lbl: 'Avg spread',     val: avgSpread != null ? `${avgSpread.toFixed(2)}%` : '—',                              cls: 'text-chalk' },
-              { lbl: 'Widest spread',  val: worstSpread ? `${worstSpread.brand} · ${worstSpread.spreadPct.toFixed(2)}%` : '—', cls: 'text-down' },
+              { lbl: 'Hiệu quả nhất', val: bestSpread ? `${bestSpread.brand} · ${bestSpread.spreadPct.toFixed(2)}%` : '—', cls: 'text-gold' },
+              { lbl: 'Spread trung bình', val: avgSpread != null ? `${avgSpread.toFixed(2)}%` : '—',                        cls: 'text-chalk' },
+              { lbl: 'Spread cao nhất', val: worstSpread ? `${worstSpread.brand} · ${worstSpread.spreadPct.toFixed(2)}%` : '—', cls: 'text-down' },
             ].map(s => (
               <div key={s.lbl} className="bg-ink-2 border border-line rounded-[14px] p-[18px]">
                 <div className="font-mono text-[9px] leading-none text-mute tracking-[0.14em] uppercase mb-2">{s.lbl}</div>
@@ -219,8 +219,8 @@ export default function SpreadPage() {
         {/* Ranking table */}
         <div className="bg-ink-2 border border-line rounded-[14px] overflow-hidden overflow-x-auto">
           <div className="px-5 py-4 border-b border-hairline flex justify-between items-center">
-            <h3 className="font-display text-[16px] leading-none font-bold m-0">rankings</h3>
-            <span className="font-mono text-[10px] text-mute">sorted by spread % · low = best</span>
+            <h3 className="font-display text-[16px] leading-none font-bold m-0">bảng xếp hạng</h3>
+            <span className="font-mono text-[10px] text-mute">sắp xếp theo spread % · thấp = tốt nhất</span>
           </div>
 
           {isLoading && (

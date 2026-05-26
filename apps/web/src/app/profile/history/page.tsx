@@ -37,7 +37,7 @@ function BrowsingHistoryContent() {
   );
 
   async function handleClearAll() {
-    if (!window.confirm('Clear all browsing history? This cannot be undone.')) return;
+    if (!window.confirm('Xóa toàn bộ lịch sử duyệt? Hành động này không thể hoàn tác.')) return;
     await clearHistory.mutateAsync();
     setPage(1);
   }
@@ -51,12 +51,12 @@ function BrowsingHistoryContent() {
       <div className="flex items-center justify-between px-7 py-5 border-b border-line bg-ink-2">
         <div className="flex items-center gap-[14px]">
           <Button variant="outline" onClick={() => router.back()} className="h-[34px] px-[10px] border-line bg-transparent text-bone hover:bg-ink-3 font-mono text-[12px] font-bold tracking-[0.04em] flex items-center gap-[6px]">
-            ← back
+            ← quay lại
           </Button>
-          <h1 className="font-display text-[20px] leading-none font-bold m-0 tracking-[-0.015em]">browsing history</h1>
+          <h1 className="font-display text-[20px] leading-none font-bold m-0 tracking-[-0.015em]">lịch sử duyệt</h1>
         </div>
         <Button variant="outline" onClick={handleClearAll} disabled={clearHistory.isPending} className="h-[34px] px-[14px] border-[rgba(229,72,77,0.5)] bg-transparent text-down hover:bg-[rgba(229,72,77,0.08)] hover:text-down font-mono text-[11px] font-bold tracking-[0.04em] uppercase">
-          {clearHistory.isPending ? '…' : 'clear all'}
+          {clearHistory.isPending ? '…' : 'xóa tất cả'}
         </Button>
       </div>
 
@@ -65,23 +65,23 @@ function BrowsingHistoryContent() {
         <div className="bg-ink-2 border border-line rounded-[14px] overflow-hidden">
           {/* Table header */}
           <div className={cn(ROW_GRID, ROW_COLS, 'bg-ink-3 border-b border-hairline font-mono text-[10px] text-mute tracking-[0.14em] uppercase py-3')}>
-            <span>viewed at</span>
-            <span>brand</span>
-            <span>gold type</span>
-            <span className="text-right">buy price</span>
+            <span>thời điểm xem</span>
+            <span>thương hiệu</span>
+            <span>loại vàng</span>
+            <span className="text-right">giá mua</span>
             <span className="text-right">giá thấp nhất</span>
             <span className="text-right">vs thấp nhất</span>
           </div>
 
           {isLoading && (
             <div className="p-[32px_24px] text-center text-mute font-mono text-[13px] leading-none font-medium">
-              loading…
+              đang tải…
             </div>
           )}
 
           {!isLoading && items.length === 0 && (
             <div className="p-[32px_24px] text-center text-mute font-mono text-[13px] leading-none font-medium">
-              no history yet
+              chưa có lịch sử
             </div>
           )}
 
@@ -124,18 +124,18 @@ function BrowsingHistoryContent() {
         {totalPages > 1 && (
           <div className="flex items-center justify-center gap-4 mt-5">
             <Button variant="outline" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1} className="h-[34px] px-[14px] bg-ink-3 border-line text-bone hover:bg-ink-4 font-mono text-[11px] font-bold tracking-[0.04em] uppercase">
-              ← prev
+              ← trước
             </Button>
-            <span className="font-mono text-[12px] text-mute">page {page} of {totalPages}</span>
+            <span className="font-mono text-[12px] text-mute">trang {page} / {totalPages}</span>
             <Button variant="outline" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="h-[34px] px-[14px] bg-ink-3 border-line text-bone hover:bg-ink-4 font-mono text-[11px] font-bold tracking-[0.04em] uppercase">
-              next →
+              tiếp →
             </Button>
           </div>
         )}
 
         {data && (
           <div className="text-center mt-3 font-mono text-[11px] text-mute">
-            {data.total} entries total
+            {data.total} mục tổng cộng
           </div>
         )}
       </div>
