@@ -1,6 +1,7 @@
 'use client';
 
 import { useExchangeRates } from '@/lib/exchange-rate.api';
+import { LiveBadge } from '@/components/ui/LiveBadge';
 import { cn } from '@/lib/utils';
 
 function timeAgo(isoString: string): string {
@@ -29,9 +30,12 @@ export function ExchangeRateCard() {
   return (
     <div className="bg-ink-2 border border-line rounded-[14px] p-[18px_24px]">
       <div className="flex justify-between items-center mb-4">
-        <span className="font-mono text-[10px] leading-none text-mute tracking-[0.14em] uppercase">
-          Tỷ giá ngoại tệ
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-[10px] leading-none text-mute tracking-[0.14em] uppercase">
+            Tỷ giá ngoại tệ
+          </span>
+          <LiveBadge label="Mỗi 15 phút" variant="inline" />
+        </div>
         <div className="flex items-center gap-[10px]">
           {data && (
             <span className={cn(

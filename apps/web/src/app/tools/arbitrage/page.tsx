@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
+import { LiveBadge } from '@/components/ui/LiveBadge';
 
 const GOLD_TYPES = ['NHAN_9999', 'MIEN_SJC', 'VANG_24K', 'VANG_18K'] as const;
 
@@ -60,7 +61,10 @@ export default function ArbitragePage() {
 
   return (
     <div className="max-w-[800px] mx-auto p-[24px_16px]">
-      <h1 className="text-gold mb-1 text-[24px] font-bold">⚡ Chênh lệch giá vàng</h1>
+      <div className="flex items-center gap-3 mb-1">
+        <h1 className="text-gold text-[24px] font-bold m-0">⚡ Chênh lệch giá vàng</h1>
+        <LiveBadge />
+      </div>
       <p className="text-mute text-[14px] mb-6">
         So sánh giá mua/bán giữa các thương hiệu real-time. Mua nơi rẻ nhất, bán nơi cao nhất.
       </p>

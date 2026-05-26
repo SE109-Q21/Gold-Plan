@@ -3,7 +3,14 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { io } from 'socket.io-client';
-import type { DomesticPriceDto, ComparisonRowDto } from '@gpls/shared';
+import type {
+  DomesticPriceDto,
+  ComparisonRowDto,
+  ArbitrageOpportunityDto,
+  SpreadRankingDto,
+  InternationalPriceDto,
+  ExchangeRateDto,
+} from '@gpls/shared';
 
 interface PriceUpdatedPayload {
   brand: string;
@@ -30,7 +37,6 @@ export function useRealTimePrices() {
       const buyPrice  = Number(data.buyPrice);
       const sellPrice = Number(data.sellPrice);
 
-      // Cập nhật domestic prices cache ngay lập tức — không cần round-trip API
       queryClient.setQueriesData<DomesticPriceDto[]>(
         { queryKey: ['prices', 'domestic'] },
         (old) => {
@@ -43,7 +49,6 @@ export function useRealTimePrices() {
         },
       );
 
-      // Cập nhật comparison cache và tính lại best buy/sell
       queryClient.setQueriesData<ComparisonRowDto[]>(
         { queryKey: ['prices', 'comparison'] },
         (old) => {
@@ -65,9 +70,22 @@ export function useRealTimePrices() {
           });
         },
       );
+    });
 
-      // Arbitrage cần refetch vì phụ thuộc vào logic phức tạp phía server
-      queryClient.invalidateQueries({ queryKey: ['prices', 'arbitrage'] });
+    socket.on('arbitrage:updated', (data: ArbitrageOpportunityDto[]) => {
+      queryClient.setQueryData(['prices', 'arbitrage'], data);
+    });
+
+    socket.on('spread:updated', (data: { goldType: string; ranking: SpreadRankingDto[] }) => {
+      queryClient.setQueryData(['spread', 'ranking', data.goldType], data.ranking);
+    });
+
+    socket.on('international-price:updated', (data: InternationalPriceDto) => {
+      queryClient.setQueryData(['prices', 'international'], data);
+    });
+
+    socket.on('exchange-rate:updated', (data: ExchangeRateDto) => {
+      queryClient.setQueryData(['exchange-rate', 'rates'], data);
     });
 
     return () => {

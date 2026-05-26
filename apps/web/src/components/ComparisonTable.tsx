@@ -5,6 +5,7 @@ import type { GoldType, ComparisonBrandDto } from '@gpls/shared';
 import { useComparison } from '@/lib/price.api';
 import { cn } from '@/lib/utils';
 import { BrandLogo } from '@/components/ui/BrandLogo';
+import { LiveBadge } from '@/components/ui/LiveBadge';
 
 const GOLD_TYPES: GoldType[] = ['MIEN_SJC', 'NHAN_9999', 'VANG_24K', 'VANG_18K'];
 const GOLD_TYPE_LABELS: Record<GoldType, string> = {
@@ -60,6 +61,7 @@ export function ComparisonTable() {
   return (
     <div className="bg-ink-2 rounded-lg border border-line p-4">
       <div className="mb-4 flex items-center gap-3">
+        <LiveBadge variant="inline" />
         <span className="font-sans text-[13px] font-medium text-bone">Loại vàng:</span>
         <select
           value={goldType}

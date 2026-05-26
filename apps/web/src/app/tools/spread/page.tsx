@@ -6,6 +6,7 @@ import { useSpreadRanking, useSpreadHistory } from '@/lib/spread.api';
 import type { GoldType, GoldBrand, SpreadRankingDto } from '@gpls/shared';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { LiveBadge } from '@/components/ui/LiveBadge';
 
 const GOLD_TYPES: { value: GoldType; label: string }[] = [
   { value: 'MIEN_SJC' as GoldType, label: 'Miếng SJC' },
@@ -219,7 +220,10 @@ export default function SpreadPage() {
         {/* Ranking table */}
         <div className="bg-ink-2 border border-line rounded-[14px] overflow-hidden overflow-x-auto">
           <div className="px-5 py-4 border-b border-hairline flex justify-between items-center">
-            <h3 className="font-display text-[16px] leading-none font-bold m-0">bảng xếp hạng</h3>
+            <div className="flex items-center gap-3">
+              <h3 className="font-display text-[16px] leading-none font-bold m-0">bảng xếp hạng</h3>
+              <LiveBadge />
+            </div>
             <span className="font-mono text-[10px] text-mute">sắp xếp theo spread % · thấp = tốt nhất</span>
           </div>
 

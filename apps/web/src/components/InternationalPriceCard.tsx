@@ -1,6 +1,7 @@
 'use client';
 
 import { useInternationalPrice } from '@/lib/price.api';
+import { LiveBadge } from '@/components/ui/LiveBadge';
 
 export function InternationalPriceCard() {
   const { data, isLoading, error } = useInternationalPrice();
@@ -29,7 +30,10 @@ export function InternationalPriceCard() {
 
   return (
     <div className="bg-ink-2 rounded-lg border border-line p-4">
-      <h3 className="font-sans text-[13px] font-medium text-mute">Giá vàng quốc tế</h3>
+      <div className="flex items-center justify-between">
+        <h3 className="font-sans text-[13px] font-medium text-mute">Giá vàng quốc tế</h3>
+        <LiveBadge label="Mỗi 5 phút" variant="inline" />
+      </div>
       <div className="mt-2 flex items-end gap-3">
         <span className="font-display text-[22px] font-bold text-gold">
           ${data.spotPriceUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}

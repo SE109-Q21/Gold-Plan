@@ -1,6 +1,7 @@
 'use client';
 
 import { useArbitrageOpportunities } from '@/lib/arbitrage.api';
+import { LiveBadge } from '@/components/ui/LiveBadge';
 import Link from 'next/link';
 
 function fmt(n: number) {
@@ -14,7 +15,7 @@ export function ArbitrageWidget() {
     <div className="bg-ink-2 border border-line rounded-[12px] p-5">
       <div className="flex justify-between items-center mb-4">
         <span className="text-gold font-bold text-[15px]">⚡ Chênh lệch giá</span>
-        <span className="bg-[rgba(157,204,110,0.13)] text-[#9DCC6E] px-2 py-[2px] rounded text-[11px]">● LIVE</span>
+        <LiveBadge />
       </div>
 
       {isLoading && <p className="text-mute text-[13px]">Đang tải...</p>}

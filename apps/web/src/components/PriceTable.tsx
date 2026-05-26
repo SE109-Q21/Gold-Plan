@@ -4,6 +4,7 @@ import type { DomesticPriceDto, GoldBrand, PriceStatus } from '@gpls/shared';
 import { useDomesticPrices } from '@/lib/price.api';
 import { cn } from '@/lib/utils';
 import { BrandLogo } from '@/components/ui/BrandLogo';
+import { LiveBadge } from '@/components/ui/LiveBadge';
 
 const BRAND_LABELS: Record<GoldBrand, string> = {
   SJC: 'SJC', DOJI: 'DOJI', PNJ: 'PNJ', BAO_TIN: 'Bảo Tín',
@@ -59,6 +60,9 @@ export function PriceTable({ brand }: { brand?: GoldBrand }) {
 
   return (
     <div className="overflow-x-auto bg-ink-2 rounded-lg border border-line">
+      <div className="flex justify-end px-4 pt-2 pb-1">
+        <LiveBadge variant="inline" />
+      </div>
       <table className="min-w-full font-sans text-[13px]">
         <thead className="bg-ink-3">
           <tr>
