@@ -19,6 +19,7 @@ import { HeatIndexHistoryChart } from '@/components/HeatIndexHistoryChart';
 import { ArbitrageWidget } from '@/components/ArbitrageWidget';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   DndContext,
   closestCenter,
@@ -55,72 +56,168 @@ function minsAgo(iso: string): string {
 
 function HeatIndexGauge() {
   const { data, isLoading } = useHeatIndex();
-  const [showTooltip, setShowTooltip] = useState(false);
-
-  const score = data?.value ?? 0;
-  const label = data?.category ?? '—';
-  const zoneColor = score <= 33 ? '#60A5FA' : score <= 66 ? '#FBBF24' : '#EF4444';
-  const arcLen = Math.PI * 50;
-  const visibleArc = (score / 100) * arcLen;
-  const needleAngle = (score / 100) * Math.PI;
-  const needleX = 60 - Math.cos(needleAngle) * 50;
-  const needleY = 66 - Math.sin(needleAngle) * 50;
-  const tooltipContent = data
-    ? `Vận tốc: ${data.priceVelocity?.toFixed(1) ?? '—'}% · Chênh lệch: ${data.spreadSize != null ? (data.spreadSize / 1_000_000).toFixed(2) : '—'}M₫ · Vượt ngưỡng: ${data.thresholdCrossings ?? '—'}`
-    : '';
 
   if (isLoading) return (
-    <div className="h-[76px] flex items-center justify-center text-mute font-mono text-[12px] leading-none font-medium">
+    <div className="h-[68px] flex items-center justify-center text-mute font-mono text-[12px] leading-none font-medium">
       Đang tải…
     </div>
   );
 
+  const score = data?.value ?? 0;
+  const { emoji, status, color } =
+    score <= 25 ? { emoji: '❄️', status: 'Trầm lắng', color: 'text-[#60A5FA]' } :
+    score <= 50 ? { emoji: '🌤️', status: 'Bình ổn',   color: 'text-[#FBBF24]' } :
+    score <= 75 ? { emoji: '🔥', status: 'Sôi động',  color: 'text-[#F97316]' } :
+                  { emoji: '🚨', status: 'Rất nóng',  color: 'text-[#EF4444]' };
+
   return (
-    <div className="relative flex items-center gap-[22px]">
-      <svg width="120" height="76" viewBox="0 0 120 76">
-        <path d="M10 66 A50 50 0 0 1 110 66" stroke="#22232B" strokeWidth="8" fill="none" strokeLinecap="round"/>
-        <path d="M10 66 A50 50 0 0 1 110 66"
-          stroke={zoneColor} strokeWidth="8" fill="none" strokeLinecap="round"
-          strokeDasharray={`${visibleArc} ${arcLen}`}
-          strokeDashoffset="0"
-        />
-        <circle cx={needleX} cy={needleY} r="7" fill={zoneColor} stroke="#0B0B0F" strokeWidth="2"/>
-      </svg>
+    <div className="flex items-center gap-4">
+      <div className="text-[44px] leading-none select-none">{emoji}</div>
       <div>
-        <div className="text-[44px] leading-none font-extrabold font-sans tabular-nums">{score}</div>
-        <div className="font-mono text-[10px] text-mute tracking-[0.12em] uppercase mt-1">/ 100 · {label.toLowerCase()}</div>
+        <div className={cn('text-[26px] leading-none font-extrabold font-sans', color)}>{status}</div>
+        <div className="font-mono text-[10px] text-mute mt-[7px] tracking-[0.1em]">
+          Chỉ số nhiệt: <span className="text-chalk font-bold tabular-nums">{score}</span> / 100
+        </div>
       </div>
-      <span
-        onMouseEnter={() => setShowTooltip(true)}
-        onMouseLeave={() => setShowTooltip(false)}
-        className="absolute top-0 right-0 cursor-help font-mono text-[11px] leading-none font-bold text-mute px-[6px] py-[2px] border border-line rounded"
-      >
-        ?
-        {showTooltip && tooltipContent && (
-          <span className="absolute bottom-[120%] right-0 bg-ink-3 border border-line rounded-lg px-3 py-2 font-mono text-[11px] leading-[1.5] font-medium text-chalk whitespace-nowrap z-[100]">
-            {tooltipContent}
-          </span>
-        )}
-      </span>
     </div>
   );
 }
 
-function HeatIndexStats() {
-  const { data } = useHeatIndex();
-  const stats = [
-    { l: 'Vận tốc', v: data ? `${data.priceVelocity?.toFixed(1) ?? '—'}%` : '—' },
-    { l: 'Chênh lệch', v: data ? `${data.spreadSize != null ? (data.spreadSize / 1_000_000).toFixed(2) : '—'}M` : '—' },
-    { l: 'Vượt ngưỡng', v: data ? `${data.thresholdCrossings}` : '—' },
-  ];
+type CalcTab = 'value' | 'pnl';
+const CALC_UNITS = [
+  { id: 'luong' as const, label: 'Lượng', grams: 37.5 },
+  { id: 'chi'   as const, label: 'Chỉ',   grams: 3.75 },
+  { id: 'phan'  as const, label: 'Phân',  grams: 0.375 },
+  { id: 'gram'  as const, label: 'Gram',  grams: 1 },
+];
+type CalcUnit = typeof CALC_UNITS[number]['id'];
+
+function GoldCalculatorCard({ sjcBuyPrice }: { sjcBuyPrice: number }) {
+  const [tab, setTab] = useState<CalcTab>('value');
+  const [valQtyStr, setValQtyStr] = useState('1');
+  const [valUnit, setValUnit] = useState<CalcUnit>('luong');
+  const [pnlBoughtStr, setPnlBoughtStr] = useState('');
+  const [pnlQtyStr, setPnlQtyStr] = useState('1');
+
+  const pricePerGram = sjcBuyPrice / 37.5;
+  const valQty = parseFloat(valQtyStr) || 0;
+  const unitGrams = CALC_UNITS.find(u => u.id === valUnit)?.grams ?? 37.5;
+  const valResult = valQty * unitGrams * pricePerGram;
+
+  const pnlBought = parseFloat(pnlBoughtStr.replace(/\./g, '').replace(/,/g, '')) || 0;
+  const pnlQty = parseFloat(pnlQtyStr) || 0;
+  const pnlDiff = (sjcBuyPrice - pnlBought) * pnlQty;
+  const pnlPct = pnlBought > 0 ? ((sjcBuyPrice - pnlBought) / pnlBought) * 100 : null;
+  const hasPrice = sjcBuyPrice > 0;
+
   return (
-    <div className="grid grid-cols-3 gap-3 mt-[18px] pt-[14px] border-t border-hairline">
-      {stats.map(s => (
-        <div key={s.l}>
-          <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-1">{s.l}</div>
-          <div className="text-[16px] leading-none font-bold font-sans tabular-nums">{s.v}</div>
+    <div className="bg-ink-2 border border-line rounded-[14px] p-5">
+      <h3 className="text-[16px] leading-none font-bold font-sans m-0 mb-[14px]">Máy tính vàng</h3>
+
+      <div className="flex gap-0 mb-4 bg-ink-3 border border-line rounded-[8px] p-[3px]">
+        {([['value', 'Tính giá trị'], ['pnl', 'Tính lãi/lỗ']] as [CalcTab, string][]).map(([t, label]) => (
+          <button
+            key={t}
+            type="button"
+            onClick={() => setTab(t)}
+            className={cn(
+              'flex-1 h-[30px] font-mono text-[11px] leading-none font-bold tracking-[0.06em] rounded-[6px] transition-[background,color] duration-[140ms]',
+              tab === t ? 'bg-gold text-gold-ink' : 'text-mute hover:text-bone',
+            )}
+          >{label}</button>
+        ))}
+      </div>
+
+      {tab === 'value' && (
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap gap-[6px]">
+            {CALC_UNITS.map(u => (
+              <button
+                key={u.id}
+                type="button"
+                onClick={() => setValUnit(u.id)}
+                className={cn(
+                  'px-3 py-[6px] font-mono text-[11px] font-bold rounded-md border transition-[border-color,background,color] duration-[140ms]',
+                  valUnit === u.id
+                    ? 'border-gold bg-[rgba(212,175,55,0.12)] text-gold'
+                    : 'border-line bg-transparent text-bone hover:bg-ink-3',
+                )}
+              >{u.label}</button>
+            ))}
+          </div>
+          <Input
+            type="number"
+            min="0"
+            step="any"
+            value={valQtyStr}
+            onChange={e => setValQtyStr(e.target.value)}
+            placeholder="Số lượng..."
+            className="bg-ink-3 border-line text-chalk font-display text-[20px] leading-none font-bold p-[10px_14px] h-auto focus-visible:ring-gold placeholder:text-mute"
+          />
+          <div className="p-[14px] bg-ink-3 border border-line rounded-[10px]">
+            <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-[6px]">giá trị ước tính</div>
+            {!hasPrice
+              ? <div className="text-mute font-mono text-[13px]">Đang tải giá…</div>
+              : valQty <= 0
+              ? <div className="text-mute font-mono text-[13px]">Nhập số lượng</div>
+              : <div className="text-[22px] leading-none font-extrabold font-sans tabular-nums text-chalk">{Math.round(valResult).toLocaleString('vi-VN')} ₫</div>
+            }
+            {hasPrice && (
+              <div className="font-mono text-[10px] text-mute mt-[6px]">Giá mua SJC: {sjcBuyPrice.toLocaleString('vi-VN')} ₫/lượng</div>
+            )}
+          </div>
         </div>
-      ))}
+      )}
+
+      {tab === 'pnl' && (
+        <div className="flex flex-col gap-3">
+          <div>
+            <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-[6px]">giá mua (₫/lượng)</div>
+            <Input
+              type="text"
+              value={pnlBoughtStr}
+              onChange={e => setPnlBoughtStr(e.target.value)}
+              placeholder="ví dụ: 78.000.000"
+              className="bg-ink-3 border-line text-chalk text-[14px] font-medium p-[10px_14px] h-auto focus-visible:ring-gold placeholder:text-mute"
+            />
+          </div>
+          <div>
+            <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-[6px]">số lượng (lượng)</div>
+            <Input
+              type="number"
+              min="0"
+              step="any"
+              value={pnlQtyStr}
+              onChange={e => setPnlQtyStr(e.target.value)}
+              placeholder="1"
+              className="bg-ink-3 border-line text-chalk text-[14px] font-medium p-[10px_14px] h-auto focus-visible:ring-gold placeholder:text-mute"
+            />
+          </div>
+          <div className="p-[14px] bg-ink-3 border border-line rounded-[10px]">
+            <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-[6px]">lãi / lỗ ước tính</div>
+            {!hasPrice
+              ? <div className="text-mute font-mono text-[13px]">Đang tải giá…</div>
+              : pnlBought <= 0 || pnlQty <= 0
+              ? <div className="text-mute font-mono text-[13px]">Nhập giá mua và số lượng</div>
+              : (
+                <>
+                  <div className={cn('text-[22px] leading-none font-extrabold font-sans tabular-nums', pnlDiff >= 0 ? 'text-up' : 'text-down')}>
+                    {pnlDiff >= 0 ? '+' : ''}{Math.round(pnlDiff).toLocaleString('vi-VN')} ₫
+                  </div>
+                  {pnlPct !== null && (
+                    <div className={cn('font-mono text-[11px] font-bold mt-[5px]', pnlDiff >= 0 ? 'text-up' : 'text-down')}>
+                      {pnlDiff >= 0 ? '+' : ''}{pnlPct.toFixed(2)}%
+                    </div>
+                  )}
+                </>
+              )
+            }
+            {hasPrice && pnlBought > 0 && pnlQty > 0 && (
+              <div className="font-mono text-[10px] text-mute mt-[6px]">Giá hiện tại SJC: {sjcBuyPrice.toLocaleString('vi-VN')} ₫/lượng</div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -394,6 +491,7 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
   const compRow = comparison?.[0];
   const compBrands = compRow?.brands ?? [];
   const compGoldType = compRow?.goldType ?? 'MIEN_SJC';
+  const sjc = compBrands.find(b => b.brand === 'SJC');
   void domestic;
 
   const FALLBACK_BRANDS: ComparisonBrandDto[] = [
@@ -607,6 +705,9 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
         {/* ── Right column */}
         <div className="flex flex-col gap-5 min-w-0">
 
+          {/* Gold calculator */}
+          <GoldCalculatorCard sjcBuyPrice={sjc?.buyPrice ?? 0} />
+
           {/* Karat strip */}
           <div className="bg-ink-2 border border-line rounded-[14px] p-5">
             <div className="flex justify-between items-baseline mb-[14px]">
@@ -644,7 +745,6 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
               <h3 className="text-[16px] leading-none font-bold font-sans m-0">Nhiệt độ thị trường</h3>
             </div>
             <HeatIndexGauge />
-            <HeatIndexStats />
           </div>
 
           {/* Arbitrage opportunities */}

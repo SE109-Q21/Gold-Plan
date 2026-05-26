@@ -229,9 +229,11 @@ export function AccountPage() {
                 <div className="font-display text-[24px] leading-[1.1] font-bold tracking-[-0.015em] mb-[6px]">
                   {user?.displayName ?? user?.email ?? 'GoldTracker User'}
                 </div>
-                <div className="font-mono text-[12px] text-mute">{user ? user.role : 'guest'}</div>
+                <div className="font-mono text-[12px] text-mute">
+                  {user ? (user.role === 'admin' ? 'Quản trị viên' : 'Thành viên') : 'Khách'}
+                </div>
               </div>
-              <span className="stamp text-[10px]">GOLD MEMBER</span>
+              <span className="stamp text-[10px]">Thành viên Vàng</span>
             </div>
             {(() => {
               const portfolio = portfolioQuery.data;
@@ -245,7 +247,7 @@ export function AccountPage() {
                 : 'text-chalk';
               const stats = [
                 { l: 'Danh mục', v: totalValue, color: 'text-chalk' },
-                { l: 'L/L · 30d', v: pnl, color: pnlColor },
+                { l: 'Lãi/Lỗ · 30 ngày', v: pnl, color: pnlColor },
                 { l: 'Cảnh báo', v: `${alerts.length} / 10`, color: 'text-chalk' },
               ];
               return (
@@ -264,7 +266,7 @@ export function AccountPage() {
           {/* Preferences */}
           <div className="bg-ink-2 border border-line rounded-[14px]">
             <div className="px-[22px] py-4">
-              <h3 className="font-display text-[16px] leading-none font-bold m-0">tùy chỉnh</h3>
+              <h3 className="font-display text-[16px] leading-none font-bold m-0">Tùy chỉnh</h3>
             </div>
             <Row label="Đơn vị tiền tệ" detail="tất cả giá hiển thị theo đơn vị này" right={<Segmented options={['USD', 'VND', 'EUR']} value="USD" onChange={() => {}}/>}/>
             <Row label="Giao diện" detail="tối theo mặc định" right={<Segmented options={['DARK', 'LIGHT', 'AUTO']} value={theme} onChange={setTheme}/>}/>
@@ -282,7 +284,7 @@ export function AccountPage() {
                     }
                   }}
                 >
-                  {resetPrefs.isPending ? '…' : 'reset'}
+                  {resetPrefs.isPending ? '…' : 'Đặt lại'}
                 </SmallBtn>
               }
             />
@@ -291,10 +293,10 @@ export function AccountPage() {
           {/* Notifications */}
           <div className="bg-ink-2 border border-line rounded-[14px]">
             <div className="px-[22px] py-4">
-              <h3 className="font-display text-[16px] leading-none font-bold m-0">thông báo</h3>
+              <h3 className="font-display text-[16px] leading-none font-bold m-0">Thông báo</h3>
             </div>
             <Row label="Cảnh báo email" detail="trong vòng 2 phút khi kích hoạt" right={<Toggle on={notifEmail} onChange={() => setNotifEmail(!notifEmail)}/>}/>
-            <Row label="Thông báo đẩy" detail="push notification trình duyệt" right={<PushNotificationButton />}/>
+            <Row label="Thông báo trình duyệt" detail="nhận thông báo ngay trên trình duyệt" right={<PushNotificationButton />}/>
             <Row
               label="Bản tin buổi sáng"
               detail="tóm tắt thị trường lúc 07:30 · tùy chọn"
@@ -313,18 +315,18 @@ export function AccountPage() {
         <div className="flex flex-col gap-5">
           <div className="bg-ink-2 border border-line rounded-[14px]">
             <div className="px-[22px] py-4">
-              <h3 className="font-display text-[16px] leading-none font-bold m-0">bảo mật</h3>
+              <h3 className="font-display text-[16px] leading-none font-bold m-0">Bảo mật</h3>
             </div>
             <Row label="Mật khẩu" detail="nhấn để cập nhật mật khẩu" right={<SmallBtn onClick={() => setShowChangePw(true)}>đổi</SmallBtn>}/>
-            <Row label="Xác thực 2 yếu tố" detail="TOTP authenticator" right={<span className="font-mono text-[11px] text-up">· bật</span>}/>
+            <Row label="Xác thực 2 bước" detail="ứng dụng xác thực (Google Authenticator, v.v.)" right={<span className="font-mono text-[11px] text-up">· Đang bật</span>}/>
           </div>
 
           <div className="bg-ink-2 border border-line rounded-[14px]">
             <div className="px-[22px] py-4">
-              <h3 className="font-display text-[16px] leading-none font-bold m-0">dữ liệu & api</h3>
+              <h3 className="font-display text-[16px] leading-none font-bold m-0">Dữ liệu & Xuất file</h3>
             </div>
             <Row label="Xuất lịch sử" detail="CSV · 12 tháng gần nhất" right={<SmallBtn>xuất</SmallBtn>}/>
-            <Row label="API key" detail="chỉ đọc · 1 đang dùng" right={<span className="font-mono text-[11px] text-mute">gt_live_••••a31f</span>}/>
+            <Row label="Khóa API" detail="chỉ đọc · dùng cho tích hợp bên ngoài" right={<span className="font-mono text-[11px] text-mute">gt_live_••••a31f</span>}/>
             <Row
               label="Lịch sử duyệt"
               detail="Xem và xóa lịch sử xem giá"

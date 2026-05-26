@@ -11,9 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 
 function ConfirmDeleteModal({ message, onConfirm, onClose }: {
   message: string;
@@ -103,34 +101,6 @@ function buildFullPreview(brand: string, cond1: SmartAlertCondition | null, cond
   return s1;
 }
 
-type ConditionDraft = {
-  type: 'TREND' | 'SPREAD' | 'THRESHOLD';
-  trendN: number;
-  trendDir: 'up' | 'down';
-  spreadThreshold: string;
-  thresholdDir: 'lte' | 'gte';
-  thresholdPrice: string;
-};
-
-const defaultCond = (): ConditionDraft => ({
-  type: 'TREND',
-  trendN: 3,
-  trendDir: 'up',
-  spreadThreshold: '',
-  thresholdDir: 'lte',
-  thresholdPrice: '',
-});
-
-function toSmartAlertCondition(draft: ConditionDraft): SmartAlertCondition {
-  if (draft.type === 'TREND') {
-    return { type: 'TREND', params: { n: draft.trendN, direction: draft.trendDir } };
-  }
-  if (draft.type === 'SPREAD') {
-    return { type: 'SPREAD', params: { thresholdVnd: Number(draft.spreadThreshold) || 0 } };
-  }
-  return { type: 'THRESHOLD', params: { condition: draft.thresholdDir, priceVnd: Number(draft.thresholdPrice) || 0 } };
-}
-
 function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <Button
@@ -143,70 +113,6 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
     >
       {children}
     </Button>
-  );
-}
-
-function ConditionForm({ value, onChange }: { value: ConditionDraft; onChange: (v: ConditionDraft) => void }) {
-  return (
-    <div className="flex flex-col gap-[10px]">
-      <div className="flex gap-[6px]">
-        {(['TREND', 'SPREAD', 'THRESHOLD'] as const).map(t => (
-          <Chip key={t} active={value.type === t} onClick={() => onChange({ ...value, type: t })}>
-            {t === 'TREND' ? 'Xu hướng' : t === 'SPREAD' ? 'Spread' : 'Ngưỡng giá'}
-          </Chip>
-        ))}
-      </div>
-
-      {value.type === 'TREND' && (
-        <div className="flex gap-3 items-center">
-          <span className="text-[12px] leading-none font-sans font-medium text-mute">Số lần liên tiếp:</span>
-          <div className="flex gap-1">
-            {[2, 3, 4, 5].map(n => (
-              <Chip key={n} active={value.trendN === n} onClick={() => onChange({ ...value, trendN: n })}>{n}</Chip>
-            ))}
-          </div>
-          <div className="flex gap-1">
-            {(['up', 'down'] as const).map(d => (
-              <Chip key={d} active={value.trendDir === d} onClick={() => onChange({ ...value, trendDir: d })}>
-                {d === 'up' ? '↑ Tăng' : '↓ Giảm'}
-              </Chip>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {value.type === 'SPREAD' && (
-        <div className="flex gap-2 items-center">
-          <span className="text-[12px] leading-none font-sans font-medium text-mute whitespace-nowrap">Chênh lệch tối đa (₫)</span>
-          <Input
-            type="number"
-            placeholder="ví dụ: 200.000"
-            value={value.spreadThreshold}
-            onChange={e => onChange({ ...value, spreadThreshold: e.target.value })}
-            className="h-9 bg-ink-3 border-line text-chalk font-mono text-[13px] placeholder:text-mute focus-visible:ring-gold"
-          />
-        </div>
-      )}
-
-      {value.type === 'THRESHOLD' && (
-        <div className="flex gap-2 items-center">
-          <div className="flex gap-1">
-            {([['lte', '≤'], ['gte', '≥']] as const).map(([v, label]) => (
-              <Chip key={v} active={value.thresholdDir === v} onClick={() => onChange({ ...value, thresholdDir: v })}>
-                {label}
-              </Chip>
-            ))}
-          </div>
-          <Input
-            type="number"
-            placeholder="ví dụ: 79.000.000"
-            value={value.thresholdPrice}
-            onChange={e => onChange({ ...value, thresholdPrice: e.target.value })}
-            className="h-9 bg-ink-3 border-line text-chalk font-mono text-[13px] placeholder:text-mute focus-visible:ring-gold"
-          />
-        </div>
-      )}
-    </div>
   );
 }
 
@@ -227,28 +133,36 @@ function goldTypeLabel(code: string): string {
 function BuilderModal({ onClose }: { onClose: () => void }) {
   const [brand, setBrand] = useState<string>('SJC');
   const [goldType, setGoldType] = useState<string>('MIEN_SJC');
-  const [cond1, setCond1] = useState<ConditionDraft>(defaultCond());
-  const [hasCond2, setHasCond2] = useState(false);
-  const [cond2, setCond2] = useState<ConditionDraft>(defaultCond());
+  const [thresholdDir, setThresholdDir] = useState<'lte' | 'gte'>('lte');
+  const [thresholdPrice, setThresholdPrice] = useState('');
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [extraCondType, setExtraCondType] = useState<'TREND' | 'SPREAD' | null>(null);
+  const [trendN, setTrendN] = useState(3);
+  const [trendDir, setTrendDir] = useState<'up' | 'down'>('up');
+  const [spreadThreshold, setSpreadThreshold] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const createAlert = useCreateSmartAlert();
 
-  const preview = buildFullPreview(
-    brand,
-    toSmartAlertCondition(cond1),
-    hasCond2 ? toSmartAlertCondition(cond2) : null,
-  );
+  const priceNum = Number(thresholdPrice.replace(/\./g, '').replace(/,/g, '')) || 0;
+  const cond1: SmartAlertCondition = { type: 'THRESHOLD', params: { condition: thresholdDir, priceVnd: priceNum } };
+  const cond2: SmartAlertCondition | null =
+    extraCondType === 'TREND'  ? { type: 'TREND',  params: { n: trendN, direction: trendDir } } :
+    extraCondType === 'SPREAD' ? { type: 'SPREAD', params: { thresholdVnd: Number(spreadThreshold) || 0 } } :
+    null;
+
+  const preview = buildFullPreview(brand, cond1, cond2);
 
   const handleSubmit = async () => {
+    if (priceNum <= 0) return;
     setIsSubmitting(true);
     setError(null);
     try {
       const dto: CreateSmartAlertDto = {
         brand,
         goldType,
-        condition1: toSmartAlertCondition(cond1),
-        ...(hasCond2 ? { condition2: toSmartAlertCondition(cond2) } : {}),
+        condition1: cond1,
+        ...(cond2 ? { condition2: cond2 } : {}),
       };
       await createAlert.mutateAsync(dto);
       onClose();
@@ -263,50 +177,44 @@ function BuilderModal({ onClose }: { onClose: () => void }) {
 
   return (
     <Dialog open onOpenChange={o => !o && onClose()}>
-      <DialogContent className="w-[500px] max-h-[90vh] overflow-y-auto bg-ink-2 border-line text-chalk px-7 py-6 gap-5">
+      <DialogContent className="w-[480px] max-h-[90vh] overflow-y-auto bg-ink-2 border-line text-chalk px-7 py-6 gap-5">
         <DialogHeader>
-          <DialogTitle className="text-[20px] leading-none font-extrabold font-sans text-chalk">Cảnh báo thông minh mới</DialogTitle>
-          <DialogDescription className="sr-only">Tạo cảnh báo thông minh với một hoặc hai điều kiện</DialogDescription>
+          <DialogTitle className="text-[20px] leading-none font-extrabold font-sans text-chalk">Tạo cảnh báo giá</DialogTitle>
+          <DialogDescription className="sr-only">Cảnh báo khi giá vàng đạt ngưỡng bạn chọn</DialogDescription>
         </DialogHeader>
 
         <div>
           <div className={labelCls}>Thương hiệu</div>
           <div className="flex gap-[6px] flex-wrap">
-            {BRANDS_LIST.map(b => (
-              <Chip key={b} active={brand === b} onClick={() => setBrand(b)}>{b}</Chip>
-            ))}
+            {BRANDS_LIST.map(b => <Chip key={b} active={brand === b} onClick={() => setBrand(b)}>{b}</Chip>)}
           </div>
         </div>
 
         <div>
           <div className={labelCls}>Loại vàng</div>
           <div className="flex gap-[6px] flex-wrap">
-            {GOLD_TYPES_LIST.map(g => (
-              <Chip key={g} active={goldType === g} onClick={() => setGoldType(g)}>{goldTypeLabel(g)}</Chip>
-            ))}
+            {GOLD_TYPES_LIST.map(g => <Chip key={g} active={goldType === g} onClick={() => setGoldType(g)}>{goldTypeLabel(g)}</Chip>)}
           </div>
         </div>
 
         <div>
-          <div className={labelCls}>Điều kiện 1</div>
-          <ConditionForm value={cond1} onChange={setCond1} />
-        </div>
-
-        <label className="flex items-center gap-[10px] cursor-pointer">
-          <Checkbox
-            checked={hasCond2}
-            onCheckedChange={v => setHasCond2(!!v)}
-            className="border-line data-[state=checked]:bg-gold data-[state=checked]:border-gold data-[state=checked]:text-gold-ink"
-          />
-          <span className="text-[13px] leading-none font-sans font-medium text-bone">Thêm điều kiện 2 (VÀ)</span>
-        </label>
-
-        {hasCond2 && (
-          <div>
-            <div className={labelCls}>Điều kiện 2</div>
-            <ConditionForm value={cond2} onChange={setCond2} />
+          <div className={labelCls}>Cảnh báo khi giá mua</div>
+          <div className="flex gap-2 items-center flex-wrap">
+            <div className="flex gap-1">
+              {([['lte', '↓ Giảm xuống'], ['gte', '↑ Vượt lên']] as const).map(([v, label]) => (
+                <Chip key={v} active={thresholdDir === v} onClick={() => setThresholdDir(v)}>{label}</Chip>
+              ))}
+            </div>
+            <Input
+              type="number"
+              placeholder="ví dụ: 79000000"
+              value={thresholdPrice}
+              onChange={e => setThresholdPrice(e.target.value)}
+              className="flex-1 min-w-[140px] h-9 bg-ink-3 border-line text-chalk font-mono text-[13px] placeholder:text-mute focus-visible:ring-gold"
+            />
+            <span className="font-mono text-[12px] text-mute">₫/lượng</span>
           </div>
-        )}
+        </div>
 
         {preview && (
           <div className="bg-ink-3 border border-line rounded-lg px-4 py-3">
@@ -315,16 +223,65 @@ function BuilderModal({ onClose }: { onClose: () => void }) {
           </div>
         )}
 
-        {error && (
-          <div className="text-[13px] leading-[1.4] font-sans font-medium text-down">{error}</div>
+        <button
+          type="button"
+          onClick={() => setShowAdvanced(v => !v)}
+          className="flex items-center gap-2 text-[12px] font-mono font-bold text-mute tracking-[0.08em] hover:text-bone transition-colors w-fit"
+        >
+          <span>{showAdvanced ? '▲' : '▼'}</span>
+          <span>Điều kiện nâng cao</span>
+        </button>
+
+        {showAdvanced && (
+          <div className="flex flex-col gap-3 pl-4 border-l border-line">
+            <div>
+              <div className={labelCls}>Thêm điều kiện (VÀ)</div>
+              <div className="flex gap-[6px]">
+                <Chip active={extraCondType === null}    onClick={() => setExtraCondType(null)}>Không có</Chip>
+                <Chip active={extraCondType === 'TREND'} onClick={() => setExtraCondType('TREND')}>Xu hướng</Chip>
+                <Chip active={extraCondType === 'SPREAD'} onClick={() => setExtraCondType('SPREAD')}>Chênh lệch</Chip>
+              </div>
+            </div>
+
+            {extraCondType === 'TREND' && (
+              <div className="flex flex-wrap gap-3 items-center">
+                <span className="text-[12px] font-sans font-medium text-mute">Số lần liên tiếp:</span>
+                <div className="flex gap-1">
+                  {[2, 3, 4, 5].map(n => <Chip key={n} active={trendN === n} onClick={() => setTrendN(n)}>{n}</Chip>)}
+                </div>
+                <div className="flex gap-1">
+                  {(['up', 'down'] as const).map(d => (
+                    <Chip key={d} active={trendDir === d} onClick={() => setTrendDir(d)}>
+                      {d === 'up' ? '↑ Tăng' : '↓ Giảm'}
+                    </Chip>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {extraCondType === 'SPREAD' && (
+              <div className="flex gap-2 items-center">
+                <span className="text-[12px] font-sans font-medium text-mute whitespace-nowrap">Chênh lệch tối đa (₫)</span>
+                <Input
+                  type="number"
+                  placeholder="ví dụ: 200000"
+                  value={spreadThreshold}
+                  onChange={e => setSpreadThreshold(e.target.value)}
+                  className="h-9 bg-ink-3 border-line text-chalk font-mono text-[13px] placeholder:text-mute focus-visible:ring-gold"
+                />
+              </div>
+            )}
+          </div>
         )}
+
+        {error && <div className="text-[13px] leading-[1.4] font-sans font-medium text-down">{error}</div>}
 
         <Button
           onClick={handleSubmit}
-          disabled={isSubmitting}
+          disabled={isSubmitting || priceNum <= 0}
           className="h-11 font-mono text-[14px] font-bold tracking-[0.04em] uppercase"
         >
-          {isSubmitting ? 'Đang tạo…' : 'Tạo cảnh báo thông minh'}
+          {isSubmitting ? 'Đang tạo…' : 'Tạo cảnh báo'}
         </Button>
       </DialogContent>
     </Dialog>
