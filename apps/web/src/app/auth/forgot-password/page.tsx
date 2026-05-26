@@ -34,13 +34,13 @@ export default function ForgotPasswordPage() {
         <div className={CARD}>
           <div className="text-center">
             <div className="w-[52px] h-[52px] rounded-[12px] bg-[linear-gradient(135deg,#D4AF37,#8E7321)] flex items-center justify-center mx-auto mb-4 font-display text-[22px] leading-none font-extrabold text-gold-ink">✉</div>
-            <h1 className="font-display text-[24px] leading-[1.1] font-extrabold tracking-[-0.02em] text-chalk m-0">Check your inbox</h1>
+            <h1 className="font-display text-[24px] leading-[1.1] font-extrabold tracking-[-0.02em] text-chalk m-0">Kiểm tra hộp thư</h1>
             <p className="text-mute mt-[10px] text-[14px] leading-[1.6]">
-              If <strong className="text-bone">{email}</strong> is registered,
-              you&apos;ll receive a password reset link shortly.
+              Nếu <strong className="text-bone">{email}</strong> đã đăng ký,
+              bạn sẽ nhận được liên kết đặt lại mật khẩu trong thời gian ngắn.
             </p>
             <Button asChild className="mt-6 h-[42px] px-6 text-[13px] font-bold tracking-[0.02em]">
-              <Link href="/auth/login">Back to login</Link>
+              <Link href="/auth/login">Quay lại đăng nhập</Link>
             </Button>
           </div>
         </div>
@@ -53,9 +53,9 @@ export default function ForgotPasswordPage() {
       <div className={CARD}>
         <div className="text-center mb-7">
           <div className="w-11 h-11 rounded-[10px] bg-[linear-gradient(135deg,#D4AF37,#8E7321)] flex items-center justify-center mx-auto mb-[14px] font-display text-[18px] leading-none font-extrabold text-gold-ink">GT</div>
-          <h1 className="font-display text-[24px] leading-[1.1] font-extrabold tracking-[-0.02em] text-chalk m-0">Reset password</h1>
+          <h1 className="font-display text-[24px] leading-[1.1] font-extrabold tracking-[-0.02em] text-chalk m-0">Đặt lại mật khẩu</h1>
           <p className="text-mute text-[13px] mt-[6px] leading-[1.5] m-0">
-            Enter your email and we&apos;ll send you a reset link.
+            Nhập email và chúng tôi sẽ gửi cho bạn liên kết đặt lại.
           </p>
         </div>
 
@@ -80,13 +80,13 @@ export default function ForgotPasswordPage() {
             disabled={loading}
             className="w-full h-[42px] mt-1 text-[13px] font-bold tracking-[0.02em]"
           >
-            {loading ? 'Sending…' : 'Send reset link'}
+            {loading ? 'Đang gửi…' : 'Gửi liên kết đặt lại'}
           </Button>
         </form>
 
         <p className="text-center mt-5 text-[13px] text-mute m-0">
-          Remembered it?{' '}
-          <Link href="/auth/login" className="text-gold font-semibold no-underline">Sign in</Link>
+          Đã nhớ rồi?{' '}
+          <Link href="/auth/login" className="text-gold font-semibold no-underline">Đăng nhập</Link>
         </p>
       </div>
     </div>

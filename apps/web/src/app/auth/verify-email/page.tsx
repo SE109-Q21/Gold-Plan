@@ -40,36 +40,36 @@ function VerifyEmailContent() {
         {status === 'loading' && (
           <div className="text-center">
             <div className="w-9 h-9 rounded-full border-[3px] border-line border-t-gold animate-spin mx-auto"/>
-            <p className="text-mute mt-4">Verifying your email…</p>
+            <p className="text-mute mt-4">Đang xác minh email…</p>
           </div>
         )}
 
         {status === 'success' && (
           <div className="text-center">
             <div className="w-[52px] h-[52px] rounded-[12px] bg-[linear-gradient(135deg,#D4AF37,#8E7321)] flex items-center justify-center mx-auto font-display text-[22px] leading-none font-extrabold text-gold-ink">✓</div>
-            <h1 className={HEADING}>Email verified!</h1>
-            <p className="text-mute mt-2 text-[14px] leading-[1.6]">Your account is now active. You can sign in.</p>
-            <Link href="/auth/login" className={BTN}>Sign in</Link>
+            <h1 className={HEADING}>Email đã xác minh!</h1>
+            <p className="text-mute mt-2 text-[14px] leading-[1.6]">Tài khoản của bạn đã được kích hoạt. Bạn có thể đăng nhập.</p>
+            <Link href="/auth/login" className={BTN}>Đăng nhập</Link>
           </div>
         )}
 
         {status === 'expired' && (
           <div className="text-center">
             <div className="w-[52px] h-[52px] rounded-[12px] bg-[rgba(212,175,55,0.15)] border border-[rgba(212,175,55,0.3)] flex items-center justify-center mx-auto font-display text-[22px] leading-none font-extrabold text-gold">!</div>
-            <h1 className={HEADING}>Link expired</h1>
+            <h1 className={HEADING}>Liên kết đã hết hạn</h1>
             <p className="text-mute mt-2 text-[14px] leading-[1.6]">
-              This verification link has expired or already been used.
+              Liên kết xác minh này đã hết hạn hoặc đã được sử dụng.
             </p>
-            <Link href="/auth/login" className={BTN}>Back to login</Link>
+            <Link href="/auth/login" className={BTN}>Quay lại đăng nhập</Link>
           </div>
         )}
 
         {status === 'invalid' && (
           <div className="text-center">
             <div className="w-[52px] h-[52px] rounded-[12px] bg-[rgba(229,72,77,0.12)] border border-[rgba(229,72,77,0.3)] flex items-center justify-center mx-auto font-display text-[22px] leading-none font-extrabold text-down">×</div>
-            <h1 className={HEADING}>Invalid link</h1>
-            <p className="text-mute mt-2 text-[14px]">This verification link is missing or malformed.</p>
-            <Link href="/auth/login" className={BTN}>Back to login</Link>
+            <h1 className={HEADING}>Liên kết không hợp lệ</h1>
+            <p className="text-mute mt-2 text-[14px]">Liên kết xác minh này bị thiếu hoặc không hợp lệ.</p>
+            <Link href="/auth/login" className={BTN}>Quay lại đăng nhập</Link>
           </div>
         )}
       </div>

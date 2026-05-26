@@ -31,9 +31,9 @@ function LoginForm() {
       router.push(from && from.startsWith('/') ? from : '/');
     } catch (err: unknown) {
       if (err instanceof ApiError && err.status === 429) {
-        setError('Too many failed attempts. Try again in 15 minutes.');
+        setError('Quá nhiều lần thử thất bại. Vui lòng thử lại sau 15 phút.');
       } else {
-        setError(err instanceof Error ? err.message : 'Login failed');
+        setError(err instanceof Error ? err.message : 'Đăng nhập thất bại');
       }
     } finally {
       setLoading(false);
@@ -51,8 +51,8 @@ function LoginForm() {
           <div className="w-11 h-11 rounded-[10px] bg-[linear-gradient(135deg,#D4AF37,#8E7321)] flex items-center justify-center mx-auto mb-[14px] text-[18px] leading-none font-extrabold font-sans text-gold-ink">
             GT
           </div>
-          <h1 className="text-[24px] leading-[1.1] font-extrabold font-sans tracking-[-0.02em] text-chalk m-0">Sign in</h1>
-          <p className="text-mute text-[13px] mt-[6px] m-0">Welcome back to GoldTracker</p>
+          <h1 className="text-[24px] leading-[1.1] font-extrabold font-sans tracking-[-0.02em] text-chalk m-0">Đăng nhập</h1>
+          <p className="text-mute text-[13px] mt-[6px] m-0">Chào mừng trở lại GoldTracker</p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-[14px]">
@@ -74,14 +74,14 @@ function LoginForm() {
 
           <div>
             <Label htmlFor="password" className="block font-mono text-[11px] leading-none font-semibold tracking-[0.1em] uppercase text-mute mb-[6px]">
-              Password
+              Mật khẩu
             </Label>
             <Input
               id="password"
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              placeholder="Your password"
+              placeholder="Mật khẩu của bạn"
               required
               autoComplete="current-password"
               className="bg-ink-3 border-line text-chalk text-[14px] font-medium placeholder:text-mute focus-visible:ring-gold"
@@ -90,7 +90,7 @@ function LoginForm() {
 
           <div className="text-right -mt-1">
             <Link href="/auth/forgot-password" className="text-gold font-semibold text-[12px] no-underline">
-              Forgot password?
+              Quên mật khẩu?
             </Link>
           </div>
 
@@ -105,7 +105,7 @@ function LoginForm() {
             disabled={loading}
             className="w-full h-[42px] mt-1 text-[13px] font-bold tracking-[0.02em]"
           >
-            {loading ? 'Signing in…' : 'Sign in'}
+            {loading ? 'Đang đăng nhập…' : 'Đăng nhập'}
           </Button>
         </form>
 
@@ -129,8 +129,8 @@ function LoginForm() {
         </a>
 
         <p className="text-center mt-5 text-[13px] text-mute m-0">
-          No account?{' '}
-          <Link href="/auth/register" className="text-gold font-semibold no-underline">Create one</Link>
+          Chưa có tài khoản?{' '}
+          <Link href="/auth/register" className="text-gold font-semibold no-underline">Tạo mới</Link>
         </p>
       </div>
     </div>

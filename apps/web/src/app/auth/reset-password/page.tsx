@@ -14,10 +14,10 @@ const LABEL_CLS = 'block font-mono text-[11px] leading-none font-semibold tracki
 const INPUT_CLS = 'bg-ink-3 border-line text-chalk text-[14px] font-medium placeholder:text-mute focus-visible:ring-gold';
 
 function validate(password: string, confirm: string): string | null {
-  if (password.length < 8) return 'Password must be at least 8 characters';
-  if (!/[A-Z]/.test(password)) return 'Password must contain at least 1 uppercase letter';
-  if (!/[0-9]/.test(password)) return 'Password must contain at least 1 digit';
-  if (password !== confirm) return 'Passwords do not match';
+  if (password.length < 8) return 'Mật khẩu phải có ít nhất 8 ký tự';
+  if (!/[A-Z]/.test(password)) return 'Mật khẩu phải chứa ít nhất 1 chữ hoa';
+  if (!/[0-9]/.test(password)) return 'Mật khẩu phải chứa ít nhất 1 chữ số';
+  if (password !== confirm) return 'Mật khẩu không khớp';
   return null;
 }
 
@@ -36,10 +36,10 @@ function ResetPasswordContent() {
         <div className={CARD}>
           <div className="text-center">
             <div className="w-[52px] h-[52px] rounded-[12px] bg-[rgba(229,72,77,0.12)] border border-[rgba(229,72,77,0.3)] flex items-center justify-center mx-auto font-display text-[22px] leading-none font-extrabold text-down">×</div>
-            <h1 className="font-display text-[24px] leading-[1.1] font-extrabold tracking-[-0.02em] text-chalk mt-3 m-0">Invalid link</h1>
-            <p className="text-mute mt-2 text-[14px]">This reset link is missing or malformed.</p>
+            <h1 className="font-display text-[24px] leading-[1.1] font-extrabold tracking-[-0.02em] text-chalk mt-3 m-0">Liên kết không hợp lệ</h1>
+            <p className="text-mute mt-2 text-[14px]">Liên kết đặt lại này bị thiếu hoặc không hợp lệ.</p>
             <Button asChild className="mt-6 h-[42px] px-6 text-[13px] font-bold tracking-[0.02em]">
-              <Link href="/auth/forgot-password">Request a new link</Link>
+              <Link href="/auth/forgot-password">Yêu cầu liên kết mới</Link>
             </Button>
           </div>
         </div>
@@ -53,10 +53,10 @@ function ResetPasswordContent() {
         <div className={CARD}>
           <div className="text-center">
             <div className="w-[52px] h-[52px] rounded-[12px] bg-[linear-gradient(135deg,#D4AF37,#8E7321)] flex items-center justify-center mx-auto font-display text-[22px] leading-none font-extrabold text-gold-ink">✓</div>
-            <h1 className="font-display text-[24px] leading-[1.1] font-extrabold tracking-[-0.02em] text-chalk mt-3 m-0">Password updated</h1>
-            <p className="text-mute mt-2 text-[14px]">Your password has been reset successfully.</p>
+            <h1 className="font-display text-[24px] leading-[1.1] font-extrabold tracking-[-0.02em] text-chalk mt-3 m-0">Mật khẩu đã cập nhật</h1>
+            <p className="text-mute mt-2 text-[14px]">Mật khẩu của bạn đã được đặt lại thành công.</p>
             <Button asChild className="mt-6 h-[42px] px-6 text-[13px] font-bold tracking-[0.02em]">
-              <Link href="/auth/login">Sign in</Link>
+              <Link href="/auth/login">Đăng nhập</Link>
             </Button>
           </div>
         </div>
@@ -74,7 +74,7 @@ function ResetPasswordContent() {
       await apiResetPassword(token!, password);
       setSuccess(true);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Reset failed');
+      setError(err instanceof Error ? err.message : 'Đặt lại thất bại');
     } finally {
       setLoading(false);
     }
@@ -85,18 +85,18 @@ function ResetPasswordContent() {
       <div className={CARD}>
         <div className="text-center mb-7">
           <div className="w-11 h-11 rounded-[10px] bg-[linear-gradient(135deg,#D4AF37,#8E7321)] flex items-center justify-center mx-auto mb-[14px] font-display text-[18px] leading-none font-extrabold text-gold-ink">GT</div>
-          <h1 className="font-display text-[24px] leading-[1.1] font-extrabold tracking-[-0.02em] text-chalk m-0">New password</h1>
-          <p className="text-mute text-[13px] mt-[6px] m-0">Choose a strong new password</p>
+          <h1 className="font-display text-[24px] leading-[1.1] font-extrabold tracking-[-0.02em] text-chalk m-0">Mật khẩu mới</h1>
+          <p className="text-mute text-[13px] mt-[6px] m-0">Chọn mật khẩu mới mạnh</p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-[14px]">
           <div>
-            <Label className={LABEL_CLS}>New password</Label>
-            <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Min. 8 chars, 1 uppercase, 1 digit" required className={INPUT_CLS} autoComplete="new-password"/>
+            <Label className={LABEL_CLS}>Mật khẩu mới</Label>
+            <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Tối thiểu 8 ký tự, 1 chữ hoa, 1 chữ số" required className={INPUT_CLS} autoComplete="new-password"/>
           </div>
           <div>
-            <Label className={LABEL_CLS}>Confirm password</Label>
-            <Input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Repeat password" required className={INPUT_CLS} autoComplete="new-password"/>
+            <Label className={LABEL_CLS}>Xác nhận mật khẩu</Label>
+            <Input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Nhập lại mật khẩu" required className={INPUT_CLS} autoComplete="new-password"/>
           </div>
 
           {error && (
@@ -110,12 +110,12 @@ function ResetPasswordContent() {
             disabled={loading}
             className="w-full h-[42px] mt-1 text-[13px] font-bold tracking-[0.02em]"
           >
-            {loading ? 'Updating…' : 'Update password'}
+            {loading ? 'Đang cập nhật…' : 'Cập nhật mật khẩu'}
           </Button>
         </form>
 
         <p className="text-center mt-5 text-[13px] text-mute m-0">
-          <Link href="/auth/login" className="text-gold font-semibold no-underline">Back to login</Link>
+          <Link href="/auth/login" className="text-gold font-semibold no-underline">Quay lại đăng nhập</Link>
         </p>
       </div>
     </div>
