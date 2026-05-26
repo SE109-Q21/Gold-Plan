@@ -492,7 +492,7 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
   const compBrands = compRow?.brands ?? [];
   const compGoldType = compRow?.goldType ?? 'MIEN_SJC';
   const sjc = compBrands.find(b => b.brand === 'SJC');
-  void domestic;
+  const sjcDomestic = domestic?.find(d => d.brand === 'SJC' && d.goldType === 'MIEN_SJC');
 
   const FALLBACK_BRANDS: ComparisonBrandDto[] = [
     { brand: 'SJC', buyPrice: 76420000, sellPrice: 78920000, isBestBuy: false, isBestSell: false, crawlSessionId: '' },
@@ -706,7 +706,7 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
         <div className="flex flex-col gap-5 min-w-0">
 
           {/* Gold calculator */}
-          <GoldCalculatorCard sjcBuyPrice={sjc?.buyPrice ?? 0} />
+          <GoldCalculatorCard sjcBuyPrice={sjcDomestic?.buyPrice ?? sjc?.buyPrice ?? 0} />
 
           {/* Karat strip */}
           <div className="bg-ink-2 border border-line rounded-[14px] p-5">
