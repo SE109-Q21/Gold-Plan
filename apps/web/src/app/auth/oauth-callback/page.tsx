@@ -1,9 +1,9 @@
 'use client';
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 
-export default function OAuthCallbackPage() {
+function OAuthCallbackContent() {
   const router = useRouter();
   const params = useSearchParams();
   const { loginWithToken } = useAuth();
@@ -23,5 +23,19 @@ export default function OAuthCallbackPage() {
     <div className="min-h-screen flex items-center justify-center bg-ink text-gold font-mono text-[16px] tracking-[0.05em]">
       Đang đăng nhập…
     </div>
+  );
+}
+
+export default function OAuthCallbackPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-ink text-gold font-mono text-[16px] tracking-[0.05em]">
+          Đang đăng nhập…
+        </div>
+      }
+    >
+      <OAuthCallbackContent />
+    </Suspense>
   );
 }
