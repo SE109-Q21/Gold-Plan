@@ -89,7 +89,7 @@ export function PriceHistoryChart() {
           sellPrice: { label: 'Giá bán', color: 'var(--down)' },
         } satisfies ChartConfig} className="h-[280px] w-full">
           <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(128,128,128,0.15)" />
             <XAxis dataKey="time" tick={{ fontSize: 11, fill: 'var(--mute)', fontFamily: 'var(--font-mono)' }} interval="preserveStartEnd" />
             <YAxis tickFormatter={formatVndShort} tick={{ fontSize: 11, fill: 'var(--mute)', fontFamily: 'var(--font-mono)' }} width={55} />
             <ChartTooltip content={<ChartTooltipContent formatter={(value) => {

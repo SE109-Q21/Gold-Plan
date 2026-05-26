@@ -379,14 +379,14 @@ export function PriceChart({
           {/* Y grid lines + labels */}
           {yGrid.map((v, i) => (
             <g key={i}>
-              <line x1={PC_PAD.l} x2={PC_W - PC_PAD.r} y1={yS(v)} y2={yS(v)} stroke="rgba(255,255,255,0.04)" strokeWidth="1"/>
-              <text x={PC_PAD.l - 5} y={yS(v) + 3.5} textAnchor="end" fill="#3e3f4c" fontSize={9} fontFamily="var(--font-mono)">{fmtY(v)}</text>
+              <line x1={PC_PAD.l} x2={PC_W - PC_PAD.r} y1={yS(v)} y2={yS(v)} stroke="rgba(128,128,128,0.15)" strokeWidth="1"/>
+              <text x={PC_PAD.l - 5} y={yS(v) + 3.5} textAnchor="end" fill="var(--mute)" fontSize={9} fontFamily="var(--font-mono)">{fmtY(v)}</text>
             </g>
           ))}
 
           {/* X labels */}
           {xLabelIdxs.map((idx, k) => (
-            <text key={k} x={xS(idx)} y={PC_H - 4} textAnchor="middle" fill="#3e3f4c" fontSize={9} fontFamily="var(--font-mono)">
+            <text key={k} x={xS(idx)} y={PC_H - 4} textAnchor="middle" fill="var(--mute)" fontSize={9} fontFamily="var(--font-mono)">
               {fmtXLabel(visible[idx].recordedAt)}
             </text>
           ))}
@@ -445,14 +445,14 @@ export function PriceChart({
           {/* Vertical crosshair */}
           {safeIdx !== null && (
             <line x1={xS(safeIdx)} x2={xS(safeIdx)} y1={PC_PAD.t} y2={PC_PAD.t + PC_IH}
-              stroke="rgba(255,255,255,0.15)" strokeWidth="1"/>
+              stroke="rgba(128,128,148,0.4)" strokeWidth="1"/>
           )}
 
           {/* Horizontal crosshair */}
           {safeIdx !== null && tpValue !== null && (
             <line x1={PC_PAD.l} x2={PC_W - PC_PAD.r}
               y1={yS(tpValue)} y2={yS(tpValue)}
-              stroke="rgba(255,255,255,0.10)" strokeWidth="1" strokeDasharray="3 5"/>
+              stroke="rgba(128,128,148,0.3)" strokeWidth="1" strokeDasharray="3 5"/>
           )}
 
           {/* Y-axis hover price pill */}
@@ -484,17 +484,17 @@ export function PriceChart({
               : { right: `calc(${(100 - ttXPct).toFixed(1)}% + 14px)` }
             }
           >
-            <div className="font-display text-[18px] leading-none font-extrabold tabular-nums text-chalk mb-[5px]">
+            <div className="font-display text-[18px] leading-none font-extrabold tabular-nums text-[#F0EAE0] mb-[5px]">
               {isCompareMode
                 ? `${tpValue >= 0 ? '+' : ''}${tpValue.toFixed(3)}%`
                 : (tpRawPrice! / 1_000_000).toFixed(2) + 'M₫'}
             </div>
             {isCompareMode && tpRawPrice && (
-              <div className="font-mono text-[10px] leading-none text-mute mb-[3px]">
+              <div className="font-mono text-[10px] leading-none text-[rgba(160,155,148,0.9)] mb-[3px]">
                 {(tpRawPrice / 1_000_000).toFixed(2)}M₫ actual
               </div>
             )}
-            <div className="font-mono text-[10px] leading-[1.4] text-mute mb-[5px]">{fmtDT(tp.recordedAt)}</div>
+            <div className="font-mono text-[10px] leading-[1.4] text-[rgba(160,155,148,0.9)] mb-[5px]">{fmtDT(tp.recordedAt)}</div>
             {tpDelta !== null && (
               <div className={cn('font-mono text-[11px] leading-none font-bold', tpDelta >= 0 ? 'text-up' : 'text-down')}>
                 {tpDelta >= 0 ? '+' : ''}

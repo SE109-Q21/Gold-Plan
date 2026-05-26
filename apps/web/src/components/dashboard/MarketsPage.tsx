@@ -284,7 +284,7 @@ function SpreadHistoryChart() {
       {!isLoading && chartData.length > 0 && (
         <ChartContainer config={SPREAD_CHART_CONFIG} className="h-[200px] w-full">
           <ReLineChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(128,128,128,0.15)" vertical={false} />
             <XAxis
               dataKey="date"
               tick={{ fill: '#5a5b65', fontSize: 10, fontFamily: 'var(--font-mono)' }}
