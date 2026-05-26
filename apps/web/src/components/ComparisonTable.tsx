@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { GoldType, ComparisonBrandDto } from '@gpls/shared';
 import { useComparison } from '@/lib/price.api';
 import { cn } from '@/lib/utils';
+import { BrandLogo } from '@/components/ui/BrandLogo';
 
 const GOLD_TYPES: GoldType[] = ['MIEN_SJC', 'NHAN_9999', 'VANG_24K', 'VANG_18K'];
 const GOLD_TYPE_LABELS: Record<GoldType, string> = {
@@ -86,7 +87,12 @@ export function ComparisonTable() {
           <tbody className="divide-y divide-hairline">
             {brands.map((b) => (
               <tr key={b.brand}>
-                <td className="px-4 py-3 font-semibold text-gold">{BRAND_LABELS[b.brand] ?? b.brand}</td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <BrandLogo brand={b.brand} size={24} />
+                    <span className="font-semibold text-gold">{BRAND_LABELS[b.brand] ?? b.brand}</span>
+                  </div>
+                </td>
                 <BrandCell item={b} />
                 <BrandSellCell item={b} />
               </tr>

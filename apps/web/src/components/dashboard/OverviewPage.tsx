@@ -4,10 +4,10 @@ import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useInternationalPrice, useDomesticPrices, usePriceHistory, useComparison } from '@/lib/price.api';
 import { useExchangeRates } from '@/lib/exchange-rate.api';
-import { useHeatIndex } from '@/lib/heat-index.api';
 import { useAlerts } from '@/lib/alerts.api';
 import { Sparkline } from '@/components/ui/ChartPrimitives';
 import { PriceChart } from '@/components/ui/PriceChart';
+import { BrandLogo } from '@/components/ui/BrandLogo';
 import { IconPlus } from '@/components/dashboard/DashboardShell';
 import type { GoldType, ComparisonBrandDto } from '@gpls/shared';
 import { useAuth } from '@/contexts/auth-context';
@@ -15,7 +15,6 @@ import { usePersonalisationOrder, useRecordView, useAddPin, useRemovePin, useReo
 import { useBrowsingContext, useRecordBrowse } from '@/lib/browsing-history.api';
 import { DigestCard } from '@/components/DigestCard';
 import { ForecastVoteWidget } from '@/components/ForecastVoteWidget';
-import { HeatIndexHistoryChart } from '@/components/HeatIndexHistoryChart';
 import { ArbitrageWidget } from '@/components/ArbitrageWidget';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -37,6 +36,10 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 
 const RANGE_LABELS = ['1D', '1W', '1M'] as const;
+
+const BRAND_LABELS: Record<string, string> = {
+  SJC: 'SJC', DOJI: 'DOJI', PNJ: 'PNJ', BAO_TIN: 'Bảo Tín',
+};
 type Range = '1D' | '1W' | '1M';
 
 const KARATS = [
@@ -52,35 +55,6 @@ function minsAgo(iso: string): string {
   const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 60_000);
   if (diff < 1) return 'vừa xong';
   return `${diff} phút trước`;
-}
-
-function HeatIndexGauge() {
-  const { data, isLoading } = useHeatIndex();
-
-  if (isLoading) return (
-    <div className="h-[68px] flex items-center justify-center text-mute font-mono text-[12px] leading-none font-medium">
-      Đang tải…
-    </div>
-  );
-
-  const score = data?.value ?? 0;
-  const { emoji, status, color } =
-    score <= 25 ? { emoji: '❄️', status: 'Trầm lắng', color: 'text-[#60A5FA]' } :
-    score <= 50 ? { emoji: '🌤️', status: 'Bình ổn',   color: 'text-[#FBBF24]' } :
-    score <= 75 ? { emoji: '🔥', status: 'Sôi động',  color: 'text-[#F97316]' } :
-                  { emoji: '🚨', status: 'Rất nóng',  color: 'text-[#EF4444]' };
-
-  return (
-    <div className="flex items-center gap-4">
-      <div className="text-[44px] leading-none select-none">{emoji}</div>
-      <div>
-        <div className={cn('text-[26px] leading-none font-extrabold font-sans', color)}>{status}</div>
-        <div className="font-mono text-[10px] text-mute mt-[7px] tracking-[0.1em]">
-          Chỉ số nhiệt: <span className="text-chalk font-bold tabular-nums">{score}</span> / 100
-        </div>
-      </div>
-    </div>
-  );
 }
 
 type CalcTab = 'value' | 'pnl';
@@ -368,10 +342,8 @@ function PriceRow({
     >
       {isPinned && isLoggedIn && <DragHandle dragHandleProps={dragHandleProps} />}
       <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-md bg-ink-3 border border-line flex items-center justify-center font-mono text-[11px] font-extrabold text-gold tracking-[0.06em]">
-          {brand.slice(0, 2)}
-        </div>
-        <div className="text-[14px] leading-[1.1] font-bold font-sans">{brand}</div>
+        <BrandLogo brand={brand} size={36} />
+        <div className="text-[14px] leading-[1.1] font-bold font-sans">{BRAND_LABELS[brand] ?? brand}</div>
       </div>
       <div className="text-right">
         <div className="inline-flex items-center flex-wrap justify-end">
@@ -739,19 +711,8 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
             })}
           </div>
 
-          {/* Market heat */}
-          <div className="bg-ink-2 border border-line rounded-[14px] p-5">
-            <div className="flex justify-between items-baseline mb-[14px]">
-              <h3 className="text-[16px] leading-none font-bold font-sans m-0">Nhiệt độ thị trường</h3>
-            </div>
-            <HeatIndexGauge />
-          </div>
-
           {/* Arbitrage opportunities */}
           <ArbitrageWidget />
-
-          {/* Heat Index 7-day trend */}
-          <HeatIndexHistoryChart />
 
           {/* Alerts widget */}
           <div className="bg-ink-2 border border-line rounded-[14px] p-5">

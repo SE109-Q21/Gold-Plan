@@ -3,6 +3,7 @@
 import type { DomesticPriceDto, GoldBrand, PriceStatus } from '@gpls/shared';
 import { useDomesticPrices } from '@/lib/price.api';
 import { cn } from '@/lib/utils';
+import { BrandLogo } from '@/components/ui/BrandLogo';
 
 const BRAND_LABELS: Record<GoldBrand, string> = {
   SJC: 'SJC', DOJI: 'DOJI', PNJ: 'PNJ', BAO_TIN: 'Bảo Tín',
@@ -72,7 +73,12 @@ export function PriceTable({ brand }: { brand?: GoldBrand }) {
         <tbody className="divide-y divide-hairline">
           {prices.map((p: DomesticPriceDto) => (
             <tr key={`${p.brand}-${p.goldType}`} className="hover:bg-ink-3 transition-colors">
-              <td className="px-4 py-3 font-semibold text-gold">{BRAND_LABELS[p.brand]}</td>
+              <td className="px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <BrandLogo brand={p.brand} size={24} />
+                  <span className="font-semibold text-gold">{BRAND_LABELS[p.brand]}</span>
+                </div>
+              </td>
               <td className="px-4 py-3 text-bone">{GOLD_TYPE_LABELS[p.goldType] ?? p.goldType}</td>
               <td className="px-4 py-3 text-right font-mono text-up">{formatVnd(p.buyPrice)}</td>
               <td className="px-4 py-3 text-right font-mono text-down">{formatVnd(p.sellPrice)}</td>
