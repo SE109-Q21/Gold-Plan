@@ -1,4 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Cron } from '@nestjs/schedule';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import axios from 'axios';
 
 const TAEL_PER_TROY_OZ = 37.5 / 31.1035;
@@ -21,6 +23,18 @@ interface CacheEntry {
 export class InternationalService {
   private readonly logger = new Logger(InternationalService.name);
   private cache: CacheEntry | null = null;
+
+  constructor(private readonly eventEmitter: EventEmitter2) {}
+
+  @Cron('0 */5 * * * *')
+  async refresh(): Promise<void> {
+    const prevPrice = this.cache?.data.spotPriceUsd;
+    await this.getInternationalPrice();
+    const next = this.cache?.data;
+    if (next && next.spotPriceUsd !== prevPrice) {
+      this.eventEmitter.emit('international-price.updated', next);
+    }
+  }
 
   async getInternationalPrice(): Promise<InternationalPriceDto> {
     if (this.cache && Date.now() < this.cache.expiresAt) {

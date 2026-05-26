@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { GoldBrand, GoldType } from '@prisma/client';
 import { PrismaService } from '../database/prisma.service';
 import { ArbitrageOpportunityDto, ArbitrageHistoryDto } from '@gpls/shared';
@@ -16,7 +16,10 @@ export interface LatestBrandPrice {
 export class ArbitrageService {
   private readonly logger = new Logger(ArbitrageService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
   calculateOpportunities(prices: LatestBrandPrice[]): ArbitrageOpportunityDto[] {
     const byGoldType = new Map<string, LatestBrandPrice[]>();
@@ -102,6 +105,7 @@ export class ArbitrageService {
           },
         });
       }
+      this.eventEmitter.emit('arbitrage.updated', opportunities);
     } catch (err) {
       this.logger.error(`onPriceUpdated: ${(err as Error).message}`);
     }

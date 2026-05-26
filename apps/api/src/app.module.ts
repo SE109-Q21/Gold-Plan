@@ -29,7 +29,6 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { RealtimeModule } from './realtime/realtime.module';
 import { ArbitrageModule } from './arbitrage/arbitrage.module';
 import { AssetsComparisonModule } from './assets-comparison/assets-comparison.module';
-import { DemoModule } from './demo/demo.module';
 
 @Module({
   imports: [
@@ -64,7 +63,6 @@ import { DemoModule } from './demo/demo.module';
     ArbitrageModule,
     AssetsComparisonModule,
     PushModule,
-    DemoModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

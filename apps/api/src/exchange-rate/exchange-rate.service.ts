@@ -1,4 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Cron } from '@nestjs/schedule';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import axios from 'axios';
 import { ExchangeRateDto } from '@gpls/shared';
 
@@ -16,6 +18,18 @@ interface CacheEntry {
 export class ExchangeRateService {
   private readonly logger = new Logger(ExchangeRateService.name);
   private cache: CacheEntry | null = null;
+
+  constructor(private readonly eventEmitter: EventEmitter2) {}
+
+  @Cron('0 */15 * * * *')
+  async refresh(): Promise<void> {
+    const prev = this.cache?.data;
+    await this.getRates();
+    const next = this.cache?.data;
+    if (next && (prev?.usdVnd !== next.usdVnd || prev?.eurVnd !== next.eurVnd)) {
+      this.eventEmitter.emit('exchange-rate.updated', next);
+    }
+  }
 
   async getRates(): Promise<ExchangeRateDto> {
     if (this.cache && Date.now() < this.cache.expiresAt) {

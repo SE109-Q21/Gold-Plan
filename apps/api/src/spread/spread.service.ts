@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { OnEvent, EventEmitter2 } from '@nestjs/event-emitter';
 import { GoldBrand, GoldType } from '@prisma/client';
 import { PrismaService } from '../database/prisma.service';
 import { SpreadRankingDto, SpreadHistoryPointDto } from '@gpls/shared';
@@ -12,7 +13,12 @@ const BRANDS: GoldBrand[] = [
 
 @Injectable()
 export class SpreadService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(SpreadService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
   async getSpreadHistory(
     brand: GoldBrand,
@@ -82,5 +88,15 @@ export class SpreadService {
     }
 
     return results;
+  }
+
+  @OnEvent('price.updated')
+  async onPriceUpdated(event: { goldType: string }): Promise<void> {
+    try {
+      const ranking = await this.getSpreadRanking(event.goldType as GoldType);
+      this.eventEmitter.emit('spread.updated', { goldType: event.goldType, ranking });
+    } catch (err) {
+      this.logger.error(`onPriceUpdated: ${(err as Error).message}`);
+    }
   }
 }
