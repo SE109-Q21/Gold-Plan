@@ -86,21 +86,58 @@ function IconShield({ s = 20 }: { s?: number }) {
     </svg>
   );
 }
+function IconPieChart({ s = 20 }: { s?: number }) {
+  return (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21.21 15.89A10 10 0 1 1 8 2.83"/>
+      <path d="M22 12A10 10 0 0 0 12 2v10z"/>
+    </svg>
+  );
+}
+function IconFire({ s = 20 }: { s?: number }) {
+  return (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M8.5 14.5A2.5 2.5 0 0 0 11 17c0 1.1-.9 2-2 2s-2-.9-2-2c0-2 2-5 2-5Z"/>
+      <path d="M12 22c4.418 0 8-3.582 8-8 0-3-1.5-5.5-4-7.5 0 2-1 4-3 5 0-3-1.5-5-3-7-1.5 2-2 4-2 7-2-1-3-3-3-5-2 2-3 4.5-3 7.5 0 4.418 3.582 8 8 8Z"/>
+    </svg>
+  );
+}
+function IconTrendDown({ s = 20 }: { s?: number }) {
+  return (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/>
+      <polyline points="16 17 22 17 22 11"/>
+    </svg>
+  );
+}
+function IconPercent({ s = 20 }: { s?: number }) {
+  return (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="19" y1="5" x2="5" y2="19"/>
+      <circle cx="6.5" cy="6.5" r="2.5"/>
+      <circle cx="17.5" cy="17.5" r="2.5"/>
+    </svg>
+  );
+}
 
-export { IconHome, IconChart, IconBell, IconUser, IconSearch, IconPlus, IconConvert, IconPortfolio, IconTrophy, IconNewspaper, IconClock, IconShield };
+export { IconHome, IconChart, IconBell, IconUser, IconSearch, IconPlus, IconConvert, IconPortfolio, IconTrophy, IconNewspaper, IconClock, IconShield, IconFire, IconTrendDown, IconPercent, IconPieChart };
 
 const NAV_ITEMS = [
-  { id: 'home',        label: 'Tổng quan',          Icon: IconHome,      href: null,                requiresAuth: false, adminOnly: false },
-  { id: 'chart',       label: 'Thị trường',         Icon: IconChart,     href: null,                requiresAuth: false, adminOnly: false },
-  { id: 'alerts',      label: 'Cảnh báo',           Icon: IconBell,      href: null,                requiresAuth: true,  adminOnly: false },
-  { id: 'profile',     label: 'Tài khoản',          Icon: IconUser,      href: null,                requiresAuth: true,  adminOnly: false },
-  { id: 'portfolio',   label: 'Danh mục',           Icon: IconPortfolio, href: '/portfolio',        requiresAuth: true,  adminOnly: false },
-  { id: 'converter',   label: 'Quy đổi',            Icon: IconConvert,   href: '/tools/converter',  requiresAuth: false, adminOnly: false },
-  { id: 'leaderboard', label: 'Bảng xếp hạng',      Icon: IconTrophy,    href: '/leaderboard',      requiresAuth: false, adminOnly: false },
-  { id: 'spread',      label: 'Chênh lệch giá',     Icon: IconChart,     href: '/tools/spread',     requiresAuth: false, adminOnly: false },
-  { id: 'digest',      label: 'Kho bản tin',        Icon: IconNewspaper, href: '/digest/archive',   requiresAuth: false, adminOnly: false },
-  { id: 'history',     label: 'Lịch sử giá',        Icon: IconClock,     href: '/profile/history',  requiresAuth: true,  adminOnly: false },
-  { id: 'admin',       label: 'Quản trị',           Icon: IconShield,    href: '/admin',            requiresAuth: true,  adminOnly: true  },
+  { id: 'home',             label: 'Tổng quan',          Icon: IconHome,      href: null,                             requiresAuth: false, adminOnly: false },
+  { id: 'chart',            label: 'Thị trường',         Icon: IconChart,     href: null,                             requiresAuth: false, adminOnly: false },
+  { id: 'alerts',           label: 'Cảnh báo',           Icon: IconBell,      href: null,                             requiresAuth: true,  adminOnly: false },
+  { id: 'profile',          label: 'Tài khoản',          Icon: IconUser,      href: null,                             requiresAuth: true,  adminOnly: false },
+  { id: 'portfolio',        label: 'Danh mục',           Icon: IconPortfolio, href: '/portfolio',                     requiresAuth: true,  adminOnly: false },
+  { id: 'assets',           label: 'Tổng tài sản',       Icon: IconPieChart,  href: '/assets',                        requiresAuth: true,  adminOnly: false },
+  { id: 'converter',        label: 'Quy đổi',            Icon: IconConvert,   href: '/tools/converter',               requiresAuth: false, adminOnly: false },
+  { id: 'fire-calculator',  label: 'FIRE Calculator',    Icon: IconFire,      href: '/tools/fire-calculator',         requiresAuth: false, adminOnly: false },
+  { id: 'inflation',        label: 'Máy tính lạm phát',  Icon: IconTrendDown, href: '/tools/inflation-calculator',    requiresAuth: false, adminOnly: false },
+  { id: 'compound',         label: 'Lãi kép',            Icon: IconPercent,   href: '/tools/compound-interest',       requiresAuth: false, adminOnly: false },
+  { id: 'leaderboard',      label: 'Bảng xếp hạng',      Icon: IconTrophy,    href: '/leaderboard',                   requiresAuth: false, adminOnly: false },
+  { id: 'spread',           label: 'Chênh lệch giá',     Icon: IconChart,     href: '/tools/spread',                  requiresAuth: false, adminOnly: false },
+  { id: 'digest',           label: 'Kho bản tin',        Icon: IconNewspaper, href: '/digest/archive',                requiresAuth: false, adminOnly: false },
+  { id: 'history',          label: 'Lịch sử giá',        Icon: IconClock,     href: '/profile/history',               requiresAuth: true,  adminOnly: false },
+  { id: 'admin',            label: 'Quản trị',           Icon: IconShield,    href: '/admin',                         requiresAuth: true,  adminOnly: true  },
 ] as const;
 
 type Tab = 'home' | 'chart' | 'alerts' | 'profile';
