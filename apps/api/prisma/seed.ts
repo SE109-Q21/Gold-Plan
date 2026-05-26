@@ -63,7 +63,6 @@ async function main() {
   await prisma.forecastVote.deleteMany();
   await prisma.forecastSession.deleteMany();
   await prisma.goldDigest.deleteMany();
-  await prisma.heatIndexRecord.deleteMany();
   await prisma.exchangeRate.deleteMany();
   await prisma.priceRecord.deleteMany();
   await prisma.crawlSession.deleteMany();
