@@ -97,8 +97,8 @@ const NAV_ITEMS = [
   { id: 'portfolio',   label: 'Danh mục',           Icon: IconPortfolio, href: '/portfolio',        requiresAuth: true,  adminOnly: false },
   { id: 'converter',   label: 'Quy đổi',            Icon: IconConvert,   href: '/tools/converter',  requiresAuth: false, adminOnly: false },
   { id: 'leaderboard', label: 'Bảng xếp hạng',      Icon: IconTrophy,    href: '/leaderboard',      requiresAuth: false, adminOnly: false },
-  { id: 'spread',      label: 'Xếp hạng spread',    Icon: IconChart,     href: '/tools/spread',     requiresAuth: false, adminOnly: false },
-  { id: 'digest',      label: 'Kho digest',         Icon: IconNewspaper, href: '/digest/archive',   requiresAuth: false, adminOnly: false },
+  { id: 'spread',      label: 'Chênh lệch giá',     Icon: IconChart,     href: '/tools/spread',     requiresAuth: false, adminOnly: false },
+  { id: 'digest',      label: 'Kho bản tin',        Icon: IconNewspaper, href: '/digest/archive',   requiresAuth: false, adminOnly: false },
   { id: 'history',     label: 'Lịch sử giá',        Icon: IconClock,     href: '/profile/history',  requiresAuth: true,  adminOnly: false },
   { id: 'admin',       label: 'Quản trị',           Icon: IconShield,    href: '/admin',            requiresAuth: true,  adminOnly: true  },
 ] as const;
@@ -228,7 +228,7 @@ function Sidebar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
       <div className="px-4 py-[14px] border-t border-hairline">
         <div className="flex items-center gap-2">
           <span className="w-[7px] h-[7px] rounded-full bg-live shadow-[0_0_8px_var(--live)] shrink-0"/>
-          <span className="font-mono text-[10px] text-bone tracking-[0.1em] uppercase">live · ict</span>
+          <span className="font-mono text-[10px] text-bone tracking-[0.1em] uppercase">Trực tiếp · ICT</span>
         </div>
         <div className="font-mono text-[9px] text-mute mt-2 leading-[1.5]">
           làm mới sau 04:48<br/>sjc · doji · pnj
@@ -303,8 +303,8 @@ function TopBar({ currency, onCurrency, onTab }: { currency: string; onCurrency:
     { label: 'Danh mục',       type: 'công cụ', action: () => { router.push('/portfolio');       setSearchOpen(false); setSearchQuery(''); } },
     { label: 'Quy đổi',        type: 'công cụ', action: () => { router.push('/tools/converter'); setSearchOpen(false); setSearchQuery(''); } },
     { label: 'Bảng xếp hạng', type: 'công cụ', action: () => { router.push('/leaderboard');     setSearchOpen(false); setSearchQuery(''); } },
-    { label: 'Xếp hạng spread', type: 'công cụ', action: () => { router.push('/tools/spread');    setSearchOpen(false); setSearchQuery(''); } },
-    { label: 'Kho digest',     type: 'công cụ', action: () => { router.push('/digest/archive');  setSearchOpen(false); setSearchQuery(''); } },
+    { label: 'Chênh lệch giá',  type: 'công cụ', action: () => { router.push('/tools/spread');    setSearchOpen(false); setSearchQuery(''); } },
+    { label: 'Kho bản tin',    type: 'công cụ', action: () => { router.push('/digest/archive');  setSearchOpen(false); setSearchQuery(''); } },
     { label: 'Lịch sử giá',   type: 'công cụ', action: () => { router.push('/profile/history'); setSearchOpen(false); setSearchQuery(''); } },
     { label: 'SJC',            type: 'brand', action: () => { onTab('chart');   setSearchOpen(false); setSearchQuery(''); } },
     { label: 'DOJI',           type: 'brand', action: () => { onTab('chart');   setSearchOpen(false); setSearchQuery(''); } },

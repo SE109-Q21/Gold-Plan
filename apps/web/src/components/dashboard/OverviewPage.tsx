@@ -66,12 +66,12 @@ function HeatIndexGauge() {
   const needleX = 60 - Math.cos(needleAngle) * 50;
   const needleY = 66 - Math.sin(needleAngle) * 50;
   const tooltipContent = data
-    ? `Velocity: ${data.priceVelocity?.toFixed(1) ?? '—'}% · Spread: ${data.spreadSize != null ? (data.spreadSize / 1_000_000).toFixed(2) : '—'}M₫ · Crossings: ${data.thresholdCrossings ?? '—'}`
+    ? `Vận tốc: ${data.priceVelocity?.toFixed(1) ?? '—'}% · Chênh lệch: ${data.spreadSize != null ? (data.spreadSize / 1_000_000).toFixed(2) : '—'}M₫ · Vượt ngưỡng: ${data.thresholdCrossings ?? '—'}`
     : '';
 
   if (isLoading) return (
     <div className="h-[76px] flex items-center justify-center text-mute font-mono text-[12px] leading-none font-medium">
-      loading…
+      Đang tải…
     </div>
   );
 
@@ -131,6 +131,10 @@ function ExchangeRateCard() {
     fx?.source === 'live' ? 'text-live' :
     fx?.source === 'stale' ? 'text-gold' :
     'text-mute';
+  const sourceLabel =
+    fx?.source === 'live' ? 'Trực tiếp' :
+    fx?.source === 'stale' ? 'Dữ liệu cũ' :
+    fx?.source ?? '';
 
   return (
     <div className="bg-ink-2 border border-line rounded-[14px] px-6 py-[18px]">
@@ -140,14 +144,14 @@ function ExchangeRateCard() {
           {fx && (
             <>
               <span className={cn('font-mono text-[9px] leading-none font-bold tracking-[0.14em] uppercase', sourceBadgeColor)}>
-                {fx.source}
+                {sourceLabel}
               </span>
               <span className="font-mono text-[9px] text-mute tracking-[0.08em] leading-none font-bold">
                 {minsAgo(fx.updatedAt)}
               </span>
             </>
           )}
-          {!fx && <span className="font-mono text-[9px] text-mute tracking-[0.08em] leading-none font-bold">đang tải…</span>}
+          {!fx && <span className="font-mono text-[9px] text-mute tracking-[0.08em] leading-none font-bold">Đang tải…</span>}
         </div>
       </div>
       <div className="grid grid-cols-2 gap-4">
@@ -156,14 +160,14 @@ function ExchangeRateCard() {
           <div className="text-[22px] leading-none font-bold font-sans tabular-nums">
             {fx ? fx.usdVnd.toLocaleString('en-US', { maximumFractionDigits: 0 }) : '—'}
           </div>
-          <div className="font-mono text-[10px] text-mute mt-[6px]">per 1 usd</div>
+          <div className="font-mono text-[10px] text-mute mt-[6px]">trên 1 USD</div>
         </div>
         <div className="p-[14px] bg-ink-3 border border-line rounded-[10px]">
           <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-[6px]">eur / vnd</div>
           <div className="text-[22px] leading-none font-bold font-sans tabular-nums">
             {fx ? fx.eurVnd.toLocaleString('en-US', { maximumFractionDigits: 0 }) : '—'}
           </div>
-          <div className="font-mono text-[10px] text-mute mt-[6px]">per 1 eur</div>
+          <div className="font-mono text-[10px] text-mute mt-[6px]">trên 1 EUR</div>
         </div>
       </div>
     </div>
@@ -450,7 +454,7 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
           >
             <div className="flex justify-between items-center mb-[18px]">
               <span className="stamp">XAU/USD · london spot · 24K</span>
-              <span className="font-mono text-[11px] text-mute">{intl ? 'live' : 'đang tải…'}</span>
+              <span className="font-mono text-[11px] text-mute">{intl ? 'trực tiếp' : 'đang tải…'}</span>
             </div>
             <div className="flex items-end gap-8">
               <div>

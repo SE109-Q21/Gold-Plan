@@ -20,10 +20,10 @@ const BRANDS: { label: string; value: GoldBrand }[] = [
 ];
 
 const GOLD_TYPES: { label: string; value: GoldType }[] = [
-  { label: 'Mien SJC',  value: 'MIEN_SJC'  },
-  { label: 'Nhan 9999', value: 'NHAN_9999' },
-  { label: 'Vang 24K',  value: 'VANG_24K'  },
-  { label: 'Vang 18K',  value: 'VANG_18K'  },
+  { label: 'Vàng miếng SJC', value: 'MIEN_SJC'  },
+  { label: 'Nhẫn tròn 9999', value: 'NHAN_9999' },
+  { label: 'Vàng 24K',       value: 'VANG_24K'  },
+  { label: 'Vàng 18K',       value: 'VANG_18K'  },
 ];
 
 function Chip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
@@ -136,7 +136,7 @@ export function AddAlertModal({ open, onClose }: Props) {
         <div className="p-[12px_14px] bg-ink-3 border border-line rounded-lg font-mono text-[11px] leading-[1.5] text-mute mb-[18px]">
           thông báo khi{' '}
           <span className="text-gold">
-            {brandLabel} · {goldTypeLabel} {cond === 'gte' ? '≥' : '≤'} ₫{threshold.toLocaleString('en-US')}
+            {brandLabel} · {goldTypeLabel} {cond === 'gte' ? '≥' : '≤'} ₫{threshold.toLocaleString('vi-VN')}
           </span>
           . lặp lại: {repeatMode ? 'có' : 'không'}
         </div>

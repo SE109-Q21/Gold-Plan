@@ -30,7 +30,7 @@ function ConfirmDeleteModal({ message, onConfirm, onClose }: {
             </svg>
           </div>
           <div>
-            <div className="text-[16px] leading-none font-bold font-sans text-chalk mb-[6px]">Xóa alert</div>
+            <div className="text-[16px] leading-none font-bold font-sans text-chalk mb-[6px]">Xóa cảnh báo</div>
             <div className="text-[13px] leading-[1.5] font-sans text-mute">{message}</div>
           </div>
         </div>
@@ -65,11 +65,11 @@ function SkeletonRow() {
 
 function fmtTarget(a: PriceAlertDto) {
   const price = Number(a.thresholdPrice);
-  return price.toLocaleString('en-US') + '₫';
+  return price.toLocaleString('vi-VN') + '₫';
 }
 
 function fmtDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '.');
+  return new Date(iso).toLocaleDateString('vi-VN', { year: 'numeric', month: '2-digit', day: '2-digit' });
 }
 
 function buildNaturalLanguage(brand: string, cond: SmartAlertCondition | null): string {
@@ -84,13 +84,13 @@ function buildNaturalLanguage(brand: string, cond: SmartAlertCondition | null): 
   if (cond.type === 'SPREAD') {
     const p = cond.params as { thresholdVnd?: number };
     const t = p.thresholdVnd ?? 0;
-    return `${b} chênh lệch mua/bán ≤ ${t.toLocaleString('en-US')}₫`;
+    return `${b} chênh lệch mua/bán ≤ ${t.toLocaleString('vi-VN')}₫`;
   }
   if (cond.type === 'THRESHOLD') {
     const p = cond.params as { condition?: string; priceVnd?: number };
     const dir = p.condition === 'gte' ? '≥' : '≤';
     const price = p.priceVnd ?? 0;
-    return `${b} mua ${dir} ${price.toLocaleString('en-US')}₫`;
+    return `${b} mua ${dir} ${price.toLocaleString('vi-VN')}₫`;
   }
   return '';
 }
@@ -159,7 +159,7 @@ function ConditionForm({ value, onChange }: { value: ConditionDraft; onChange: (
 
       {value.type === 'TREND' && (
         <div className="flex gap-3 items-center">
-          <span className="text-[12px] leading-none font-sans font-medium text-mute">N =</span>
+          <span className="text-[12px] leading-none font-sans font-medium text-mute">Số lần liên tiếp:</span>
           <div className="flex gap-1">
             {[2, 3, 4, 5].map(n => (
               <Chip key={n} active={value.trendN === n} onClick={() => onChange({ ...value, trendN: n })}>{n}</Chip>
@@ -177,10 +177,10 @@ function ConditionForm({ value, onChange }: { value: ConditionDraft; onChange: (
 
       {value.type === 'SPREAD' && (
         <div className="flex gap-2 items-center">
-          <span className="text-[12px] leading-none font-sans font-medium text-mute whitespace-nowrap">Ngưỡng (VND)</span>
+          <span className="text-[12px] leading-none font-sans font-medium text-mute whitespace-nowrap">Chênh lệch tối đa (₫)</span>
           <Input
             type="number"
-            placeholder="e.g. 200000"
+            placeholder="ví dụ: 200.000"
             value={value.spreadThreshold}
             onChange={e => onChange({ ...value, spreadThreshold: e.target.value })}
             className="h-9 bg-ink-3 border-line text-chalk font-mono text-[13px] placeholder:text-mute focus-visible:ring-gold"
@@ -199,7 +199,7 @@ function ConditionForm({ value, onChange }: { value: ConditionDraft; onChange: (
           </div>
           <Input
             type="number"
-            placeholder="e.g. 79000000"
+            placeholder="ví dụ: 79.000.000"
             value={value.thresholdPrice}
             onChange={e => onChange({ ...value, thresholdPrice: e.target.value })}
             className="h-9 bg-ink-3 border-line text-chalk font-mono text-[13px] placeholder:text-mute focus-visible:ring-gold"
@@ -212,6 +212,17 @@ function ConditionForm({ value, onChange }: { value: ConditionDraft; onChange: (
 
 const BRANDS_LIST = ['SJC', 'DOJI', 'PNJ', 'BAO_TIN'] as const;
 const GOLD_TYPES_LIST = ['MIEN_SJC', 'NHAN_9999', 'VANG_24K', 'VANG_18K'] as const;
+
+const GOLD_TYPE_LABELS: Record<string, string> = {
+  MIEN_SJC: 'Vàng miếng SJC',
+  NHAN_9999: 'Nhẫn tròn 9999',
+  VANG_24K: 'Vàng 24K',
+  VANG_18K: 'Vàng 18K',
+};
+
+function goldTypeLabel(code: string): string {
+  return GOLD_TYPE_LABELS[code] ?? code;
+}
 
 function BuilderModal({ onClose }: { onClose: () => void }) {
   const [brand, setBrand] = useState<string>('SJC');
@@ -271,7 +282,7 @@ function BuilderModal({ onClose }: { onClose: () => void }) {
           <div className={labelCls}>Loại vàng</div>
           <div className="flex gap-[6px] flex-wrap">
             {GOLD_TYPES_LIST.map(g => (
-              <Chip key={g} active={goldType === g} onClick={() => setGoldType(g)}>{g}</Chip>
+              <Chip key={g} active={goldType === g} onClick={() => setGoldType(g)}>{goldTypeLabel(g)}</Chip>
             ))}
           </div>
         </div>
@@ -541,7 +552,7 @@ export function AlertsPage({ onOpenAdd }: { onOpenAdd: () => void }) {
                     <span className="font-mono text-[11px] font-bold text-gold tracking-[0.1em]">{a.brand}</span>
 
                     <div>
-                      <div className="text-[14px] leading-[1.1] font-sans font-medium mb-1">{a.goldType}</div>
+                      <div className="text-[14px] leading-[1.1] font-sans font-medium mb-1">{goldTypeLabel(a.goldType)}</div>
                       <Badge className={cn(
                         'font-mono text-[10px] font-bold px-[6px] py-[3px] rounded-[3px] tracking-[0.08em] uppercase border-0',
                         a.condition === 'gte'
@@ -644,10 +655,10 @@ export function AlertsPage({ onOpenAdd }: { onOpenAdd: () => void }) {
                 >
                   <span className="font-mono text-[11px] text-mute">{h.alertId.slice(0, 8)}…</span>
                   <div className="text-right text-[14px] leading-none font-bold font-sans tabular-nums">
-                    {Number(h.priceAtTrigger).toLocaleString('en-US')}₫
+                    {Number(h.priceAtTrigger).toLocaleString('vi-VN')}₫
                   </div>
                   <div className="font-mono text-right text-[11px] text-bone">
-                    {new Date(h.triggeredAt).toLocaleString('en-US', { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                    {new Date(h.triggeredAt).toLocaleString('vi-VN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
                   </div>
                   <div className="font-mono text-right text-[11px]">
                     {h.emailSentAt

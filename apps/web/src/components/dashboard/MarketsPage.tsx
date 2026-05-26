@@ -28,6 +28,13 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
 const GOLD_TYPES: GoldType[] = ['MIEN_SJC', 'NHAN_9999', 'VANG_24K', 'VANG_18K'];
 const BRANDS: GoldBrand[] = ['SJC', 'DOJI', 'PNJ', 'BAO_TIN'];
 
+const GOLD_TYPE_LABELS: Record<string, string> = {
+  MIEN_SJC: 'Vàng miếng SJC',
+  NHAN_9999: 'Nhẫn tròn 9999',
+  VANG_24K: 'Vàng 24K',
+  VANG_18K: 'Vàng 18K',
+};
+
 const COMPARE_COLORS: Record<string, string> = {
   DOJI:    '#60a5fa',
   BAO_TIN: '#a78bfa',
@@ -51,12 +58,12 @@ function QuickAlertPanel({
   return (
     <div className="bg-ink-2 border border-[rgba(212,175,55,0.35)] rounded-xl px-[22px] py-[18px] flex items-center gap-5 flex-wrap">
       <div className="flex flex-col gap-1 min-w-[160px]">
-        <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase">New alert · SJC MIEN_SJC</div>
+        <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase">Cảnh báo mới · SJC Vàng miếng</div>
         <div className="text-[26px] leading-none font-extrabold font-sans tabular-nums text-chalk">{fmtP(price)}</div>
       </div>
 
       <div className="flex flex-col gap-[6px]">
-        <div className="font-mono text-[9px] text-mute tracking-[0.12em] uppercase mb-0.5">Condition</div>
+        <div className="font-mono text-[9px] text-mute tracking-[0.12em] uppercase mb-0.5">Điều kiện</div>
         <div className="flex gap-[6px]">
           {(['gte', 'lte'] as const).map(c => {
             const active = condition === c;
@@ -116,7 +123,7 @@ function SpreadRankingSection() {
   return (
     <div className="bg-ink-2 border border-line rounded-[14px] p-[22px]">
       <div className="flex justify-between items-center mb-[14px]">
-        <h3 className="text-[16px] leading-none font-bold font-sans m-0">xếp hạng spread</h3>
+        <h3 className="text-[16px] leading-none font-bold font-sans m-0">Xếp hạng chênh lệch giá</h3>
         <span
           onMouseEnter={() => setShowTip(true)}
           onMouseLeave={() => setShowTip(false)}
@@ -125,7 +132,7 @@ function SpreadRankingSection() {
           ?
           {showTip && (
             <span className="absolute bottom-[calc(100%+6px)] right-0 w-[220px] bg-ink-4 border border-line rounded-lg px-[10px] py-2 font-mono text-[11px] leading-[1.5] font-medium text-chalk z-10 pointer-events-none">
-              Spread is how much you lose if you buy and sell immediately. Smaller spread = less cost.
+              Chênh lệch là khoản bạn mất nếu mua và bán ngay lập tức. Chênh lệch càng nhỏ = chi phí càng thấp.
             </span>
           )}
         </span>
@@ -142,7 +149,7 @@ function SpreadRankingSection() {
               goldType === gt ? 'border-gold bg-gold text-gold-ink hover:bg-gold hover:text-gold-ink' : 'border-line bg-transparent text-bone hover:bg-ink-3',
             )}
           >
-            {gt}
+            {GOLD_TYPE_LABELS[gt] ?? gt}
           </Button>
         ))}
       </div>
@@ -257,7 +264,7 @@ function SpreadHistoryChart() {
               goldType === gt ? 'border-gold bg-gold text-gold-ink hover:bg-gold hover:text-gold-ink' : 'border-line bg-transparent text-bone hover:bg-ink-3',
             )}
           >
-            {gt}
+            {GOLD_TYPE_LABELS[gt] ?? gt}
           </Button>
         ))}
       </div>
