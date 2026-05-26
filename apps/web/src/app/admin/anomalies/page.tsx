@@ -12,7 +12,7 @@ function ReviewBadge({ review }: { review: { action: string } | null }) {
   if (!review) {
     return (
       <Badge className="font-mono text-[9px] font-bold tracking-[0.12em] uppercase bg-[rgba(100,100,120,0.18)] text-mute border border-line hover:bg-[rgba(100,100,120,0.18)]">
-        pending
+        Chờ duyệt
       </Badge>
     );
   }
@@ -24,7 +24,7 @@ function ReviewBadge({ review }: { review: { action: string } | null }) {
         ? 'bg-[rgba(88,200,150,0.12)] text-up border-[rgba(88,200,150,0.3)] hover:bg-[rgba(88,200,150,0.12)]'
         : 'bg-[rgba(200,80,80,0.12)] text-down border-[rgba(200,80,80,0.3)] hover:bg-[rgba(200,80,80,0.12)]',
     )}>
-      {review.action}
+      {review.action === 'approved' ? 'Đã duyệt' : 'Đã từ chối'}
     </Badge>
   );
 }
@@ -43,22 +43,22 @@ export default function AdminAnomaliesPage() {
     <div className="p-[32px_36px]">
       <div className="mb-8">
         <h1 className="font-display text-[28px] leading-none font-extrabold m-0 mb-[6px] tracking-[-0.02em]">
-          Anomalies
+          Dữ Liệu Bất Thường
         </h1>
         <div className="font-mono text-[12px] leading-none text-mute">
-          Flagged price records requiring manual review
+          Các bản ghi giá bị gắn cờ cần xem xét thủ công
         </div>
       </div>
 
       <div className="bg-ink-2 border border-line rounded-[12px] overflow-hidden">
-        {isLoading && <div className="p-6 font-mono text-[13px] leading-none text-mute">Loading…</div>}
-        {isError  && <div className="p-6 font-mono text-[13px] leading-none text-down">Failed to load anomalies.</div>}
+        {isLoading && <div className="p-6 font-mono text-[13px] leading-none text-mute">Đang tải…</div>}
+        {isError  && <div className="p-6 font-mono text-[13px] leading-none text-down">Không thể tải dữ liệu bất thường.</div>}
 
         {!isLoading && !isError && (
           <table className="w-full border-collapse">
             <thead>
               <tr className="bg-ink-3">
-                {['Brand', 'Gold Type', 'Buy Price', 'Sell Price', 'Date', 'Reason', 'Review Status', 'Actions'].map(col => (
+                {['Thương hiệu', 'Loại vàng', 'Giá mua', 'Giá bán', 'Ngày', 'Lý do', 'Trạng thái xét duyệt', 'Hành động'].map(col => (
                   <th key={col} className={TH}>{col}</th>
                 ))}
               </tr>
@@ -67,7 +67,7 @@ export default function AdminAnomaliesPage() {
               {(anomalies ?? []).length === 0 ? (
                 <tr>
                   <td colSpan={8} className="p-[24px_16px] font-mono text-[13px] text-mute text-center">
-                    No anomalies found.
+                    Không tìm thấy dữ liệu bất thường.
                   </td>
                 </tr>
               ) : (anomalies ?? []).map(record => (
@@ -91,14 +91,14 @@ export default function AdminAnomaliesPage() {
                     {!record.anomalyReview ? (
                       <div className="flex gap-2">
                         <Button variant="outline" size="sm" onClick={() => review({ id: record.id, action: 'approved' })} disabled={isReviewing} className="px-[10px] py-[6px] h-auto border-up bg-transparent text-up hover:bg-[rgba(88,200,150,0.08)] hover:text-up font-mono text-[9px] font-bold tracking-[0.08em] uppercase">
-                          Approve
+                          Duyệt
                         </Button>
                         <Button variant="outline" size="sm" onClick={() => review({ id: record.id, action: 'rejected' })} disabled={isReviewing} className="px-[10px] py-[6px] h-auto border-down bg-transparent text-down hover:bg-[rgba(229,72,77,0.08)] hover:text-down font-mono text-[9px] font-bold tracking-[0.08em] uppercase">
-                          Reject
+                          Từ chối
                         </Button>
                       </div>
                     ) : (
-                      <span className="font-mono text-[11px] leading-none text-mute">Reviewed</span>
+                      <span className="font-mono text-[11px] leading-none text-mute">Đã xét duyệt</span>
                     )}
                   </td>
                 </tr>

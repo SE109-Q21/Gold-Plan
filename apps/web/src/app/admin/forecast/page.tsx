@@ -29,7 +29,7 @@ function StatusBadge({ status }: { status: 'open' | 'closed' | 'scored' }) {
     'bg-[rgba(100,100,120,0.18)] text-mute border-line hover:bg-[rgba(100,100,120,0.18)]';
   return (
     <Badge className={cn('font-mono text-[9px] font-bold tracking-[0.12em] uppercase border', cls)}>
-      {status}
+      {status === 'open' ? 'Mở' : status === 'scored' ? 'Đã chấm' : 'Đã đóng'}
     </Badge>
   );
 }
@@ -58,23 +58,23 @@ function VoteDetailPanel({ sessionId }: { sessionId: string }) {
   const { data, isLoading, isError } = useAdminSessionVotes(sessionId);
   const votes: Array<{ id: string; email: string; displayName: string | null; direction: string; votedAt: string; isCorrect: boolean | null }> = data?.votes ?? [];
 
-  if (isLoading) return <tr><td colSpan={9} className="p-[12px_20px] font-mono text-[12px] text-mute bg-ink-3">Loading votes…</td></tr>;
-  if (isError)   return <tr><td colSpan={9} className="p-[12px_20px] font-mono text-[12px] text-down bg-ink-3">Failed to load votes.</td></tr>;
+  if (isLoading) return <tr><td colSpan={9} className="p-[12px_20px] font-mono text-[12px] text-mute bg-ink-3">Đang tải phiếu bầu…</td></tr>;
+  if (isError)   return <tr><td colSpan={9} className="p-[12px_20px] font-mono text-[12px] text-down bg-ink-3">Không thể tải phiếu bầu.</td></tr>;
 
   return (
     <tr>
       <td colSpan={9} className="bg-ink-3 p-0">
         <div className="p-[12px_20px_16px]">
           <div className="font-mono text-[10px] leading-none font-bold text-mute tracking-[0.12em] uppercase mb-[10px]">
-            Votes ({votes.length})
+            Phiếu bầu ({votes.length})
           </div>
           {votes.length === 0 ? (
-            <div className="font-mono text-[12px] leading-none text-mute">No votes for this session.</div>
+            <div className="font-mono text-[12px] leading-none text-mute">Chưa có phiếu bầu cho phiên này.</div>
           ) : (
             <table className="w-full border-collapse">
               <thead>
                 <tr>
-                  {['Email', 'Display Name', 'Direction', 'Voted At', 'Correct?'].map(col => (
+                  {['Email', 'Tên hiển thị', 'Hướng', 'Thời gian bầu', 'Đúng?'].map(col => (
                     <th key={col} className="text-left p-[6px_12px] font-mono text-[9px] leading-none font-bold text-mute tracking-[0.12em] uppercase border-b border-hairline">
                       {col}
                     </th>
@@ -125,19 +125,19 @@ function NewSessionForm({ onClose }: { onClose: () => void }) {
   return (
     <form onSubmit={handleSubmit} className="bg-ink-2 border border-line rounded-[10px] p-[20px_24px] mb-6 flex gap-6 items-end flex-wrap">
       <div>
-        <Label className={LABEL_CLS}>Date</Label>
+        <Label className={LABEL_CLS}>Ngày</Label>
         <Input type="date" value={date} onChange={e => setDate(e.target.value)} required className={INPUT_CLS}/>
       </div>
       <div>
-        <Label className={LABEL_CLS}>Closes At</Label>
+        <Label className={LABEL_CLS}>Đóng lúc</Label>
         <Input type="datetime-local" value={closesAt} onChange={e => setClosesAt(e.target.value)} required className={INPUT_CLS}/>
       </div>
       <div className="flex gap-2">
         <Button type="submit" disabled={isPending} className="px-[18px] h-[36px] font-mono text-[11px] font-bold tracking-[0.08em] uppercase">
-          {isPending ? 'Opening…' : 'Open Session'}
+          {isPending ? 'Đang mở…' : 'Mở phiên'}
         </Button>
         <Button type="button" variant="outline" onClick={onClose} className="px-[14px] h-[36px] border-line bg-transparent text-mute hover:bg-ink-3 hover:text-bone font-mono text-[11px] font-bold tracking-[0.08em] uppercase">
-          Cancel
+          Hủy
         </Button>
       </div>
     </form>
@@ -157,8 +157,8 @@ export default function AdminForecastPage() {
     <div className="p-[32px_36px]">
       <div className="flex items-center justify-between mb-7">
         <div>
-          <h1 className="font-display text-[28px] leading-none font-extrabold m-0 mb-[6px] tracking-[-0.02em]">Forecast Sessions</h1>
-          <div className="font-mono text-[12px] leading-none text-mute">Manage gold price forecast sessions and results</div>
+          <h1 className="font-display text-[28px] leading-none font-extrabold m-0 mb-[6px] tracking-[-0.02em]">Phiên Dự Báo</h1>
+          <div className="font-mono text-[12px] leading-none text-mute">Quản lý phiên dự báo giá vàng và kết quả</div>
         </div>
         <Button
           onClick={() => setShowNewForm(v => !v)}
@@ -167,28 +167,28 @@ export default function AdminForecastPage() {
             showNewForm ? 'bg-[rgba(212,175,55,0.15)] border border-gold text-gold hover:bg-[rgba(212,175,55,0.25)] hover:text-gold' : '',
           )}
         >
-          {showNewForm ? 'Cancel' : '+ Open New Session'}
+          {showNewForm ? 'Hủy' : '+ Mở phiên mới'}
         </Button>
       </div>
 
       {showNewForm && <NewSessionForm onClose={() => setShowNewForm(false)}/>}
 
       <div className="bg-ink-2 border border-line rounded-[12px] overflow-hidden">
-        {isLoading && <div className="p-6 font-mono text-[13px] leading-none text-mute">Loading…</div>}
-        {isError  && <div className="p-6 font-mono text-[13px] leading-none text-down">Failed to load forecast sessions.</div>}
+        {isLoading && <div className="p-6 font-mono text-[13px] leading-none text-mute">Đang tải…</div>}
+        {isError  && <div className="p-6 font-mono text-[13px] leading-none text-down">Không thể tải phiên dự báo.</div>}
 
         {!isLoading && !isError && (
           <table className="w-full border-collapse">
             <thead>
               <tr className="bg-ink-3">
-                {['Date', 'Status', 'Votes (↑/→/↓)', 'Result', 'Actions'].map(col => (
+                {['Ngày', 'Trạng thái', 'Phiếu bầu (↑/→/↓)', 'Kết quả', 'Hành động'].map(col => (
                   <th key={col} className={TH}>{col}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {(sessions ?? []).length === 0 ? (
-                <tr><td colSpan={5} className="p-[24px_16px] font-mono text-[13px] text-mute text-center">No forecast sessions found.</td></tr>
+                <tr><td colSpan={5} className="p-[24px_16px] font-mono text-[13px] text-mute text-center">Không tìm thấy phiên dự báo nào.</td></tr>
               ) : (sessions ?? []).map(session => {
                 const status = sessionStatus(session);
                 const isExpanded = expandedVotes === session.id;
@@ -217,14 +217,14 @@ export default function AdminForecastPage() {
                         <div className="flex gap-[6px] flex-wrap items-center">
                           {status === 'open' && (
                             <Button variant="outline" size="sm" onClick={() => closeSession(session.id)} disabled={isClosing} className="px-[9px] py-[5px] h-auto border-line bg-transparent text-mute hover:bg-ink-3 hover:text-bone font-mono text-[10px] font-bold tracking-[0.06em] uppercase">
-                              Close
+                              Đóng
                             </Button>
                           )}
                           {status === 'closed' && (
                             <>
-                              <Button variant="outline" size="sm" onClick={() => setResult({ id: session.id, actualResult: 'up' })}   disabled={isSettingResult} className="px-[9px] py-[5px] h-auto border-[#22c55e] bg-transparent text-[#22c55e] hover:bg-[rgba(34,197,94,0.08)] hover:text-[#22c55e] font-mono text-[10px] font-bold tracking-[0.06em] uppercase">↑ Up</Button>
-                              <Button variant="outline" size="sm" onClick={() => setResult({ id: session.id, actualResult: 'flat' })} disabled={isSettingResult} className="px-[9px] py-[5px] h-auto border-gold bg-transparent text-gold hover:bg-[rgba(212,175,55,0.08)] hover:text-gold font-mono text-[10px] font-bold tracking-[0.06em] uppercase">→ Flat</Button>
-                              <Button variant="outline" size="sm" onClick={() => setResult({ id: session.id, actualResult: 'down' })} disabled={isSettingResult} className="px-[9px] py-[5px] h-auto border-[#ef4444] bg-transparent text-[#ef4444] hover:bg-[rgba(239,68,68,0.08)] hover:text-[#ef4444] font-mono text-[10px] font-bold tracking-[0.06em] uppercase">↓ Down</Button>
+                              <Button variant="outline" size="sm" onClick={() => setResult({ id: session.id, actualResult: 'up' })}   disabled={isSettingResult} className="px-[9px] py-[5px] h-auto border-[#22c55e] bg-transparent text-[#22c55e] hover:bg-[rgba(34,197,94,0.08)] hover:text-[#22c55e] font-mono text-[10px] font-bold tracking-[0.06em] uppercase">↑ Tăng</Button>
+                              <Button variant="outline" size="sm" onClick={() => setResult({ id: session.id, actualResult: 'flat' })} disabled={isSettingResult} className="px-[9px] py-[5px] h-auto border-gold bg-transparent text-gold hover:bg-[rgba(212,175,55,0.08)] hover:text-gold font-mono text-[10px] font-bold tracking-[0.06em] uppercase">→ Đi ngang</Button>
+                              <Button variant="outline" size="sm" onClick={() => setResult({ id: session.id, actualResult: 'down' })} disabled={isSettingResult} className="px-[9px] py-[5px] h-auto border-[#ef4444] bg-transparent text-[#ef4444] hover:bg-[rgba(239,68,68,0.08)] hover:text-[#ef4444] font-mono text-[10px] font-bold tracking-[0.06em] uppercase">↓ Giảm</Button>
                             </>
                           )}
                           <Button
@@ -236,7 +236,7 @@ export default function AdminForecastPage() {
                               isExpanded ? 'bg-[rgba(100,100,120,0.18)] border-bone text-chalk hover:bg-[rgba(100,100,120,0.28)] hover:text-chalk' : 'border-line bg-transparent text-mute hover:bg-ink-3 hover:text-bone',
                             )}
                           >
-                            {isExpanded ? 'Hide' : 'Votes'}
+                            {isExpanded ? 'Ẩn' : 'Phiếu bầu'}
                           </Button>
                         </div>
                       </td>

@@ -116,7 +116,7 @@ function DonutChart({ active, total }: { active: number; total: number }) {
           strokeDashoffset={circ * 0.25}
           style={{ transform: 'rotate(-90deg)', transformOrigin: `${cx}px ${cy}px` }}
         >
-          <title>Active: {active}</title>
+          <title>Hoạt động: {active}</title>
         </circle>
       )}
       {inactiveDash > 0 && (
@@ -129,14 +129,14 @@ function DonutChart({ active, total }: { active: number; total: number }) {
           strokeDashoffset={circ * 0.25 - activeDash}
           style={{ transform: 'rotate(-90deg)', transformOrigin: `${cx}px ${cy}px` }}
         >
-          <title>Inactive: {inactive}</title>
+          <title>Không hoạt động: {inactive}</title>
         </circle>
       )}
       <text x={cx} y={cy - 6} textAnchor="middle" fill="var(--chalk)" fontSize={13} fontWeight={800} fontFamily="var(--font-display)">
         {total > 0 ? Math.round(activePct * 100) : 0}%
       </text>
       <text x={cx} y={cy + 8} textAnchor="middle" fill="var(--mute)" fontSize={9} fontFamily="var(--font-mono)">
-        active
+        hoạt động
       </text>
     </svg>
   );
@@ -216,7 +216,7 @@ function ChartsSection() {
     <div className="mb-9">
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-display text-[16px] leading-none font-bold m-0 tracking-[-0.01em]">
-          Activity
+          Hoạt động
         </h2>
         <div className="flex">
           {RANGES.map((r, i) => (
@@ -240,34 +240,34 @@ function ChartsSection() {
 
       {isLoading ? (
         <div className="bg-ink-2 border border-line rounded-[12px] p-10 text-center font-mono text-[12px] leading-none text-mute">
-          Loading charts…
+          Đang tải biểu đồ…
         </div>
       ) : (
         <>
           <div className="grid grid-cols-2 gap-4 mb-4">
             <ChartCard
-              title="New Registrations"
+              title="Đăng ký mới"
               value={sum('newUsers')}
               delta={`${range}d total`}
               accent="#D4AF37"
               chart={<BarChart data={toBarData('newUsers')} color="#D4AF37" />}
             />
             <ChartCard
-              title="Crawl Success Rate"
+              title="Tỷ lệ thu thập thành công"
               value={`${series.length > 0 && sum('crawlsTotal') > 0 ? Math.round((sum('crawlsSuccess') / sum('crawlsTotal')) * 100) : 0}%`}
               delta={`${sum('crawlsTotal')} crawls`}
               accent="#22c55e"
               chart={<LineChart data={toCrawlRateLine()} color="#22c55e" />}
             />
             <ChartCard
-              title="Alerts Fired"
+              title="Cảnh báo đã kích hoạt"
               value={sum('alertsFired')}
               delta={`${range}d total`}
               accent="#7aa4f7"
               chart={<BarChart data={toBarData('alertsFired')} color="#7aa4f7" />}
             />
             <ChartCard
-              title="Forecast Votes"
+              title="Lượt dự báo"
               value={sum('forecastVotes')}
               delta={`${range}d total`}
               accent="#c084fc"
@@ -292,8 +292,8 @@ function ChartsSection() {
 function UserStatusCard({ totalUsers, activeUsers }: { totalUsers: number; activeUsers: number }) {
   const inactive = Math.max(totalUsers - activeUsers, 0);
   const rows = [
-    { label: 'Active', value: activeUsers, color: '#22c55e' },
-    { label: 'Inactive / Locked', value: inactive, color: 'rgba(200,80,80,0.7)' },
+    { label: 'Hoạt động', value: activeUsers, color: '#22c55e' },
+    { label: 'Không hoạt động / Bị khóa', value: inactive, color: 'rgba(200,80,80,0.7)' },
   ];
 
   return (
@@ -301,7 +301,7 @@ function UserStatusCard({ totalUsers, activeUsers }: { totalUsers: number; activ
       <DonutChart active={activeUsers} total={totalUsers} />
       <div className="flex-1">
         <div className="font-mono text-[10px] leading-none font-bold text-mute tracking-[0.14em] uppercase mb-[14px]">
-          User Breakdown
+          Phân loại người dùng
         </div>
         {rows.map(row => (
           <div key={row.label} className="mb-[10px]">
@@ -353,17 +353,17 @@ function PeriodStatsSection() {
   const { data, isLoading } = useAdminPeriodStats(period);
 
   const cards = [
-    { label: 'New Users',     value: isLoading ? '—' : (data?.newUsers ?? '—') },
-    { label: 'Alerts Sent',   value: isLoading ? '—' : (data?.alertsSent ?? '—') },
-    { label: 'Crawl Success', value: isLoading ? '—' : (data?.crawlSuccessRate ?? '—'), unit: '%' as const },
-    { label: 'Total Crawls',  value: isLoading ? '—' : (data?.totalCrawls ?? '—') },
+    { label: 'Người dùng mới',     value: isLoading ? '—' : (data?.newUsers ?? '—') },
+    { label: 'Cảnh báo đã gửi',   value: isLoading ? '—' : (data?.alertsSent ?? '—') },
+    { label: 'Thu thập thành công', value: isLoading ? '—' : (data?.crawlSuccessRate ?? '—'), unit: '%' as const },
+    { label: 'Tổng lượt thu thập',  value: isLoading ? '—' : (data?.totalCrawls ?? '—') },
   ];
 
   return (
     <div className="mb-9">
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-display text-[16px] leading-none font-bold m-0 tracking-[-0.01em]">
-          Statistics
+          Thống kê
         </h2>
         <div className="flex">
           {PERIOD_LABELS.map(({ key, label }, i) => (
@@ -434,20 +434,20 @@ export default function AdminOverviewPage() {
       <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="font-display text-[28px] leading-none font-extrabold m-0 mb-[6px] tracking-[-0.02em]">
-            Overview
+            Tổng quan
           </h1>
           <div className="font-mono text-[12px] leading-none text-mute">
-            System health and key metrics
+            Sức khỏe hệ thống và chỉ số chính
           </div>
         </div>
         <TriggerCrawlButton />
       </div>
 
       <div className="grid gap-4 mb-9" style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr 1.6fr' }}>
-        <StatCard label="Total Users"        value={isLoading ? '—' : (stats?.totalUsers ?? '—')} />
-        <StatCard label="Active Users"       value={isLoading ? '—' : (stats?.activeUsers ?? '—')} />
-        <StatCard label="Alerts Sent Today"  value={isLoading ? '—' : (stats?.alertsSentToday ?? '—')} />
-        <StatCard label="Crawl Success Rate" value={isLoading ? '—' : (stats?.crawlSuccessRate ?? '—')} unit="%" />
+        <StatCard label="Tổng người dùng"        value={isLoading ? '—' : (stats?.totalUsers ?? '—')} />
+        <StatCard label="Người dùng hoạt động"       value={isLoading ? '—' : (stats?.activeUsers ?? '—')} />
+        <StatCard label="Cảnh báo đã gửi hôm nay"  value={isLoading ? '—' : (stats?.alertsSentToday ?? '—')} />
+        <StatCard label="Tỷ lệ thu thập thành công" value={isLoading ? '—' : (stats?.crawlSuccessRate ?? '—')} unit="%" />
         {!isLoading && stats ? (
           <UserStatusCard totalUsers={stats.totalUsers} activeUsers={stats.activeUsers} />
         ) : (

@@ -60,9 +60,9 @@ export default function AdminUsersPage() {
   return (
     <div className="p-[32px_36px]">
       <div className="mb-6">
-        <h1 className="font-display text-[28px] leading-none font-extrabold m-0 mb-[6px] tracking-[-0.02em]">Users</h1>
+        <h1 className="font-display text-[28px] leading-none font-extrabold m-0 mb-[6px] tracking-[-0.02em]">Người dùng</h1>
         <div className="font-mono text-[12px] leading-none text-mute">
-          {total > 0 ? `${total} registered accounts` : 'Manage user accounts'}
+          {total > 0 ? `${total} tài khoản đã đăng ký` : 'Quản lý tài khoản người dùng'}
         </div>
       </div>
 
@@ -70,19 +70,19 @@ export default function AdminUsersPage() {
       <div className="flex gap-[10px] mb-4 flex-wrap">
         <Input
           type="text"
-          placeholder="Search by email…"
+          placeholder="Tìm kiếm theo email…"
           value={search}
           onChange={e => handleSearchChange(e.target.value)}
           className="flex-[1_1_200px] max-w-[300px] h-[34px] bg-ink-3 border-line text-chalk font-mono text-[13px] placeholder:text-mute focus-visible:ring-gold"
         />
         <select value={statusFilter} onChange={handleFilterChange(setStatusFilter)} className={FILTER_SELECT}>
-          <option value="">All statuses</option>
+          <option value="">Tất cả trạng thái</option>
           <option value="active">Active</option>
           <option value="locked">Locked</option>
           <option value="pending">Pending</option>
         </select>
         <select value={roleFilter} onChange={handleFilterChange(setRoleFilter)} className={FILTER_SELECT}>
-          <option value="">All roles</option>
+          <option value="">Tất cả vai trò</option>
           <option value="user">User</option>
           <option value="admin">Admin</option>
         </select>
@@ -92,21 +92,21 @@ export default function AdminUsersPage() {
             onClick={() => { setSearch(''); setStatusFilter(''); setRoleFilter(''); setPage(1); }}
             className="h-[34px] px-[14px] border-line bg-transparent text-mute hover:bg-ink-3 hover:text-bone font-mono text-[11px] font-semibold tracking-[0.06em]"
           >
-            Clear
+            Xóa
           </Button>
         )}
       </div>
 
       <div className="bg-ink-2 border border-line rounded-[12px] overflow-hidden">
-        {isLoading && <div className="p-6 font-mono text-[13px] leading-none text-mute">Loading…</div>}
-        {isError  && <div className="p-6 font-mono text-[13px] leading-none text-down">Failed to load users.</div>}
+        {isLoading && <div className="p-6 font-mono text-[13px] leading-none text-mute">Đang tải…</div>}
+        {isError  && <div className="p-6 font-mono text-[13px] leading-none text-down">Tải người dùng thất bại.</div>}
 
         {!isLoading && !isError && (
           <>
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-ink-3">
-                  {['Email', 'Display Name', 'Role', 'Status', 'Alerts', 'Created At', 'Actions'].map(col => (
+                  {['Email', 'Tên hiển thị', 'Vai trò', 'Trạng thái', 'Cảnh báo', 'Ngày tạo', 'Hành động'].map(col => (
                     <th key={col} className={TH}>{col}</th>
                   ))}
                 </tr>
@@ -114,7 +114,7 @@ export default function AdminUsersPage() {
               <tbody>
                 {users.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="p-[24px_16px] font-mono text-[13px] text-mute text-center">No users found.</td>
+                    <td colSpan={7} className="p-[24px_16px] font-mono text-[13px] text-mute text-center">Không tìm thấy người dùng.</td>
                   </tr>
                 ) : users.map(u => (
                   <tr key={u.id} className="border-t border-hairline">
@@ -141,14 +141,14 @@ export default function AdminUsersPage() {
                     <td className="p-[10px_16px]">
                       <div className="flex gap-[6px] flex-wrap">
                         {u.status === 'locked' ? (
-                          <Button variant="outline" size="sm" onClick={() => unlock(u.id)} disabled={isMutating} className="px-[10px] py-[5px] h-auto border-up text-up hover:bg-[rgba(88,200,150,0.08)] hover:text-up font-mono text-[9px] font-bold tracking-[0.08em] uppercase">Unlock</Button>
+                          <Button variant="outline" size="sm" onClick={() => unlock(u.id)} disabled={isMutating} className="px-[10px] py-[5px] h-auto border-up text-up hover:bg-[rgba(88,200,150,0.08)] hover:text-up font-mono text-[9px] font-bold tracking-[0.08em] uppercase">Mở khóa</Button>
                         ) : (u.status === 'active' || u.status === 'pending') ? (
-                          <Button variant="outline" size="sm" onClick={() => lock(u.id)} disabled={isMutating} className="px-[10px] py-[5px] h-auto border-down text-down hover:bg-[rgba(229,72,77,0.08)] hover:text-down font-mono text-[9px] font-bold tracking-[0.08em] uppercase">Lock</Button>
+                          <Button variant="outline" size="sm" onClick={() => lock(u.id)} disabled={isMutating} className="px-[10px] py-[5px] h-auto border-down text-down hover:bg-[rgba(229,72,77,0.08)] hover:text-down font-mono text-[9px] font-bold tracking-[0.08em] uppercase">Khóa</Button>
                         ) : null}
                         {u.role === 'user' ? (
-                          <Button variant="outline" size="sm" onClick={() => changeRole({ id: u.id, role: 'admin' })} disabled={isMutating} className="px-[10px] py-[5px] h-auto border-[rgba(212,175,55,0.5)] text-gold hover:bg-[rgba(212,175,55,0.08)] hover:text-gold font-mono text-[9px] font-bold tracking-[0.08em] uppercase">Promote</Button>
+                          <Button variant="outline" size="sm" onClick={() => changeRole({ id: u.id, role: 'admin' })} disabled={isMutating} className="px-[10px] py-[5px] h-auto border-[rgba(212,175,55,0.5)] text-gold hover:bg-[rgba(212,175,55,0.08)] hover:text-gold font-mono text-[9px] font-bold tracking-[0.08em] uppercase">Nâng quyền</Button>
                         ) : u.role === 'admin' ? (
-                          <Button variant="outline" size="sm" onClick={() => changeRole({ id: u.id, role: 'user' })} disabled={isMutating} className="px-[10px] py-[5px] h-auto border-line text-mute hover:bg-ink-3 hover:text-bone font-mono text-[9px] font-bold tracking-[0.08em] uppercase">Demote</Button>
+                          <Button variant="outline" size="sm" onClick={() => changeRole({ id: u.id, role: 'user' })} disabled={isMutating} className="px-[10px] py-[5px] h-auto border-line text-mute hover:bg-ink-3 hover:text-bone font-mono text-[9px] font-bold tracking-[0.08em] uppercase">Hạ quyền</Button>
                         ) : null}
                       </div>
                     </td>
@@ -160,14 +160,14 @@ export default function AdminUsersPage() {
             {totalPages > 1 && (
               <div className="p-[16px_20px] border-t border-hairline flex items-center justify-between">
                 <span className="font-mono text-[11px] leading-none text-mute">
-                  Page {page} of {totalPages} · {total} total
+                  Trang {page} / {totalPages} · {total} tổng
                 </span>
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1} className="px-[14px] border-line bg-transparent text-bone hover:bg-ink-3 font-mono text-[10px] font-bold tracking-[0.08em]">
-                    ← Prev
+                    ← Trước
                   </Button>
                   <Button variant="outline" size="sm" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="px-[14px] border-line bg-transparent text-bone hover:bg-ink-3 font-mono text-[10px] font-bold tracking-[0.08em]">
-                    Next →
+                    Tiếp →
                   </Button>
                 </div>
               </div>

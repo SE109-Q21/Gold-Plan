@@ -48,22 +48,22 @@ export default function AdminAuditPage() {
     <div className="p-[32px_36px]">
       <div className="mb-7">
         <h1 className="font-display text-[28px] leading-none font-extrabold m-0 mb-[6px] tracking-[-0.02em]">
-          Audit Log
+          Nhật Ký Kiểm Tra
         </h1>
         <div className="font-mono text-[12px] leading-none text-mute">
-          Admin action history — 30 entries per page
+          Lịch sử hành động của quản trị viên — 30 mục mỗi trang
         </div>
       </div>
 
       <div className="bg-ink-2 border border-line rounded-[12px] overflow-hidden mb-5">
-        {isLoading && <div className="p-6 font-mono text-[13px] leading-none text-mute">Loading…</div>}
-        {isError  && <div className="p-6 font-mono text-[13px] leading-none text-down">Failed to load audit log.</div>}
+        {isLoading && <div className="p-6 font-mono text-[13px] leading-none text-mute">Đang tải…</div>}
+        {isError  && <div className="p-6 font-mono text-[13px] leading-none text-down">Không thể tải nhật ký kiểm tra.</div>}
 
         {!isLoading && !isError && (
           <table className="w-full border-collapse">
             <thead>
               <tr className="bg-ink-3">
-                {['Date', 'Admin ID', 'Action', 'Entity Type', 'Entity ID', 'New Value'].map(col => (
+                {['Ngày', 'ID Quản trị viên', 'Hành động', 'Loại đối tượng', 'ID Đối tượng', 'Giá trị mới'].map(col => (
                   <th key={col} className={TH}>{col}</th>
                 ))}
               </tr>
@@ -72,7 +72,7 @@ export default function AdminAuditPage() {
               {items.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="p-[24px_16px] font-mono text-[13px] text-mute text-center">
-                    No audit log entries found.
+                    Không tìm thấy mục nhật ký kiểm tra nào.
                   </td>
                 </tr>
               ) : items.map((entry, i) => {
@@ -109,13 +109,13 @@ export default function AdminAuditPage() {
 
       <div className="flex items-center gap-3 justify-end">
         <Button variant="outline" size="sm" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1} className="px-4 border-line bg-transparent text-bone hover:bg-ink-3 font-mono text-[10px] font-bold tracking-[0.08em] uppercase">
-          ← Prev
+          ← Trước
         </Button>
         <span className="font-mono text-[12px] leading-none text-mute">
-          Page {page}{totalPages > 1 ? ` / ${totalPages}` : ''}
+          Trang {page}{totalPages > 1 ? ` / ${totalPages}` : ''}
         </span>
         <Button variant="outline" size="sm" onClick={() => setPage(p => p + 1)} disabled={page >= totalPages} className="px-4 border-line bg-transparent text-bone hover:bg-ink-3 font-mono text-[10px] font-bold tracking-[0.08em] uppercase">
-          Next →
+          Tiếp →
         </Button>
       </div>
     </div>

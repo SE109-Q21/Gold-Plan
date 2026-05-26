@@ -26,7 +26,7 @@ function BenchmarksSection() {
 
   return (
     <div>
-      <h3 className="text-chalk mb-4 font-display text-[16px] font-bold">Asset Benchmarks</h3>
+      <h3 className="text-chalk mb-4 font-display text-[16px] font-bold">Chỉ số tài sản tham chiếu</h3>
       <p className="text-mute text-[13px] mb-5 leading-[1.5]">
         Nhập dữ liệu VN-Index (điểm) và lãi suất ngân hàng (%/năm) để hiển thị trên trang Gold vs Assets.
       </p>
@@ -119,10 +119,10 @@ export default function AdminBenchmarksPage() {
     <div className="p-[32px_36px]">
       <div className="mb-8">
         <h1 className="font-display text-[28px] leading-none font-extrabold m-0 mb-[6px] tracking-[-0.02em]">
-          Benchmarks
+          Chỉ số tham chiếu
         </h1>
         <div className="font-mono text-[12px] leading-none text-mute">
-          Manage VN-Index and bank deposit rate data
+          Quản lý dữ liệu VN-Index và lãi suất ngân hàng
         </div>
       </div>
       <BenchmarksSection/>
