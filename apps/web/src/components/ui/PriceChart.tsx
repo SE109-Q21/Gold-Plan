@@ -30,7 +30,7 @@ function fmtDT(iso: string) {
 
 export function PriceChart({
   history, range, onHoverPrice, chartId = 'pc',
-  alerts, onAddAlertAtPrice, compareData,
+  alerts, onAddAlertAtPrice, compareData, isLoading = false,
 }: {
   history: PricePoint[];
   range: string;
@@ -39,6 +39,7 @@ export function PriceChart({
   alerts?: AlertLine[];
   onAddAlertAtPrice?: (price: number) => void;
   compareData?: CompareSeries[];
+  isLoading?: boolean;
 }) {
   const containerRef  = useRef<HTMLDivElement>(null);
   const [hoverIdx,    setHoverIdx]    = useState<number | null>(null);
@@ -116,13 +117,25 @@ export function PriceChart({
     ...(isCompareMode ? compareNorm.flatMap(s => s.values).filter(Number.isFinite) : []),
   ];
 
-  if (allYValues.length < 2) {
+  if (isLoading) {
     return (
       <div
         className="flex items-center justify-center text-mute font-mono text-[12px] leading-none font-medium"
         style={{ height: PC_H }}
       >
-        Loading price history…
+        Đang tải biểu đồ…
+      </div>
+    );
+  }
+
+  if (allYValues.length < 2) {
+    return (
+      <div
+        className="flex flex-col items-center justify-center gap-2 text-mute font-mono text-[12px] leading-none font-medium"
+        style={{ height: PC_H }}
+      >
+        <span className="text-[20px]">📊</span>
+        Chưa có dữ liệu cho khoảng thời gian này
       </div>
     );
   }

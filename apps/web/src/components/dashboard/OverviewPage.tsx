@@ -452,7 +452,7 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
 
   const { data: intl } = useInternationalPrice();
   const { data: domestic } = useDomesticPrices();
-  const { data: history } = usePriceHistory('SJC', 'MIEN_SJC', range);
+  const { data: history, isLoading: historyLoading } = usePriceHistory('SJC', 'MIEN_SJC', range);
   const { data: history1D } = usePriceHistory('SJC', 'MIEN_SJC', '1D');
   const { data: comparison } = useComparison('MIEN_SJC' as GoldType);
   const { data: alertsData } = useAlerts();
@@ -633,7 +633,7 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
                 ))}
               </div>
             </div>
-            <PriceChart history={history ?? []} range={range} onHoverPrice={setHoverPrice} chartId="overview-pc" />
+            <PriceChart history={history ?? []} range={range} onHoverPrice={setHoverPrice} chartId="overview-pc" isLoading={historyLoading} />
           </div>
 
           {/* Brand spreads table */}

@@ -351,7 +351,7 @@ export function MarketsPage({ currency = 'VND' }: { currency?: string }) {
     }
   }, [range, getAccessToken]);
 
-  const { data: history } = usePriceHistory('SJC' as GoldBrand, 'MIEN_SJC' as GoldType, range);
+  const { data: history, isLoading: historyLoading } = usePriceHistory('SJC' as GoldBrand, 'MIEN_SJC' as GoldType, range);
   const { data: history1D } = usePriceHistory('SJC' as GoldBrand, 'MIEN_SJC' as GoldType, '1D');
   const { data: dojiHistory } = usePriceHistory('DOJI' as GoldBrand, 'NHAN_9999' as GoldType, range);
   const { data: baoTinHistory } = usePriceHistory('BAO_TIN' as GoldBrand, 'NHAN_9999' as GoldType, range);
@@ -489,6 +489,7 @@ export function MarketsPage({ currency = 'VND' }: { currency?: string }) {
           alerts={sjcAlerts}
           onAddAlertAtPrice={user && !showCompare ? (p) => { setPendingAlertPrice(p); } : undefined}
           compareData={compareData}
+          isLoading={historyLoading}
         />
 
         <div className="grid grid-cols-2 mt-[22px] pt-[18px] border-t border-hairline">
