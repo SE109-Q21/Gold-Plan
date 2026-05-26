@@ -77,7 +77,7 @@ export default function RegisterPage() {
         <form onSubmit={handleSubmit} className="flex flex-col gap-[14px]">
           <div>
             <Label htmlFor="email" className={LABEL_CLS}>Email</Label>
-            <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" required className={INPUT_CLS} autoComplete="email"/>
+            <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email@cua-ban.com" required className={INPUT_CLS} autoComplete="email"/>
           </div>
           <div>
             <Label htmlFor="password" className={LABEL_CLS}>Mật khẩu</Label>

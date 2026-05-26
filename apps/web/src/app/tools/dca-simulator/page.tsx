@@ -356,7 +356,7 @@ function DcaSimulatorContent() {
               <StatCard label="Tổng đã chi" value={fmtMillions(data.totalSpentVnd)}/>
               <StatCard label="Giá trị hiện tại" value={fmtMillions(data.currentValueVnd)}/>
               <StatCard
-                label="L/L DCA"
+                label="Lãi/Lỗ DCA"
                 value={`${pnlArrow(data.dcaPnlVnd)} ${fmtMillions(Math.abs(data.dcaPnlVnd))}`}
                 valueClass={pnlClass(data.dcaPnlVnd)}
                 sub={`${data.dcaPnlPct >= 0 ? '+' : ''}${data.dcaPnlPct.toFixed(2)}%`}
@@ -414,7 +414,7 @@ function DcaSimulatorContent() {
             <div className="mt-4 p-[14px_20px] bg-[rgba(212,175,55,0.04)] border border-[rgba(212,175,55,0.12)] rounded-[10px] flex gap-[8px_40px] flex-wrap">
               <LumpSumDetail label="Chi phí mua một lần" value={fmtVnd(data.lumpSumCostVnd)}/>
               <LumpSumDetail label="Giá trị hiện tại (mua 1 lần)" value={fmtVnd(data.lumpSumCurrentValueVnd)}/>
-              <LumpSumDetail label="L/L mua một lần" value={`${data.lumpSumPnlPct >= 0 ? '+' : ''}${data.lumpSumPnlPct.toFixed(2)}%`}/>
+              <LumpSumDetail label="Lãi/Lỗ mua một lần" value={`${data.lumpSumPnlPct >= 0 ? '+' : ''}${data.lumpSumPnlPct.toFixed(2)}%`}/>
             </div>
 
             {/* Save to Portfolio */}

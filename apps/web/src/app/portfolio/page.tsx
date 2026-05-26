@@ -346,11 +346,12 @@ const INPUT_CLS = 'bg-ink-3 border-line text-chalk font-display text-[14px] font
 // ─── ChipSel ─────────────────────────────────────────────────────────────────
 
 function ChipSel<T extends string>({
-  options, value, onChange,
+  options, value, onChange, labelMap,
 }: {
   options: readonly T[];
   value: T;
   onChange: (v: T) => void;
+  labelMap?: Partial<Record<string, string>>;
 }) {
   return (
     <div className="flex flex-wrap gap-[6px]">
@@ -367,7 +368,7 @@ function ChipSel<T extends string>({
               : 'border-line bg-transparent text-bone hover:bg-ink-3',
           )}
         >
-          {opt}
+          {labelMap?.[opt] ?? opt}
         </Button>
       ))}
     </div>
@@ -378,6 +379,18 @@ function ChipSel<T extends string>({
 
 const BRANDS = ['SJC', 'DOJI', 'PNJ', 'BAO_TIN'] as const;
 const GOLD_TYPES = ['MIEN_SJC', 'NHAN_9999', 'VANG_24K', 'VANG_18K'] as const;
+
+const GOLD_TYPE_LABELS: Record<string, string> = {
+  MIEN_SJC: 'Vàng miếng SJC',
+  NHAN_9999: 'Nhẫn tròn 9999',
+  VANG_24K: 'Vàng 24K',
+  VANG_18K: 'Vàng 18K',
+};
+
+const TX_TYPE_LABELS: Record<string, string> = {
+  BUY: 'Mua',
+  SELL: 'Bán',
+};
 
 function AddTransactionModal({ onClose }: { onClose: () => void }) {
   const addTx = useAddTransaction();
@@ -453,7 +466,7 @@ function AddTransactionModal({ onClose }: { onClose: () => void }) {
                       : 'border-line bg-transparent text-bone hover:bg-ink-3',
                   )}
                 >
-                  {t}
+                  {TX_TYPE_LABELS[t]}
                 </Button>
               ))}
             </div>
@@ -468,7 +481,7 @@ function AddTransactionModal({ onClose }: { onClose: () => void }) {
           {/* Gold Type */}
           <div>
             <SectionLabel>Loại vàng</SectionLabel>
-            <ChipSel options={GOLD_TYPES} value={goldType as typeof GOLD_TYPES[number]} onChange={setGoldType}/>
+            <ChipSel options={GOLD_TYPES} value={goldType as typeof GOLD_TYPES[number]} onChange={setGoldType} labelMap={GOLD_TYPE_LABELS}/>
           </div>
 
           {/* Quantity & Price */}
@@ -481,7 +494,7 @@ function AddTransactionModal({ onClose }: { onClose: () => void }) {
                 step="0.01"
                 value={qty}
                 onChange={(e: { target: { value: string } }) => setQty(e.target.value)}
-                placeholder="e.g. 1.5"
+                placeholder="vd: 1,5"
                 required
                 className={INPUT_CLS}
               />
@@ -494,7 +507,7 @@ function AddTransactionModal({ onClose }: { onClose: () => void }) {
                 step="1"
                 value={price}
                 onChange={(e: { target: { value: string } }) => setPrice(e.target.value)}
-                placeholder="e.g. 79000000"
+                placeholder="vd: 79.000.000"
                 required
                 className={INPUT_CLS}
               />
@@ -521,7 +534,7 @@ function AddTransactionModal({ onClose }: { onClose: () => void }) {
               type="text"
               value={note}
               onChange={(e: { target: { value: string } }) => setNote(e.target.value)}
-              placeholder="e.g. Bought at SJC Hà Nội"
+              placeholder="vd: Mua tại SJC Hà Nội"
               className={INPUT_CLS}
             />
           </div>
@@ -539,7 +552,7 @@ function AddTransactionModal({ onClose }: { onClose: () => void }) {
             disabled={submitting}
             className="w-full h-11 font-display text-[13px] font-bold tracking-[0.04em]"
           >
-            {submitting ? 'Đang lưu…' : `Ghi ${txType === 'BUY' ? 'MUA' : 'BÁN'}`}
+            {submitting ? 'Đang lưu…' : txType === 'BUY' ? 'Lưu giao dịch Mua' : 'Lưu giao dịch Bán'}
           </Button>
         </form>
       </DialogContent>
@@ -633,7 +646,7 @@ function EditTransactionModal({ tx, onClose }: { tx: EditableTx; onClose: () => 
                       : 'border-line bg-transparent text-bone hover:bg-ink-3',
                   )}
                 >
-                  {t}
+                  {TX_TYPE_LABELS[t]}
                 </Button>
               ))}
             </div>
@@ -646,7 +659,7 @@ function EditTransactionModal({ tx, onClose }: { tx: EditableTx; onClose: () => 
 
           <div>
             <SectionLabel>Loại vàng</SectionLabel>
-            <ChipSel options={GOLD_TYPES} value={goldType as typeof GOLD_TYPES[number]} onChange={setGoldType}/>
+            <ChipSel options={GOLD_TYPES} value={goldType as typeof GOLD_TYPES[number]} onChange={setGoldType} labelMap={GOLD_TYPE_LABELS}/>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -654,13 +667,13 @@ function EditTransactionModal({ tx, onClose }: { tx: EditableTx; onClose: () => 
               <SectionLabel>Số lượng (lượng)</SectionLabel>
               <Input type="number" min="0.01" step="0.01" value={qty}
                 onChange={(e: { target: { value: string } }) => setQty(e.target.value)}
-                placeholder="e.g. 1.5" required className={INPUT_CLS}/>
+                placeholder="vd: 1,5" required className={INPUT_CLS}/>
             </div>
             <div>
               <SectionLabel>Giá / Lượng (VND)</SectionLabel>
               <Input type="number" min="1" step="1" value={price}
                 onChange={(e: { target: { value: string } }) => setPrice(e.target.value)}
-                placeholder="e.g. 79000000" required className={INPUT_CLS}/>
+                placeholder="vd: 79.000.000" required className={INPUT_CLS}/>
             </div>
           </div>
 
@@ -675,7 +688,7 @@ function EditTransactionModal({ tx, onClose }: { tx: EditableTx; onClose: () => 
             <SectionLabel>Ghi chú (tùy chọn)</SectionLabel>
             <Input type="text" value={note}
               onChange={(e: { target: { value: string } }) => setNote(e.target.value)}
-              placeholder="e.g. Bought at SJC Hà Nội" className={INPUT_CLS}/>
+              placeholder="vd: Mua tại SJC Hà Nội" className={INPUT_CLS}/>
           </div>
 
           {error && (
@@ -746,12 +759,26 @@ function PortfolioContent() {
                 Theo dõi tài sản vàng, lãi/lỗ và lịch sử giao dịch
               </p>
             </div>
-            <Button
-              onClick={() => setShowModal(true)}
-              className="flex items-center gap-[7px] h-10 font-display text-[13px] font-bold px-[18px] tracking-[0.02em] shrink-0 mt-[6px]"
-            >
-              <IconPlus s={14}/> thêm giao dịch
-            </Button>
+            <div className="flex items-center gap-2 mt-[6px]">
+              <Button
+                variant="outline"
+                onClick={() => router.push('/portfolio/report')}
+                className="flex items-center gap-[7px] h-10 font-display text-[13px] font-bold px-[14px] tracking-[0.02em] border-line text-bone hover:text-chalk hover:bg-ink-3 shrink-0"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="6 9 6 2 18 2 18 9"/>
+                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                  <rect x="6" y="14" width="12" height="8"/>
+                </svg>
+                xuất báo cáo
+              </Button>
+              <Button
+                onClick={() => setShowModal(true)}
+                className="flex items-center gap-[7px] h-10 font-display text-[13px] font-bold px-[18px] tracking-[0.02em] shrink-0"
+              >
+                <IconPlus s={14}/> thêm giao dịch
+              </Button>
+            </div>
           </div>
 
           {/* ── Summary cards ── */}
@@ -763,20 +790,20 @@ function PortfolioContent() {
               loading={summaryLoading}
             />
             <SummaryCard
-              label="Total Cost"
+              label="Tổng vốn"
               value={summary ? fmtM(summary.totalCostVnd) : '—'}
               subLabel={summary ? fmtVnd(summary.totalCostVnd) : undefined}
               loading={summaryLoading}
             />
             <SummaryCard
-              label={`L/L ${summary ? pnlArrow : ''}`}
+              label={`Lãi/Lỗ ${summary ? pnlArrow : ''}`}
               value={summary ? `${pnlPositive ? '+' : ''}${fmtM(summary.totalPnlVnd)}` : '—'}
               subLabel={summary ? fmtVnd(summary.totalPnlVnd) : undefined}
               colorClass={summary ? pnlClass : undefined}
               loading={summaryLoading}
             />
             <SummaryCard
-              label="L/L %"
+              label="Lãi/Lỗ %"
               value={summary ? `${pnlPctPositive ? '+' : ''}${pnlPctValue.toFixed(2)}%` : '—'}
               colorClass={summary ? (pnlPctPositive ? 'text-up' : 'text-down') : undefined}
               loading={summaryLoading}
@@ -795,7 +822,7 @@ function PortfolioContent() {
             <table className="w-full border-collapse min-w-[700px]">
               <thead>
                 <tr>
-                  {[['Thương hiệu', true], ['Loại vàng', true], ['SL ròng', false], ['Giá vốn TB', false], ['Giá hiện tại', false], ['Giá trị', false], ['L/L', false], ['L/L%', false]].map(([h, left]) => (
+                  {[['Thương hiệu', true], ['Loại vàng', true], ['Số lượng', false], ['Giá vốn TB', false], ['Giá hiện tại', false], ['Giá trị', false], ['Lãi/Lỗ', false], ['Lãi/Lỗ %', false]].map(([h, left]) => (
                     <th key={h as string} className={cn(TH_BASE, left ? 'text-left' : 'text-right')}>
                       {h}
                     </th>
@@ -826,7 +853,7 @@ function PortfolioContent() {
                     return (
                       <tr key={idx}>
                         <td className={cn(TD_BASE, 'font-display text-[13px] leading-none font-semibold text-chalk')}>{h.brand}</td>
-                        <td className={cn(TD_BASE, 'font-mono text-[11px] leading-none font-semibold text-bone tracking-[0.04em]')}>{h.goldType}</td>
+                        <td className={cn(TD_BASE, 'font-mono text-[11px] leading-none font-semibold text-bone tracking-[0.04em]')}>{GOLD_TYPE_LABELS[h.goldType] ?? h.goldType}</td>
                         <td className={cn(TD_BASE, 'text-right font-mono text-[13px] [font-variant-numeric:tabular-nums]')}>{h.netQty.toFixed(3)}</td>
                         <td className={cn(TD_BASE, 'text-right font-mono text-[12px] text-bone [font-variant-numeric:tabular-nums]')}>{fmtM(h.avgCostPerTael)}</td>
                         <td className={cn(TD_BASE, 'text-right font-mono text-[12px] text-bone [font-variant-numeric:tabular-nums]')}>{fmtM(h.currentBuyPrice)}</td>
@@ -860,14 +887,14 @@ function PortfolioContent() {
               <SectionLabel>giao dịch</SectionLabel>
               {txData && txData.totalPages > 1 && (
                 <div className="font-mono text-[10px] text-mute tracking-[0.1em]">
-                  page {txData.page} of {txData.totalPages}
+                  Trang {txData.page} / {txData.totalPages}
                 </div>
               )}
             </div>
             <table className="w-full border-collapse min-w-[680px]">
               <thead>
                 <tr>
-                  {['Ngày', 'Loại', 'Thương hiệu', 'Loại vàng', 'SL', 'Giá/Lượng', 'Ghi chú', ''].map((h, i) => (
+                  {['Ngày', 'Loại', 'Thương hiệu', 'Loại vàng', 'Số lượng', 'Giá/Lượng', 'Ghi chú', ''].map((h, i) => (
                     <th key={i} className={cn(TH_BASE, i >= 4 ? 'text-right' : 'text-left')}>
                       {h}
                     </th>
@@ -908,11 +935,11 @@ function PortfolioContent() {
                               ? 'bg-[rgba(88,200,150,0.12)] text-up border-[rgba(88,200,150,0.3)] hover:bg-[rgba(88,200,150,0.12)]'
                               : 'bg-[rgba(229,72,77,0.12)] text-down border-[rgba(229,72,77,0.3)] hover:bg-[rgba(229,72,77,0.12)]',
                           )}>
-                            {tx.type}
+                            {TX_TYPE_LABELS[tx.type] ?? tx.type}
                           </Badge>
                         </td>
                         <td className="px-[10px] py-[13px] border-b border-hairline font-display text-[12px] leading-none font-semibold text-chalk">{tx.brand}</td>
-                        <td className="px-[10px] py-[13px] border-b border-hairline font-mono text-[11px] text-bone tracking-[0.04em]">{tx.goldType}</td>
+                        <td className="px-[10px] py-[13px] border-b border-hairline font-mono text-[11px] text-bone tracking-[0.04em]">{GOLD_TYPE_LABELS[tx.goldType] ?? tx.goldType}</td>
                         <td className="px-[10px] py-[13px] border-b border-hairline text-right font-mono text-[12px] [font-variant-numeric:tabular-nums]">
                           {tx.quantity.toFixed(3)}
                         </td>

@@ -83,7 +83,7 @@ function CopyButton({ text }: { text: string }) {
         copied ? 'border-gold text-up hover:border-gold hover:text-up' : 'border-line text-gold hover:border-gold hover:text-gold',
       )}
     >
-      {copied ? 'Copied!' : 'Copy'}
+      {copied ? 'Đã sao chép!' : 'Sao chép'}
     </Button>
   );
 }
