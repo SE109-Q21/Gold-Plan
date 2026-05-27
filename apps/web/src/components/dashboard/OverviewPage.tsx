@@ -463,7 +463,6 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
   const compRow = comparison?.[0];
   const compBrands = compRow?.brands ?? [];
   const compGoldType = compRow?.goldType ?? 'MIEN_SJC';
-  const sjc = compBrands.find(b => b.brand === 'SJC');
   const sjcDomestic = domestic?.find(d => d.brand === 'SJC' && d.goldType === 'MIEN_SJC');
 
   const FALLBACK_BRANDS: ComparisonBrandDto[] = [
@@ -678,7 +677,7 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
         <div className="flex flex-col gap-5 min-w-0">
 
           {/* Gold calculator */}
-          <GoldCalculatorCard sjcBuyPrice={sjcDomestic?.buyPrice ?? sjc?.buyPrice ?? 0} />
+          <GoldCalculatorCard sjcBuyPrice={sjcDomestic?.buyPrice ?? displayBrands.find(b => b.brand === 'SJC')?.buyPrice ?? 0} />
 
           {/* Karat strip */}
           <div className="bg-ink-2 border border-line rounded-[14px] p-5">
