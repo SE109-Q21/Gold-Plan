@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useInternationalPrice, useDomesticPrices, usePriceHistory, useComparison } from '@/lib/price.api';
 import { useExchangeRates } from '@/lib/exchange-rate.api';
 import { useAlerts } from '@/lib/alerts.api';
-import { Sparkline } from '@/components/ui/ChartPrimitives';
 import { PriceChart } from '@/components/ui/PriceChart';
 import { BrandLogo } from '@/components/ui/BrandLogo';
 import { IconPlus } from '@/components/dashboard/DashboardShell';
@@ -18,7 +17,6 @@ import { ForecastVoteWidget } from '@/components/ForecastVoteWidget';
 import { ArbitrageWidget } from '@/components/ArbitrageWidget';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   DndContext,
   closestCenter,
@@ -42,158 +40,12 @@ const BRAND_LABELS: Record<string, string> = {
 };
 type Range = '1D' | '1W' | '1M';
 
-const KARATS = [
-  { karat: '24K', pct: 99.9, multiplier: 1 },
-  { karat: '22K', pct: 91.6, multiplier: 0.916 },
-  { karat: '18K', pct: 75.0, multiplier: 0.75 },
-] as const;
-
 function fmtVnd(n: number) { return (n / 1_000_000).toFixed(2) + 'M₫'; }
-function fmtUsd(n: number) { return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 
 function minsAgo(iso: string): string {
   const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 60_000);
   if (diff < 1) return 'vừa xong';
   return `${diff} phút trước`;
-}
-
-type CalcTab = 'value' | 'pnl';
-const CALC_UNITS = [
-  { id: 'luong' as const, label: 'Lượng', grams: 37.5 },
-  { id: 'chi'   as const, label: 'Chỉ',   grams: 3.75 },
-  { id: 'phan'  as const, label: 'Phân',  grams: 0.375 },
-  { id: 'gram'  as const, label: 'Gram',  grams: 1 },
-];
-type CalcUnit = typeof CALC_UNITS[number]['id'];
-
-function GoldCalculatorCard({ sjcBuyPrice }: { sjcBuyPrice: number }) {
-  const [tab, setTab] = useState<CalcTab>('value');
-  const [valQtyStr, setValQtyStr] = useState('1');
-  const [valUnit, setValUnit] = useState<CalcUnit>('luong');
-  const [pnlBoughtStr, setPnlBoughtStr] = useState('');
-  const [pnlQtyStr, setPnlQtyStr] = useState('1');
-
-  const pricePerGram = sjcBuyPrice / 37.5;
-  const valQty = parseFloat(valQtyStr) || 0;
-  const unitGrams = CALC_UNITS.find(u => u.id === valUnit)?.grams ?? 37.5;
-  const valResult = valQty * unitGrams * pricePerGram;
-
-  const pnlBought = parseFloat(pnlBoughtStr.replace(/\./g, '').replace(/,/g, '')) || 0;
-  const pnlQty = parseFloat(pnlQtyStr) || 0;
-  const pnlDiff = (sjcBuyPrice - pnlBought) * pnlQty;
-  const pnlPct = pnlBought > 0 ? ((sjcBuyPrice - pnlBought) / pnlBought) * 100 : null;
-  const hasPrice = sjcBuyPrice > 0;
-
-  return (
-    <div className="bg-ink-2 border border-line rounded-[14px] p-5">
-      <h3 className="text-[16px] leading-none font-bold font-sans m-0 mb-[14px]">Máy tính vàng</h3>
-
-      <div className="flex gap-0 mb-4 bg-ink-3 border border-line rounded-[8px] p-[3px]">
-        {([['value', 'Tính giá trị'], ['pnl', 'Tính lãi/lỗ']] as [CalcTab, string][]).map(([t, label]) => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => setTab(t)}
-            className={cn(
-              'flex-1 h-[30px] font-mono text-[11px] leading-none font-bold tracking-[0.06em] rounded-[6px] transition-[background,color] duration-[140ms]',
-              tab === t ? 'bg-gold text-gold-ink' : 'text-mute hover:text-bone',
-            )}
-          >{label}</button>
-        ))}
-      </div>
-
-      {tab === 'value' && (
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-wrap gap-[6px]">
-            {CALC_UNITS.map(u => (
-              <button
-                key={u.id}
-                type="button"
-                onClick={() => setValUnit(u.id)}
-                className={cn(
-                  'px-3 py-[6px] font-mono text-[11px] font-bold rounded-md border transition-[border-color,background,color] duration-[140ms]',
-                  valUnit === u.id
-                    ? 'border-gold bg-[rgba(212,175,55,0.12)] text-gold'
-                    : 'border-line bg-transparent text-bone hover:bg-ink-3',
-                )}
-              >{u.label}</button>
-            ))}
-          </div>
-          <Input
-            type="number"
-            min="0"
-            step="any"
-            value={valQtyStr}
-            onChange={e => setValQtyStr(e.target.value)}
-            placeholder="Số lượng..."
-            className="bg-ink-3 border-line text-chalk font-display text-[20px] leading-none font-bold p-[10px_14px] h-auto focus-visible:ring-gold placeholder:text-mute"
-          />
-          <div className="p-[14px] bg-ink-3 border border-line rounded-[10px]">
-            <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-[6px]">giá trị ước tính</div>
-            {!hasPrice
-              ? <div className="text-mute font-mono text-[13px]">Đang tải giá…</div>
-              : valQty <= 0
-              ? <div className="text-mute font-mono text-[13px]">Nhập số lượng</div>
-              : <div className="text-[22px] leading-none font-extrabold font-sans tabular-nums text-chalk">{Math.round(valResult).toLocaleString('vi-VN')} ₫</div>
-            }
-            {hasPrice && (
-              <div className="font-mono text-[10px] text-mute mt-[6px]">Giá mua SJC: {sjcBuyPrice.toLocaleString('vi-VN')} ₫/lượng</div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {tab === 'pnl' && (
-        <div className="flex flex-col gap-3">
-          <div>
-            <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-[6px]">giá mua (₫/lượng)</div>
-            <Input
-              type="text"
-              value={pnlBoughtStr}
-              onChange={e => setPnlBoughtStr(e.target.value)}
-              placeholder="ví dụ: 78.000.000"
-              className="bg-ink-3 border-line text-chalk text-[14px] font-medium p-[10px_14px] h-auto focus-visible:ring-gold placeholder:text-mute"
-            />
-          </div>
-          <div>
-            <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-[6px]">số lượng (lượng)</div>
-            <Input
-              type="number"
-              min="0"
-              step="any"
-              value={pnlQtyStr}
-              onChange={e => setPnlQtyStr(e.target.value)}
-              placeholder="1"
-              className="bg-ink-3 border-line text-chalk text-[14px] font-medium p-[10px_14px] h-auto focus-visible:ring-gold placeholder:text-mute"
-            />
-          </div>
-          <div className="p-[14px] bg-ink-3 border border-line rounded-[10px]">
-            <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-[6px]">lãi / lỗ ước tính</div>
-            {!hasPrice
-              ? <div className="text-mute font-mono text-[13px]">Đang tải giá…</div>
-              : pnlBought <= 0 || pnlQty <= 0
-              ? <div className="text-mute font-mono text-[13px]">Nhập giá mua và số lượng</div>
-              : (
-                <>
-                  <div className={cn('text-[22px] leading-none font-extrabold font-sans tabular-nums', pnlDiff >= 0 ? 'text-up' : 'text-down')}>
-                    {pnlDiff >= 0 ? '+' : ''}{Math.round(pnlDiff).toLocaleString('vi-VN')} ₫
-                  </div>
-                  {pnlPct !== null && (
-                    <div className={cn('font-mono text-[11px] font-bold mt-[5px]', pnlDiff >= 0 ? 'text-up' : 'text-down')}>
-                      {pnlDiff >= 0 ? '+' : ''}{pnlPct.toFixed(2)}%
-                    </div>
-                  )}
-                </>
-              )
-            }
-            {hasPrice && pnlBought > 0 && pnlQty > 0 && (
-              <div className="font-mono text-[10px] text-mute mt-[6px]">Giá hiện tại SJC: {sjcBuyPrice.toLocaleString('vi-VN')} ₫/lượng</div>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
 }
 
 function ExchangeRateCard() {
@@ -463,7 +315,6 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
   const compRow = comparison?.[0];
   const compBrands = compRow?.brands ?? [];
   const compGoldType = compRow?.goldType ?? 'MIEN_SJC';
-  const sjcDomestic = domestic?.find(d => d.brand === 'SJC' && d.goldType === 'MIEN_SJC');
 
   const FALLBACK_BRANDS: ComparisonBrandDto[] = [
     { brand: 'SJC', buyPrice: 76420000, sellPrice: 78920000, isBestBuy: false, isBestSell: false, crawlSessionId: '' },
@@ -675,40 +526,6 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
 
         {/* ── Right column */}
         <div className="flex flex-col gap-5 min-w-0">
-
-          {/* Gold calculator */}
-          <GoldCalculatorCard sjcBuyPrice={sjcDomestic?.buyPrice ?? displayBrands.find(b => b.brand === 'SJC')?.buyPrice ?? 0} />
-
-          {/* Karat strip */}
-          <div className="bg-ink-2 border border-line rounded-[14px] p-5">
-            <div className="flex justify-between items-baseline mb-[14px]">
-              <h3 className="text-[16px] leading-none font-bold font-sans m-0">Theo karat</h3>
-              <span className="font-mono text-[10px] text-mute tracking-[0.12em] uppercase">mỗi oz · usd</span>
-            </div>
-            {KARATS.map((k, i) => {
-              const price = intl ? intl.spotPriceUsd * k.multiplier : 0;
-              const karatDir: 'up' | 'down' = change1D != null && change1D < 0 ? 'down' : 'up';
-              const karatSpark = history1D && history1D.length > 0
-                ? history1D.slice(-12).map(p => (p.buyPrice / 1_000_000) * k.multiplier)
-                : [];
-              const changeStr = change1D != null ? (change1D >= 0 ? '+' : '') + change1D.toFixed(2) + '%' : '—';
-              return (
-                <div
-                  key={k.karat}
-                  className={cn('grid items-center gap-3 py-[14px]', i !== 0 && 'border-t border-hairline')}
-                  style={{ gridTemplateColumns: '52px 1fr 80px 60px' }}
-                >
-                  <div className="text-[18px] leading-none font-extrabold font-sans text-gold tracking-[-0.02em]">{k.karat}</div>
-                  <div>
-                    <div className="text-[20px] leading-none font-bold font-sans tabular-nums">{price > 0 ? fmtUsd(price) : '…'}</div>
-                    <div className="font-mono text-[10px] text-mute mt-1">{k.pct}% độ tinh khiết</div>
-                  </div>
-                  <Sparkline data={karatSpark.length > 0 ? karatSpark : [1,1,1,1,1,1,1,1,1,1,1,1]} w={80} h={28} dir={karatDir}/>
-                  <div className={cn('font-mono text-[11px] text-right font-bold', karatDir === 'up' ? 'text-up' : 'text-down')}>{changeStr}</div>
-                </div>
-              );
-            })}
-          </div>
 
           {/* Arbitrage opportunities */}
           <ArbitrageWidget />
