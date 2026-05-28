@@ -131,7 +131,8 @@ export default function CompoundInterestPage() {
     : 0;
 
   return (
-    <div className="min-h-full bg-[#0a0a0d] p-[32px_24px_60px] flex flex-col items-center">
+    <div className="h-full overflow-auto bg-ink">
+      <div className="p-[32px_24px_60px] flex flex-col items-center">
       <div className="w-full max-w-[860px]">
 
         <Button
@@ -224,6 +225,7 @@ export default function CompoundInterestPage() {
           </div>
         </div>
 
+      </div>
       </div>
     </div>
   );

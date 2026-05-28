@@ -261,7 +261,8 @@ function AssetsContent() {
         />
       )}
 
-      <div className="min-h-full bg-[#0a0a0d] p-[32px_24px_60px] flex flex-col items-center">
+      <div className="h-full overflow-auto bg-ink">
+      <div className="p-[32px_24px_60px] flex flex-col items-center">
         <div className="w-full max-w-[900px]">
 
           {/* Header */}
@@ -510,6 +511,7 @@ function AssetsContent() {
             Tài sản thủ công được lưu cục bộ trên trình duyệt này · Vàng lấy từ danh mục giao dịch của bạn
           </p>
         </div>
+      </div>
       </div>
     </>
   );

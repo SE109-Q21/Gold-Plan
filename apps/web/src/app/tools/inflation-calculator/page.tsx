@@ -94,7 +94,8 @@ export default function InflationCalculatorPage() {
   const TAB = 'flex-1 h-[32px] font-mono text-[11px] leading-none font-bold tracking-[0.06em] rounded-[6px] transition-[background,color] duration-[140ms]';
 
   return (
-    <div className="min-h-full bg-[#0a0a0d] p-[32px_24px_60px] flex flex-col items-center">
+    <div className="h-full overflow-auto bg-ink">
+      <div className="p-[32px_24px_60px] flex flex-col items-center">
       <div className="w-full max-w-[800px]">
 
         <Button
@@ -203,6 +204,7 @@ export default function InflationCalculatorPage() {
           </div>
         </div>
 
+      </div>
       </div>
     </div>
   );
