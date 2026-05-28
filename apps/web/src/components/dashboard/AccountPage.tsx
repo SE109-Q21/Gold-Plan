@@ -2,15 +2,16 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTheme } from 'next-themes';
 import { useAuth } from '@/contexts/auth-context';
 import { apiChangePassword, apiDeleteAccount } from '@/lib/auth.api';
 import { useClearHistory } from '@/lib/browsing-history.api';
 import { useSubscribeDigest } from '@/lib/digest.api';
-import { useResetPreferences } from '@/lib/personalisation.api';
 import { usePortfolio } from '@/lib/portfolio.api';
-import { useAlerts } from '@/lib/alerts.api';
+import { useAlerts, useAlertHistory } from '@/lib/alerts.api';
 import { PushNotificationButton } from '@/components/PushNotificationButton';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 import type { PortfolioTransactionDto, PaginatedDto } from '@gpls/shared';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -162,17 +163,39 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-export function AccountPage() {
+export function AccountPage({ currency = 'USD', onCurrency }: { currency?: string; onCurrency?: (c: string) => void }) {
   const { user, getAccessToken, logout } = useAuth();
   const router = useRouter();
+  const { theme: nextTheme, setTheme: setNextTheme } = useTheme();
   const clearHistory = useClearHistory();
   const subscribeDigest = useSubscribeDigest();
-  const resetPrefs = useResetPreferences();
   const portfolioQuery = usePortfolio();
   const alertsQuery = useAlerts();
-  const [theme, setTheme] = useState('DARK');
-  const [unit, setUnit] = useState('TAEL');
-  const [notifEmail, setNotifEmail] = useState(true);
+  const alertHistoryQuery = useAlertHistory();
+  const themeDisplay = nextTheme === 'light' ? 'LIGHT' : nextTheme === 'system' ? 'AUTO' : 'DARK';
+  function handleThemeChange(v: string) {
+    if (v === 'LIGHT') setNextTheme('light');
+    else if (v === 'AUTO') setNextTheme('system');
+    else setNextTheme('dark');
+  }
+
+  function handleExportHistory() {
+    const alertsMap = new Map((alertsQuery.data ?? []).map(a => [a.id, a]));
+    const rows = (alertHistoryQuery.data ?? []).map(h => {
+      const alert = alertsMap.get(h.alertId);
+      return {
+        brand: alert?.brand ?? '',
+        goldType: alert?.goldType ?? '',
+        condition: alert?.condition ?? '',
+        thresholdPrice: alert?.thresholdPrice ?? '',
+        triggeredAt: h.triggeredAt,
+        priceAtTrigger: h.priceAtTrigger,
+        emailSent: h.emailSentAt ? 'yes' : 'no',
+      };
+    });
+    if (rows.length === 0) { window.alert('Không có lịch sử để xuất'); return; }
+    downloadCsv(rows as unknown as Record<string, unknown>[], 'lich-su-canh-bao.csv');
+  }
   const [notifDigest, setNotifDigest] = useState(user?.digestOptIn ?? false);
   const [showChangePw, setShowChangePw] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
@@ -193,6 +216,7 @@ export function AccountPage() {
 
   async function handleSignOut() {
     await logout();
+    toast.success('Đã đăng xuất');
     router.push('/auth/login');
   }
 
@@ -268,26 +292,8 @@ export function AccountPage() {
             <div className="px-[22px] py-4">
               <h3 className="font-display text-[16px] leading-none font-bold m-0">Tùy chỉnh</h3>
             </div>
-            <Row label="Đơn vị tiền tệ" detail="tất cả giá hiển thị theo đơn vị này" right={<Segmented options={['USD', 'VND', 'EUR']} value="USD" onChange={() => {}}/>}/>
-            <Row label="Giao diện" detail="tối theo mặc định" right={<Segmented options={['DARK', 'LIGHT', 'AUTO']} value={theme} onChange={setTheme}/>}/>
-            <Row label="Đơn vị khối lượng" detail="giá quy đổi từ troy oz" right={<Segmented options={['TROY OZ', 'TAEL', 'GRAM']} value={unit} onChange={setUnit}/>}/>
-            <Row
-              label="Khôi phục mặc định"
-              detail="đặt lại tất cả tuỳ chọn và vị trí ghim"
-              right={
-                <SmallBtn
-                  danger
-                  disabled={resetPrefs.isPending}
-                  onClick={() => {
-                    if (window.confirm('Xoá tất cả tuỳ chọn cá nhân và vị trí ghim?')) {
-                      resetPrefs.mutate();
-                    }
-                  }}
-                >
-                  {resetPrefs.isPending ? '…' : 'Đặt lại'}
-                </SmallBtn>
-              }
-            />
+            <Row label="Đơn vị tiền tệ" detail="tất cả giá hiển thị theo đơn vị này" right={<Segmented options={['USD', 'VND', 'EUR']} value={currency} onChange={v => onCurrency?.(v)}/>}/>
+            <Row label="Giao diện" detail="tối theo mặc định" right={<Segmented options={['DARK', 'LIGHT', 'AUTO']} value={themeDisplay} onChange={handleThemeChange}/>}/>
           </div>
 
           {/* Notifications */}
@@ -295,7 +301,6 @@ export function AccountPage() {
             <div className="px-[22px] py-4">
               <h3 className="font-display text-[16px] leading-none font-bold m-0">Thông báo</h3>
             </div>
-            <Row label="Cảnh báo email" detail="trong vòng 2 phút khi kích hoạt" right={<Toggle on={notifEmail} onChange={() => setNotifEmail(!notifEmail)}/>}/>
             <Row label="Thông báo trình duyệt" detail="nhận thông báo ngay trên trình duyệt" right={<PushNotificationButton />}/>
             <Row
               label="Bản tin buổi sáng"
@@ -318,15 +323,13 @@ export function AccountPage() {
               <h3 className="font-display text-[16px] leading-none font-bold m-0">Bảo mật</h3>
             </div>
             <Row label="Mật khẩu" detail="nhấn để cập nhật mật khẩu" right={<SmallBtn onClick={() => setShowChangePw(true)}>đổi</SmallBtn>}/>
-            <Row label="Xác thực 2 bước" detail="ứng dụng xác thực (Google Authenticator, v.v.)" right={<span className="font-mono text-[11px] text-up">· Đang bật</span>}/>
           </div>
 
           <div className="bg-ink-2 border border-line rounded-[14px]">
             <div className="px-[22px] py-4">
               <h3 className="font-display text-[16px] leading-none font-bold m-0">Dữ liệu & Xuất file</h3>
             </div>
-            <Row label="Xuất lịch sử" detail="CSV · 12 tháng gần nhất" right={<SmallBtn>xuất</SmallBtn>}/>
-            <Row label="Khóa API" detail="chỉ đọc · dùng cho tích hợp bên ngoài" right={<span className="font-mono text-[11px] text-mute">gt_live_••••a31f</span>}/>
+            <Row label="Xuất lịch sử" detail="CSV · lịch sử kích hoạt cảnh báo" right={<SmallBtn onClick={handleExportHistory}>xuất</SmallBtn>}/>
             <Row
               label="Lịch sử duyệt"
               detail="Xem và xóa lịch sử xem giá"

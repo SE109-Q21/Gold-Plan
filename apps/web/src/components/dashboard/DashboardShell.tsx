@@ -4,11 +4,13 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 import { useInternationalPrice, useComparison } from '@/lib/price.api';
+import { useAlerts, useAlertHistory } from '@/lib/alerts.api';
 import type { GoldType } from '@gpls/shared';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { toast } from 'sonner';
 
 // Icons (Lucide-style inline SVG)
 function IconHome({ s = 20 }: { s?: number }) {
@@ -322,8 +324,16 @@ function TopBar({ currency, onCurrency, onTab }: { currency: string; onCurrency:
   const router = useRouter();
 
   const [bellOpen, setBellOpen] = useState(false);
-  const [hasUnread, setHasUnread] = useState(true);
   const bellRef = useRef<HTMLDivElement>(null);
+
+  const { data: alerts = [] } = useAlerts();
+  const { data: alertHistory = [] } = useAlertHistory();
+  const alertsMap = new Map(alerts.map(a => [a.id, a]));
+
+  const [lastSeenCount, setLastSeenCount] = useState(() =>
+    typeof window !== 'undefined' ? Number(localStorage.getItem('bell_last_seen') ?? '0') : 0,
+  );
+  const hasUnread = !!user && alertHistory.length > lastSeenCount;
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -410,7 +420,10 @@ function TopBar({ currency, onCurrency, onTab }: { currency: string; onCurrency:
   function handleBellClick() {
     const next = !bellOpen;
     setBellOpen(next);
-    if (next) setHasUnread(false);
+    if (next && user) {
+      setLastSeenCount(alertHistory.length);
+      localStorage.setItem('bell_last_seen', String(alertHistory.length));
+    }
   }
 
   return (
@@ -507,22 +520,62 @@ function TopBar({ currency, onCurrency, onTab }: { currency: string; onCurrency:
             )}
           </Button>
           {bellOpen && (
-            <div className="absolute top-[calc(100%+8px)] right-0 w-[300px] bg-ink-2 border border-line rounded-xl z-[200] overflow-hidden">
+            <div className="absolute top-[calc(100%+8px)] right-0 w-[300px] bg-ink-2 border border-line rounded-xl z-[200] overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
               <div className="flex items-center justify-between px-4 py-3 border-b border-line">
-                <span className="font-mono text-[9px] leading-none font-bold tracking-[0.12em] uppercase text-mute">Thông báo</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-[9px] leading-none font-bold tracking-[0.12em] uppercase text-mute">Thông báo</span>
+                  {alertHistory.length > 0 && (
+                    <span className="font-mono text-[9px] font-bold leading-none bg-gold text-gold-ink px-[5px] py-[2px] rounded-full">{alertHistory.length}</span>
+                  )}
+                </div>
                 <Button
                   variant="ghost"
-                  onClick={() => {}}
+                  onClick={() => { setBellOpen(false); onTab('alerts'); }}
                   className="h-auto px-0 py-0 font-mono text-[11px] leading-none font-semibold text-gold hover:bg-transparent hover:text-gold"
                 >
                   tất cả →
                 </Button>
               </div>
-              <div className="flex flex-col items-center justify-center px-5 py-8 gap-[10px]">
-                <span className="text-gold"><IconBell s={28}/></span>
-                <span className="text-[13px] text-chalk font-semibold">Chưa có thông báo</span>
-                <span className="text-[11px] text-mute text-center leading-[1.5]">Các cảnh báo bạn thiết lập sẽ hiển thị ở đây</span>
-              </div>
+
+              {!user && (
+                <div className="flex flex-col items-center justify-center px-5 py-8 gap-[6px]">
+                  <span className="text-gold"><IconBell s={24}/></span>
+                  <span className="font-mono text-[11px] text-mute text-center leading-[1.5]">Đăng nhập để xem thông báo</span>
+                </div>
+              )}
+
+              {user && alertHistory.length === 0 && (
+                <div className="flex flex-col items-center justify-center px-5 py-8 gap-[10px]">
+                  <span className="text-gold"><IconBell s={28}/></span>
+                  <span className="font-mono text-[12px] text-chalk font-bold leading-none">Chưa có thông báo</span>
+                  <span className="font-mono text-[11px] text-mute text-center leading-[1.5]">Sẽ hiển thị khi cảnh báo được kích hoạt</span>
+                </div>
+              )}
+
+              {user && alertHistory.length > 0 && (
+                <div>
+                  {alertHistory.slice(0, 4).map((h, i) => {
+                    const alert = alertsMap.get(h.alertId);
+                    const price = Number(h.priceAtTrigger);
+                    const timeStr = new Date(h.triggeredAt).toLocaleString('vi-VN', {
+                      month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit',
+                    });
+                    return (
+                      <div key={h.id} className={cn('px-4 py-3 flex flex-col gap-[6px]', i !== 0 && 'border-t border-hairline')}>
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono text-[10px] font-bold text-gold tracking-[0.08em]">
+                            {alert?.brand ?? '—'} {alert ? (alert.condition === 'gte' ? '↑' : '↓') : ''}
+                          </span>
+                          <span className="font-mono text-[9px] text-mute">{timeStr}</span>
+                        </div>
+                        <span className="font-sans text-[15px] leading-none font-bold tabular-nums text-chalk">
+                          {price.toLocaleString('vi-VN')}₫
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -581,7 +634,7 @@ function TopBar({ currency, onCurrency, onTab }: { currency: string; onCurrency:
                 <div className="h-px bg-line my-1"/>
                 <Button
                   variant="ghost"
-                  onClick={() => { logout(); setAvatarOpen(false); }}
+                  onClick={() => { logout().then(() => toast.success('Đã đăng xuất')); setAvatarOpen(false); }}
                   className="w-full justify-start gap-[10px] px-4 py-[10px] h-auto text-[#e05252] text-[13px] leading-none font-medium font-sans hover:bg-ink-3 hover:text-[#e05252] transition-colors"
                 >
                   Đăng xuất
