@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { toast } from 'sonner';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -135,9 +136,8 @@ function PnlChart({ data, loading }: { data: { date: string; valueVnd: number }[
   const W = 600, H = 180;
   const PAD = { top: 16, right: 20, bottom: 32, left: 56 };
 
-  const points = data.slice(-30);
-
   const chartData = useMemo(() => {
+    const points = data.slice(-30);
     if (!points.length) return null;
     const minV = Math.min(...points.map(p => p.valueVnd));
     const maxV = Math.max(...points.map(p => p.valueVnd));
@@ -159,8 +159,8 @@ function PnlChart({ data, loading }: { data: { date: string; valueVnd: number }[
       return { v, y };
     });
 
-    return { linePath, areaPath, xs, ys, xTicks: uniqueIdxs, yTicks, minV, maxV };
-  }, [points]); // eslint-disable-line react-hooks/exhaustive-deps
+    return { linePath, areaPath, xs, ys, xTicks: uniqueIdxs, yTicks, minV, maxV, points };
+  }, [data]);
 
   if (loading) {
     return (
@@ -170,7 +170,7 @@ function PnlChart({ data, loading }: { data: { date: string; valueVnd: number }[
     );
   }
 
-  if (!chartData || !points.length) {
+  if (!chartData) {
     return (
       <div className="flex items-center justify-center" style={{ height: H }}>
         <span className="font-mono text-[13px] leading-none font-medium text-mute tracking-[0.06em]">
@@ -206,7 +206,7 @@ function PnlChart({ data, loading }: { data: { date: string; valueVnd: number }[
       <path d={chartData.areaPath} fill="url(#chartGrad)"/>
       <path d={chartData.linePath} fill="none" stroke="#60A5FA" strokeWidth="1.75" strokeLinejoin="round" strokeLinecap="round"/>
       {chartData.xTicks.map((i: number) => {
-        const d = new Date(points[i].date);
+        const d = new Date(chartData.points[i].date);
         const label = `${d.getDate()}/${d.getMonth() + 1}`;
         return (
           <text key={i} x={chartData.xs[i]} y={H - PAD.bottom + 14} textAnchor="middle"
@@ -422,10 +422,11 @@ function AddTransactionModal({ onClose }: { onClose: () => void }) {
         goldType,
         quantity: qtyNum,
         pricePerTael: priceNum,
-        transactedAt: new Date(date).toISOString(),
+        transactedAt: new Date(date + 'T00:00:00').toISOString(),
         note: note || undefined,
       };
       await addTx.mutateAsync(payload);
+      toast.success('Giao dịch đã được thêm');
       onClose();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Lưu giao dịch thất bại');
@@ -604,9 +605,10 @@ function EditTransactionModal({ tx, onClose }: { tx: EditableTx; onClose: () => 
         goldType,
         quantity: qtyNum,
         pricePerTael: priceNum,
-        transactedAt: new Date(date).toISOString(),
+        transactedAt: new Date(date + 'T00:00:00').toISOString(),
         note: note || undefined,
       });
+      toast.success('Giao dịch đã được cập nhật');
       onClose();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Lưu giao dịch thất bại');
@@ -722,11 +724,21 @@ function PortfolioContent() {
   const [editingTx, setEditingTx] = useState<EditableTx | null>(null);
   const [txPage, setTxPage] = useState(1);
 
-  const { data: summary, isLoading: summaryLoading } = usePortfolio();
-  const { data: chartData, isLoading: chartLoading } = usePortfolioChart();
-  const { data: alloc, isLoading: allocLoading } = usePortfolioAllocation();
-  const { data: txData, isLoading: txLoading } = useTransactions(txPage);
+  const { data: summary, isLoading: summaryLoading, isFetching: summaryFetching } = usePortfolio();
+  const { data: chartData, isLoading: chartLoading, isFetching: chartFetching } = usePortfolioChart();
+  const { data: alloc, isLoading: allocLoading, isFetching: allocFetching } = usePortfolioAllocation();
+  const { data: txData, isLoading: txLoading, isFetching: txFetching } = useTransactions(txPage);
   const deleteTx = useDeleteTransaction();
+
+  async function handleDeleteTx(id: string) {
+    if (!window.confirm('Xóa giao dịch này? Hành động không thể hoàn tác.')) return;
+    try {
+      await deleteTx.mutateAsync(id);
+      toast.success('Đã xóa giao dịch');
+    } catch {
+      toast.error('Xóa giao dịch thất bại');
+    }
+  }
 
   const pnlPositive = (summary?.totalPnlVnd ?? 0) >= 0;
   const pnlClass = pnlPositive ? 'text-up' : 'text-down';
@@ -739,7 +751,8 @@ function PortfolioContent() {
 
   return (
     <>
-      <div className="min-h-screen bg-ink text-chalk p-[32px_40px]">
+      <div className="h-full overflow-auto bg-ink text-chalk">
+      <div className="p-[32px_40px]">
         <div className="max-w-[1100px] mx-auto">
 
           {/* ── Header bar ── */}
@@ -787,33 +800,33 @@ function PortfolioContent() {
               label="Tổng giá trị"
               value={summary ? fmtM(summary.totalValueVnd) : '—'}
               subLabel={summary ? fmtVnd(summary.totalValueVnd) : undefined}
-              loading={summaryLoading}
+              loading={summaryLoading || (summaryFetching && !summary)}
             />
             <SummaryCard
               label="Tổng vốn"
               value={summary ? fmtM(summary.totalCostVnd) : '—'}
               subLabel={summary ? fmtVnd(summary.totalCostVnd) : undefined}
-              loading={summaryLoading}
+              loading={summaryLoading || (summaryFetching && !summary)}
             />
             <SummaryCard
               label={`Lãi/Lỗ ${summary ? pnlArrow : ''}`}
               value={summary ? `${pnlPositive ? '+' : ''}${fmtM(summary.totalPnlVnd)}` : '—'}
               subLabel={summary ? fmtVnd(summary.totalPnlVnd) : undefined}
               colorClass={summary ? pnlClass : undefined}
-              loading={summaryLoading}
+              loading={summaryLoading || (summaryFetching && !summary)}
             />
             <SummaryCard
               label="Lãi/Lỗ %"
               value={summary ? `${pnlPctPositive ? '+' : ''}${pnlPctValue.toFixed(2)}%` : '—'}
               colorClass={summary ? (pnlPctPositive ? 'text-up' : 'text-down') : undefined}
-              loading={summaryLoading}
+              loading={summaryLoading || (summaryFetching && !summary)}
             />
           </div>
 
           {/* ── P&L Chart ── */}
           <div className="bg-ink-2 border border-line rounded-xl p-[20px_24px] mb-7">
             <SectionLabel>lịch sử giá trị danh mục</SectionLabel>
-            <PnlChart data={chartData ?? []} loading={chartLoading}/>
+            <PnlChart data={chartData ?? []} loading={chartLoading || (chartFetching && !chartData)}/>
           </div>
 
           {/* ── Holdings table ── */}
@@ -830,7 +843,7 @@ function PortfolioContent() {
                 </tr>
               </thead>
               <tbody>
-                {summaryLoading ? (
+                {(summaryLoading || (summaryFetching && !summary)) ? (
                   [1, 2, 3].map(i => (
                     <tr key={i}>
                       {Array.from({ length: 8 }).map((_, j) => (
@@ -876,8 +889,8 @@ function PortfolioContent() {
           <div className="bg-ink-2 border border-line rounded-xl p-[20px_24px] mb-7">
             <SectionLabel>phân bổ</SectionLabel>
             <div className="flex gap-12 flex-wrap">
-              <AllocationGroup title="theo thương hiệu" items={allocByBrand} loading={allocLoading}/>
-              <AllocationGroup title="theo loại vàng" items={allocByType} loading={allocLoading}/>
+              <AllocationGroup title="theo thương hiệu" items={allocByBrand} loading={allocLoading || (allocFetching && !alloc)}/>
+              <AllocationGroup title="theo loại vàng" items={allocByType} loading={allocLoading || (allocFetching && !alloc)}/>
             </div>
           </div>
 
@@ -902,7 +915,7 @@ function PortfolioContent() {
                 </tr>
               </thead>
               <tbody>
-                {txLoading ? (
+                {(txLoading || (txFetching && !txData)) ? (
                   [1, 2, 3, 4].map(i => (
                     <tr key={i}>
                       {Array.from({ length: 8 }).map((_, j) => (
@@ -962,7 +975,8 @@ function PortfolioContent() {
                             <Button
                               variant="outline"
                               size="icon"
-                              onClick={() => deleteTx.mutateAsync(tx.id)}
+                              onClick={() => handleDeleteTx(tx.id)}
+                              disabled={deleteTx.isPending}
                               className="border-line text-mute w-7 h-7 bg-transparent hover:bg-[rgba(229,72,77,0.08)] hover:text-down hover:border-[rgba(229,72,77,0.3)]"
                             >
                               <IconTrash s={12}/>
@@ -1005,6 +1019,7 @@ function PortfolioContent() {
           </div>
 
         </div>
+      </div>
       </div>
 
       {showModal && <AddTransactionModal onClose={() => setShowModal(false)}/>}

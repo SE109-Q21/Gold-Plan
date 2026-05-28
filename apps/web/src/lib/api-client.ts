@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { apiRefreshToken } from './auth.api';
 
 // Token lives in memory only (auth-context keeps it in tokenRef).
 // auth-context calls setApiAccessToken on every login / refresh / logout.
@@ -17,3 +18,22 @@ apiClient.interceptors.request.use((config) => {
   if (_accessToken) config.headers.Authorization = `Bearer ${_accessToken}`;
   return config;
 });
+
+apiClient.interceptors.response.use(
+  (res) => res,
+  async (err) => {
+    const original = err.config;
+    if (err.response?.status === 401 && !original._retried) {
+      original._retried = true;
+      try {
+        const { accessToken } = await apiRefreshToken();
+        setApiAccessToken(accessToken);
+        original.headers.Authorization = `Bearer ${accessToken}`;
+        return apiClient(original);
+      } catch {
+        // Refresh failed — propagate original 401
+      }
+    }
+    return Promise.reject(err);
+  },
+);

@@ -192,11 +192,13 @@ export class PortfolioService {
           ? group.totalCostBasis / group.totalBoughtQty
           : 0;
 
-      const currentBuyPrice = priceMap.get(key) ?? 0;
+      const livePrice = priceMap.get(key) ?? 0;
+      // Fall back to avg cost when live price is unavailable so holdings always show a meaningful value
+      const currentBuyPrice = livePrice > 0 ? livePrice : avgCostPerTael;
       const currentValueVnd = group.netQty * currentBuyPrice;
       const costBasisVnd = group.netQty * avgCostPerTael;
-      const pnlVnd = currentValueVnd - costBasisVnd;
-      const pnlPct = costBasisVnd > 0 ? (pnlVnd / costBasisVnd) * 100 : 0;
+      const pnlVnd = livePrice > 0 ? currentValueVnd - costBasisVnd : 0;
+      const pnlPct = livePrice > 0 && costBasisVnd > 0 ? (pnlVnd / costBasisVnd) * 100 : 0;
 
       holdings.push({
         brand,
@@ -256,11 +258,15 @@ export class PortfolioService {
       return { brand: brand as any, goldType: goldType as any };
     });
 
+    // Fetch 30 days before firstDay so "nearest prior day" fallback has data
+    const lookbackDate = new Date(firstDay);
+    lookbackDate.setDate(lookbackDate.getDate() - 30);
+
     const allRecords = await this.prisma.priceRecord.findMany({
       where: {
         OR: pairFilters,
         isAnomalous: false,
-        recordedAt: { gte: new Date(firstDay), lte: new Date(todayDay + 'T23:59:59Z') },
+        recordedAt: { gte: lookbackDate, lte: new Date(todayDay + 'T23:59:59Z') },
       },
       orderBy: { recordedAt: 'asc' },
       select: { brand: true, goldType: true, buyPrice: true, recordedAt: true },
