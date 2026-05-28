@@ -404,10 +404,9 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
               </div>
               <div className="flex-1 grid grid-cols-2 gap-3">
                 <div className="p-[14px] bg-ink-3 border border-line rounded-[10px]">
-                  <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-[6px]">mỗi lượng · vnd</div>
+                  <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-[6px]">mỗi lượng · {currency.toLowerCase()}</div>
                   <div className="text-[22px] leading-none font-bold font-sans tabular-nums">
-                    {intl ? (intl.spotPriceVnd / 1_000_000).toFixed(2) : '78.92'}
-                    <span className="text-mute text-[14px] ml-1">M₫</span>
+                    {intl ? fmt(intl.spotPriceVnd) : '—'}
                   </div>
                   <div className={cn('font-mono text-[10px] mt-[6px]', change1D != null && change1D < 0 ? 'text-down' : 'text-up')}>
                     {change1D != null ? (change1D >= 0 ? '+' : '') + change1D.toFixed(2) + '%' : '—'}
@@ -462,7 +461,7 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
           <div className="bg-ink-2 border border-line rounded-[14px]">
             <div className="flex items-center justify-between px-6 py-[18px] border-b border-hairline">
               <h3 className="text-[18px] leading-none font-bold font-sans m-0 tracking-[-0.01em]">Chênh lệch các thương hiệu nội địa</h3>
-              <span className="font-mono text-[10px] text-mute tracking-[0.12em] uppercase">vnd mỗi lượng · tốt nhất nổi bật</span>
+              <span className="font-mono text-[10px] text-mute tracking-[0.12em] uppercase">{currency.toLowerCase()} mỗi lượng · tốt nhất nổi bật</span>
             </div>
             <div
               className="px-6 py-3 font-mono text-[10px] text-mute tracking-[0.14em] uppercase bg-ink-3 border-b border-hairline grid"
@@ -562,7 +561,7 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
                   <div className="flex items-center gap-[10px]">
                     <span className="font-mono text-[10px] font-bold text-gold tracking-[0.1em] px-[6px] py-[3px] border border-gold rounded-[3px]">{a.brand}</span>
                     <span className="font-mono text-[13px] text-bone leading-none font-medium">{a.condition === 'gte' ? '≥' : '≤'}</span>
-                    <span className="text-[14px] leading-none font-bold font-sans tabular-nums">{(Number(a.thresholdPrice) / 1_000_000).toFixed(2)}M₫</span>
+                    <span className="text-[14px] leading-none font-bold font-sans tabular-nums">{fmt(Number(a.thresholdPrice))}</span>
                   </div>
                   <span className={cn(
                     'font-mono text-[9px] leading-none font-bold tracking-[0.14em] uppercase px-[7px] py-[4px] rounded-[3px] border',

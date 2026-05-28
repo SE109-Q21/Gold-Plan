@@ -40,6 +40,14 @@ const COMPARE_COLORS: Record<string, string> = {
   BAO_TIN: '#a78bfa',
 };
 
+const ASSET_CONFIG: Record<string, { brand: GoldBrand; goldType: GoldType }> = {
+  'XAU/USD': { brand: 'SJC',    goldType: 'MIEN_SJC' },
+  'XAU/VND': { brand: 'SJC',    goldType: 'MIEN_SJC' },
+  'SJC':     { brand: 'SJC',    goldType: 'MIEN_SJC' },
+  'DOJI':    { brand: 'DOJI',   goldType: 'MIEN_SJC' },
+  'PNJ':     { brand: 'PNJ',    goldType: 'MIEN_SJC' },
+};
+
 function QuickAlertPanel({
   price, lastPrice, onClose,
 }: { price: number; lastPrice: number; onClose: () => void }) {
@@ -332,16 +340,18 @@ export function MarketsPage({ currency = 'VND' }: { currency?: string }) {
   const { data: rates } = useExchangeRates();
   const { data: alertsData } = useAlerts();
 
+  const { brand: activeBrand, goldType: activeGoldType } = ASSET_CONFIG[asset] ?? ASSET_CONFIG['SJC'];
+
   const handleExportCsv = useCallback(async () => {
     setCsvLoading(true);
     try {
       const token = getAccessToken();
-      const url = `${API_BASE}/prices/history/export?brand=SJC&goldType=MIEN_SJC&range=${range}`;
+      const url = `${API_BASE}/prices/history/export?brand=${activeBrand}&goldType=${activeGoldType}&range=${range}`;
       const res = await fetch(url, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
       const blob = await res.blob();
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = `gold-history-SJC-${range}.csv`;
+      a.download = `gold-history-${activeBrand}-${range}.csv`;
       a.click();
       URL.revokeObjectURL(a.href);
     } catch {
@@ -349,10 +359,10 @@ export function MarketsPage({ currency = 'VND' }: { currency?: string }) {
     } finally {
       setCsvLoading(false);
     }
-  }, [range, getAccessToken]);
+  }, [range, activeBrand, activeGoldType, getAccessToken]);
 
-  const { data: history, isLoading: historyLoading } = usePriceHistory('SJC' as GoldBrand, 'MIEN_SJC' as GoldType, range);
-  const { data: history1D } = usePriceHistory('SJC' as GoldBrand, 'MIEN_SJC' as GoldType, '1D');
+  const { data: history, isLoading: historyLoading } = usePriceHistory(activeBrand, activeGoldType, range);
+  const { data: history1D } = usePriceHistory(activeBrand, activeGoldType, '1D');
   const { data: dojiHistory } = usePriceHistory('DOJI' as GoldBrand, 'NHAN_9999' as GoldType, range);
   const { data: baoTinHistory } = usePriceHistory('BAO_TIN' as GoldBrand, 'NHAN_9999' as GoldType, range);
   const chartData = (history ?? []).map(p => p.buyPrice);
@@ -384,7 +394,7 @@ export function MarketsPage({ currency = 'VND' }: { currency?: string }) {
   })();
 
   const sjcAlerts: AlertLine[] = (alertsData ?? [])
-    .filter(a => a.brand === 'SJC' && a.goldType === 'MIEN_SJC')
+    .filter(a => a.brand === activeBrand && a.goldType === activeGoldType)
     .map(a => ({
       id: a.id,
       condition: a.condition,

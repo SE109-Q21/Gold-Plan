@@ -2,16 +2,14 @@
 
 import { useState } from 'react';
 import { useAlerts, useToggleAlert, useDeleteAlert, useAlertHistory } from '@/lib/alerts.api';
-import { useSmartAlerts, useCreateSmartAlert, useToggleSmartAlert, useDeleteSmartAlert } from '@/lib/smart-alerts.api';
-import type { PriceAlertDto, SmartAlertDto, CreateSmartAlertDto, SmartAlertCondition } from '@gpls/shared';
+import type { PriceAlertDto } from '@gpls/shared';
 import { PushNotificationButton } from '@/components/PushNotificationButton';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 function ConfirmDeleteModal({ message, onConfirm, onClose }: {
   message: string;
@@ -70,55 +68,6 @@ function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString('vi-VN', { year: 'numeric', month: '2-digit', day: '2-digit' });
 }
 
-function buildNaturalLanguage(brand: string, cond: SmartAlertCondition | null): string {
-  if (!cond) return '';
-  const b = brand || 'SJC';
-  if (cond.type === 'TREND') {
-    const p = cond.params as { n?: number; direction?: string };
-    const n = p.n ?? 3;
-    const dir = p.direction ?? 'up';
-    return dir === 'up' ? `${b} tăng giá ${n} lần liên tiếp` : `${b} giảm giá ${n} lần liên tiếp`;
-  }
-  if (cond.type === 'SPREAD') {
-    const p = cond.params as { thresholdVnd?: number };
-    const t = p.thresholdVnd ?? 0;
-    return `${b} chênh lệch mua/bán ≤ ${t.toLocaleString('vi-VN')}₫`;
-  }
-  if (cond.type === 'THRESHOLD') {
-    const p = cond.params as { condition?: string; priceVnd?: number };
-    const dir = p.condition === 'gte' ? '≥' : '≤';
-    const price = p.priceVnd ?? 0;
-    return `${b} mua ${dir} ${price.toLocaleString('vi-VN')}₫`;
-  }
-  return '';
-}
-
-function buildFullPreview(brand: string, cond1: SmartAlertCondition | null, cond2: SmartAlertCondition | null): string {
-  const s1 = buildNaturalLanguage(brand, cond1);
-  const s2 = buildNaturalLanguage(brand, cond2);
-  if (!s1) return '';
-  if (s2) return `${s1} VÀ ${s2}`;
-  return s1;
-}
-
-function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <Button
-      variant="outline"
-      onClick={onClick}
-      className={cn(
-        'h-7 px-3 rounded-md font-mono text-[11px] leading-none font-bold tracking-[0.08em]',
-        active ? 'bg-gold border-gold text-gold-ink hover:bg-gold hover:text-gold-ink' : 'bg-ink-3 border-line text-bone hover:bg-ink-4 hover:text-bone',
-      )}
-    >
-      {children}
-    </Button>
-  );
-}
-
-const BRANDS_LIST = ['SJC', 'DOJI', 'PNJ', 'BAO_TIN'] as const;
-const GOLD_TYPES_LIST = ['MIEN_SJC', 'NHAN_9999', 'VANG_24K', 'VANG_18K'] as const;
-
 const GOLD_TYPE_LABELS: Record<string, string> = {
   MIEN_SJC: 'Vàng miếng SJC',
   NHAN_9999: 'Nhẫn tròn 9999',
@@ -130,268 +79,6 @@ function goldTypeLabel(code: string): string {
   return GOLD_TYPE_LABELS[code] ?? code;
 }
 
-function BuilderModal({ onClose }: { onClose: () => void }) {
-  const [brand, setBrand] = useState<string>('SJC');
-  const [goldType, setGoldType] = useState<string>('MIEN_SJC');
-  const [thresholdDir, setThresholdDir] = useState<'lte' | 'gte'>('lte');
-  const [thresholdPrice, setThresholdPrice] = useState('');
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [extraCondType, setExtraCondType] = useState<'TREND' | 'SPREAD' | null>(null);
-  const [trendN, setTrendN] = useState(3);
-  const [trendDir, setTrendDir] = useState<'up' | 'down'>('up');
-  const [spreadThreshold, setSpreadThreshold] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const createAlert = useCreateSmartAlert();
-
-  const priceNum = Number(thresholdPrice.replace(/\./g, '').replace(/,/g, '')) || 0;
-  const cond1: SmartAlertCondition = { type: 'THRESHOLD', params: { condition: thresholdDir, priceVnd: priceNum } };
-  const cond2: SmartAlertCondition | null =
-    extraCondType === 'TREND'  ? { type: 'TREND',  params: { n: trendN, direction: trendDir } } :
-    extraCondType === 'SPREAD' ? { type: 'SPREAD', params: { thresholdVnd: Number(spreadThreshold) || 0 } } :
-    null;
-
-  const preview = buildFullPreview(brand, cond1, cond2);
-
-  const handleSubmit = async () => {
-    if (priceNum <= 0) return;
-    setIsSubmitting(true);
-    setError(null);
-    try {
-      const dto: CreateSmartAlertDto = {
-        brand,
-        goldType,
-        condition1: cond1,
-        ...(cond2 ? { condition2: cond2 } : {}),
-      };
-      await createAlert.mutateAsync(dto);
-      onClose();
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Tạo cảnh báo thất bại');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const labelCls = 'font-mono text-[10px] leading-none font-bold tracking-[0.14em] uppercase text-mute mb-2';
-
-  return (
-    <Dialog open onOpenChange={o => !o && onClose()}>
-      <DialogContent className="w-[480px] max-h-[90vh] overflow-y-auto bg-ink-2 border-line text-chalk px-7 py-6 gap-5">
-        <DialogHeader>
-          <DialogTitle className="text-[20px] leading-none font-extrabold font-sans text-chalk">Tạo cảnh báo giá</DialogTitle>
-          <DialogDescription className="sr-only">Cảnh báo khi giá vàng đạt ngưỡng bạn chọn</DialogDescription>
-        </DialogHeader>
-
-        <div>
-          <div className={labelCls}>Thương hiệu</div>
-          <div className="flex gap-[6px] flex-wrap">
-            {BRANDS_LIST.map(b => <Chip key={b} active={brand === b} onClick={() => setBrand(b)}>{b}</Chip>)}
-          </div>
-        </div>
-
-        <div>
-          <div className={labelCls}>Loại vàng</div>
-          <div className="flex gap-[6px] flex-wrap">
-            {GOLD_TYPES_LIST.map(g => <Chip key={g} active={goldType === g} onClick={() => setGoldType(g)}>{goldTypeLabel(g)}</Chip>)}
-          </div>
-        </div>
-
-        <div>
-          <div className={labelCls}>Cảnh báo khi giá mua</div>
-          <div className="flex gap-2 items-center flex-wrap">
-            <div className="flex gap-1">
-              {([['lte', '↓ Giảm xuống'], ['gte', '↑ Vượt lên']] as const).map(([v, label]) => (
-                <Chip key={v} active={thresholdDir === v} onClick={() => setThresholdDir(v)}>{label}</Chip>
-              ))}
-            </div>
-            <Input
-              type="number"
-              placeholder="ví dụ: 79000000"
-              value={thresholdPrice}
-              onChange={e => setThresholdPrice(e.target.value)}
-              className="flex-1 min-w-[140px] h-9 bg-ink-3 border-line text-chalk font-mono text-[13px] placeholder:text-mute focus-visible:ring-gold"
-            />
-            <span className="font-mono text-[12px] text-mute">₫/lượng</span>
-          </div>
-        </div>
-
-        {preview && (
-          <div className="bg-ink-3 border border-line rounded-lg px-4 py-3">
-            <div className={labelCls + ' mb-[6px]'}>Xem trước</div>
-            <div className="text-[14px] leading-[1.4] font-sans font-medium text-gold">{preview}</div>
-          </div>
-        )}
-
-        <button
-          type="button"
-          onClick={() => setShowAdvanced(v => !v)}
-          className="flex items-center gap-2 text-[12px] font-mono font-bold text-mute tracking-[0.08em] hover:text-bone transition-colors w-fit"
-        >
-          <span>{showAdvanced ? '▲' : '▼'}</span>
-          <span>Điều kiện nâng cao</span>
-        </button>
-
-        {showAdvanced && (
-          <div className="flex flex-col gap-3 pl-4 border-l border-line">
-            <div>
-              <div className={labelCls}>Thêm điều kiện (VÀ)</div>
-              <div className="flex gap-[6px]">
-                <Chip active={extraCondType === null}    onClick={() => setExtraCondType(null)}>Không có</Chip>
-                <Chip active={extraCondType === 'TREND'} onClick={() => setExtraCondType('TREND')}>Xu hướng</Chip>
-                <Chip active={extraCondType === 'SPREAD'} onClick={() => setExtraCondType('SPREAD')}>Chênh lệch</Chip>
-              </div>
-            </div>
-
-            {extraCondType === 'TREND' && (
-              <div className="flex flex-wrap gap-3 items-center">
-                <span className="text-[12px] font-sans font-medium text-mute">Số lần liên tiếp:</span>
-                <div className="flex gap-1">
-                  {[2, 3, 4, 5].map(n => <Chip key={n} active={trendN === n} onClick={() => setTrendN(n)}>{n}</Chip>)}
-                </div>
-                <div className="flex gap-1">
-                  {(['up', 'down'] as const).map(d => (
-                    <Chip key={d} active={trendDir === d} onClick={() => setTrendDir(d)}>
-                      {d === 'up' ? '↑ Tăng' : '↓ Giảm'}
-                    </Chip>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {extraCondType === 'SPREAD' && (
-              <div className="flex gap-2 items-center">
-                <span className="text-[12px] font-sans font-medium text-mute whitespace-nowrap">Chênh lệch tối đa (₫)</span>
-                <Input
-                  type="number"
-                  placeholder="ví dụ: 200000"
-                  value={spreadThreshold}
-                  onChange={e => setSpreadThreshold(e.target.value)}
-                  className="h-9 bg-ink-3 border-line text-chalk font-mono text-[13px] placeholder:text-mute focus-visible:ring-gold"
-                />
-              </div>
-            )}
-          </div>
-        )}
-
-        {error && <div className="text-[13px] leading-[1.4] font-sans font-medium text-down">{error}</div>}
-
-        <Button
-          onClick={handleSubmit}
-          disabled={isSubmitting || priceNum <= 0}
-          className="h-11 font-mono text-[14px] font-bold tracking-[0.04em] uppercase"
-        >
-          {isSubmitting ? 'Đang tạo…' : 'Tạo cảnh báo'}
-        </Button>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function SmartAlertsPanel() {
-  const { data: alerts = [], isLoading } = useSmartAlerts();
-  const toggleAlert = useToggleSmartAlert();
-  const deleteAlert = useDeleteSmartAlert();
-  const [showModal, setShowModal] = useState(false);
-  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-
-  const handleToggle = (id: string) => toggleAlert.mutate(id);
-  const handleDelete = (id: string) => setPendingDeleteId(id);
-
-  const statusBadgeVariant = (status: SmartAlertDto['status']) => {
-    if (status === 'active') return 'bg-[rgba(212,175,55,0.15)] text-gold border border-[rgba(212,175,55,0.4)]';
-    if (status === 'triggered') return 'bg-[rgba(88,200,150,0.12)] text-up border border-[rgba(88,200,150,0.4)]';
-    return 'bg-ink-3 text-mute border border-line';
-  };
-
-  return (
-    <>
-      {showModal && <BuilderModal onClose={() => setShowModal(false)} />}
-      {pendingDeleteId && (
-        <ConfirmDeleteModal
-          message="Bạn có chắc muốn xóa smart alert này không? Hành động này không thể hoàn tác."
-          onConfirm={() => deleteAlert.mutate(pendingDeleteId)}
-          onClose={() => setPendingDeleteId(null)}
-        />
-      )}
-
-      <div className="bg-ink-2 border border-line rounded-[14px]">
-        <div className="flex items-center justify-between px-[22px] py-4 border-b border-hairline">
-          <h3 className="text-[16px] leading-none font-bold font-sans m-0">cảnh báo thông minh</h3>
-          <Button
-            onClick={() => setShowModal(true)}
-            className="h-[34px] px-[14px] font-mono text-[11px] font-bold tracking-[0.08em] uppercase"
-          >
-            + Thêm cảnh báo
-          </Button>
-        </div>
-
-        <div
-          className="grid px-[22px] py-3 font-mono text-[10px] text-mute tracking-[0.14em] uppercase bg-ink-3 border-b border-hairline"
-          style={{ gridTemplateColumns: '1fr auto auto' }}
-        >
-          <span>mô tả</span>
-          <span className="mr-12">trạng thái</span>
-          <span>hành động</span>
-        </div>
-
-        {isLoading && [0, 1, 2].map(i => (
-          <div
-            key={i}
-            className="grid px-[22px] py-4 border-t border-hairline items-center gap-3"
-            style={{ gridTemplateColumns: '1fr auto auto' }}
-          >
-            <div className="h-[14px] rounded bg-ink-3 animate-pulse w-[60%]"/>
-            <div className="h-[22px] w-[60px] rounded bg-ink-3 animate-pulse"/>
-            <div className="h-[22px] w-[80px] rounded bg-ink-3 animate-pulse"/>
-          </div>
-        ))}
-
-        {!isLoading && alerts.length === 0 && (
-          <div className="px-[22px] py-12 text-center text-mute text-[14px] leading-[1.5] font-sans font-medium">
-            Chưa có cảnh báo thông minh — nhấn <span className="text-gold">+ Thêm cảnh báo</span> để bắt đầu
-          </div>
-        )}
-
-        {!isLoading && alerts.map((a, i) => (
-          <div
-            key={a.id}
-            className={cn(
-              'grid px-[22px] py-[14px] items-center gap-3',
-              i !== 0 && 'border-t border-hairline',
-              a.status === 'inactive' && 'opacity-55',
-            )}
-            style={{ gridTemplateColumns: '1fr auto auto' }}
-          >
-            <div className="text-[14px] leading-[1.4] font-sans font-medium text-chalk">{a.naturalLanguage}</div>
-            <span className={cn('font-mono text-[9px] leading-none font-bold tracking-[0.14em] uppercase px-2 py-1 rounded', statusBadgeVariant(a.status))}>
-              {a.status === 'active' ? 'hoạt động' : a.status === 'triggered' ? 'đã kích hoạt' : 'tắt'}
-            </span>
-            <div className="flex gap-[6px] items-center">
-              <Switch
-                checked={a.status === 'active'}
-                onCheckedChange={() => handleToggle(a.id)}
-                disabled={toggleAlert.isPending}
-                className="data-[state=checked]:bg-gold data-[state=unchecked]:bg-ink-3"
-              />
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleDelete(a.id)}
-                disabled={deleteAlert.isPending}
-                className={cn('w-7 h-8 text-down hover:bg-[rgba(229,72,77,0.08)] hover:text-down', deleteAlert.isPending && 'opacity-50')}
-              >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14"/>
-                </svg>
-              </Button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </>
-  );
-}
 
 export function AlertsPage({ onOpenAdd }: { onOpenAdd: () => void }) {
   const [tab, setTab] = useState<string>('rules');
@@ -421,9 +108,9 @@ export function AlertsPage({ onOpenAdd }: { onOpenAdd: () => void }) {
         <div className="flex justify-between items-start">
           <div>
             <h1 className="text-[36px] leading-none font-extrabold font-sans m-0 tracking-[-0.025em]">cảnh báo giá</h1>
-            <p className="text-[14px] leading-[1.5] font-sans text-mute mt-2 mb-0 max-w-[480px]">
+            <div className="font-mono text-[11px] text-mute mt-2 max-w-[480px]">
               nhận thông báo khi giá vượt ngưỡng. email trong 2 phút, push trong 30 giây.
-            </p>
+            </div>
           </div>
           <div className="flex gap-[10px] items-center">
             <PushNotificationButton />
@@ -462,9 +149,6 @@ export function AlertsPage({ onOpenAdd }: { onOpenAdd: () => void }) {
             <TabsTrigger value="history" className="font-mono text-[11px] font-bold tracking-[0.1em] uppercase data-[state=active]:bg-ink-2 data-[state=active]:text-chalk data-[state=inactive]:text-mute">
               Lịch sử kích hoạt
             </TabsTrigger>
-            <TabsTrigger value="smart" className="font-mono text-[11px] font-bold tracking-[0.1em] uppercase data-[state=active]:bg-ink-2 data-[state=active]:text-chalk data-[state=inactive]:text-mute">
-              Cảnh báo thông minh
-            </TabsTrigger>
           </TabsList>
 
           {/* Rules tab */}
@@ -488,7 +172,7 @@ export function AlertsPage({ onOpenAdd }: { onOpenAdd: () => void }) {
               {isLoading && [0, 1, 2].map(i => <SkeletonRow key={i}/>)}
 
               {!isLoading && alerts.length === 0 && (
-                <div className="px-[22px] py-12 text-center text-mute text-[14px] leading-[1.5] font-sans font-medium">
+                <div className="px-[22px] py-12 text-center font-mono text-[13px] leading-none font-medium text-mute">
                   chưa có cảnh báo — nhấp <span className="text-gold">+ thêm cảnh báo</span> để bắt đầu
                 </div>
               )}
@@ -599,7 +283,7 @@ export function AlertsPage({ onOpenAdd }: { onOpenAdd: () => void }) {
               ))}
 
               {!histLoading && history.length === 0 && (
-                <div className="px-[22px] py-12 text-center text-mute text-[14px] leading-[1.5] font-sans font-medium">
+                <div className="px-[22px] py-12 text-center font-mono text-[13px] leading-none font-medium text-mute">
                   chưa có lịch sử kích hoạt
                 </div>
               )}
@@ -628,10 +312,6 @@ export function AlertsPage({ onOpenAdd }: { onOpenAdd: () => void }) {
             </div>
           </TabsContent>
 
-          {/* Smart Alerts tab */}
-          <TabsContent value="smart" className="mt-0">
-            <SmartAlertsPanel />
-          </TabsContent>
         </Tabs>
       </div>
     </>

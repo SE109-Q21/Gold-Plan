@@ -22,7 +22,6 @@ import { BrowsingHistoryModule } from './browsing-history/browsing-history.modul
 import { PersonalisationModule } from './personalisation/personalisation.module';
 import { AiModule } from './ai/ai.module';
 import { DigestModule } from './digest/digest.module';
-import { SmartAlertsModule } from './smart-alerts/smart-alerts.module';
 import { ForecastModule } from './forecast/forecast.module';
 import { PushModule } from './push/push.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
@@ -58,7 +57,6 @@ import { AssetsComparisonModule } from './assets-comparison/assets-comparison.mo
     PersonalisationModule,
     AiModule,
     DigestModule,
-    SmartAlertsModule,
     ForecastModule,
     ArbitrageModule,
     AssetsComparisonModule,

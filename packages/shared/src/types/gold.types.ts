@@ -311,33 +311,6 @@ export interface DigestArchiveDto {
   totalPages: number;
 }
 
-// ─── Plan 8: Smart Alerts ─────────────────────────────────────────────────────
-
-export interface SmartAlertCondition {
-  type: 'TREND' | 'SPREAD' | 'THRESHOLD';
-  params: Record<string, unknown>;
-}
-
-export interface SmartAlertDto {
-  id: string;
-  userId: string;
-  brand: string;
-  goldType: string;
-  condition1: SmartAlertCondition;
-  condition2: SmartAlertCondition | null;
-  status: 'active' | 'triggered' | 'inactive';
-  lastFiredAt: string | null;
-  createdAt: string;
-  naturalLanguage: string;
-}
-
-export interface CreateSmartAlertDto {
-  brand: string;
-  goldType: string;
-  condition1: SmartAlertCondition;
-  condition2?: SmartAlertCondition;
-}
-
 // ─── Plan 9: Forecast ─────────────────────────────────────────────────────────
 
 export interface ForecastSessionDto {

@@ -33,7 +33,7 @@ export default function Page() {
         {safeTab === 'home'    && <OverviewPage currency={currency} onNavigateAlerts={() => setTab('alerts')}/>}
         {safeTab === 'chart'   && <MarketsPage currency={currency}/>}
         {safeTab === 'alerts'  && <AlertsPage onOpenAdd={() => setAlertOpen(true)}/>}
-        {safeTab === 'profile' && <AccountPage/>}
+        {safeTab === 'profile' && <AccountPage currency={currency} onCurrency={setCurrency}/>}
       </DashboardShell>
       <AddAlertModal open={alertOpen} onClose={() => setAlertOpen(false)}/>
       <AiChatWidget />

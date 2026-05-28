@@ -54,7 +54,6 @@ async function main() {
   console.log('  → Cleaning old data');
   await prisma.alertTriggerHistory.deleteMany();
   await prisma.anomalyReview.deleteMany();
-  await prisma.smartAlert.deleteMany();
   await prisma.priceAlert.deleteMany();
   await prisma.viewHistory.deleteMany();
   await prisma.portfolioTransaction.deleteMany();
@@ -363,18 +362,7 @@ async function main() {
     }
   }
 
-  // ── 11. Smart Alerts ───────────────────────────────────────────────────────
-  console.log('  → SmartAlerts');
-  await prisma.smartAlert.createMany({
-    data: [
-      { userId: testUser.id,  brand: GoldBrand.SJC,  goldType: GoldType.MIEN_SJC,  condition1: { type: 'price_gte', value: 78_000_000 }, condition2: { type: 'spread_lte', value: 2_000_000 }, status: AlertStatus.active },
-      { userId: testUser2.id, brand: GoldBrand.DOJI, goldType: GoldType.NHAN_9999, condition1: { type: 'heat_gte', value: 70 },           status: AlertStatus.active },
-      { userId: testUser.id,  brand: GoldBrand.PNJ,  goldType: GoldType.NHAN_9999, condition1: { type: 'price_lte', value: 74_000_000 },  status: AlertStatus.active },
-      { userId: adminUser.id, brand: GoldBrand.SJC,  goldType: GoldType.MIEN_SJC,  condition1: { type: 'heat_gte', value: 80 },           status: AlertStatus.active },
-    ],
-  });
-
-  // ── 12. Forecast Sessions (60 days closed + today open) ───────────────────
+  // ── 11. Forecast Sessions (60 days closed + today open) ───────────────────
   console.log('  → ForecastSessions + Votes');
   const FORECAST_DAYS = 60;
   const directionCycle: ForecastDirection[] = [
