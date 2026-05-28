@@ -8,6 +8,7 @@ import { ApiError } from '@/lib/auth.api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
 
@@ -28,6 +29,7 @@ function LoginForm() {
     setLoading(true);
     try {
       await login(email, password);
+      toast.success('Đăng nhập thành công!');
       router.push(from && from.startsWith('/') ? from : '/');
     } catch (err: unknown) {
       if (err instanceof ApiError && err.status === 429) {
