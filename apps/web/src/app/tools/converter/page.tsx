@@ -128,8 +128,13 @@ function ConverterContent() {
   const { data: rates, isLoading: ratesLoading } = useExchangeRates();
   const isLoading = pricesLoading || ratesLoading;
 
-  const priceEntry = useMemo(() => prices?.find(p => p.goldType === goldType) ?? null, [prices, goldType]);
+  const priceEntry = useMemo(() => {
+    if (!prices?.length) return null;
+    return prices.find(p => p.goldType === goldType) ?? prices.find(p => p.buyPrice > 0) ?? null;
+  }, [prices, goldType]);
   const pricePerTaelVnd = priceEntry?.buyPrice ?? 0;
+
+  const noPriceData = !pricesLoading && prices !== undefined && pricePerTaelVnd === 0;
 
   const result = useMemo(() => {
     if (!rates || pricePerTaelVnd === 0 || qty <= 0) return null;
@@ -151,10 +156,11 @@ function ConverterContent() {
     return `${qty} ${UNIT_DISPLAY[unit]} ${purity} = ${valMap[currency]} (${brand} at ${timeStr})`;
   }, [result, unit, qty, purity, brand, timeStr]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const noDataLabel = noPriceData ? 'Chưa có dữ liệu giá' : '—';
   const resultRows: { id: 'VND' | 'USD' | 'EUR'; label: string; value: string; skeleton: boolean }[] = [
-    { id: 'VND', label: 'VND', value: result ? fmtVnd(result.valuations.VND) : '—', skeleton: isLoading },
-    { id: 'USD', label: 'USD', value: result ? fmtUsd(result.valuations.USD) : '—', skeleton: isLoading },
-    { id: 'EUR', label: 'EUR', value: result ? fmtEur(result.valuations.EUR) : '—', skeleton: isLoading },
+    { id: 'VND', label: 'VND', value: result ? fmtVnd(result.valuations.VND) : noDataLabel, skeleton: isLoading },
+    { id: 'USD', label: 'USD', value: result ? fmtUsd(result.valuations.USD) : noDataLabel, skeleton: isLoading },
+    { id: 'EUR', label: 'EUR', value: result ? fmtEur(result.valuations.EUR) : noDataLabel, skeleton: isLoading },
   ];
 
   const weightInGrams = qty * (WEIGHT_TO_GRAMS[unit] ?? 1);
@@ -201,6 +207,7 @@ function ConverterContent() {
               step="any"
               value={qtyStr}
               onChange={e => setQtyStr(e.target.value)}
+              onWheel={e => e.currentTarget.blur()}
               className="bg-ink-3 border-line text-chalk font-display text-[28px] leading-none font-bold p-[12px_16px] w-[160px] text-right h-auto focus-visible:ring-gold placeholder:text-mute"
             />
           </div>
@@ -270,7 +277,7 @@ function ConverterContent() {
             <InfoItem label="Khối lượng (lượng)" value={`${weightInTael.toFixed(3)} lượng`} loading={false}/>
             <InfoItem
               label="Giá dùng"
-              value={isLoading ? '—' : pricePerTaelVnd > 0 ? `${pricePerTaelVnd.toLocaleString('vi-VN')} ₫/lượng (${brand} · ${goldType})` : 'Không có dữ liệu giá'}
+              value={isLoading ? '—' : pricePerTaelVnd > 0 ? `${pricePerTaelVnd.toLocaleString('vi-VN')} ₫/lượng (${brand} · ${priceEntry?.goldType ?? goldType})` : 'Không có dữ liệu giá'}
               loading={isLoading}
             />
             <InfoItem
