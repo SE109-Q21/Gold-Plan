@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { MoneyInput } from '@/components/ui/money-input';
 
 function IconArrowLeft({ s = 16 }: { s?: number }) {
   return (
@@ -23,23 +24,28 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 function NumInput({
-  label, value, onChange, placeholder, suffix,
+  label, value, onChange, placeholder, suffix, money,
 }: {
-  label: string; value: string; onChange: (v: string) => void; placeholder?: string; suffix?: string;
+  label: string; value: string; onChange: (v: string) => void; placeholder?: string; suffix?: string; money?: boolean;
 }) {
+  const inputCls = 'bg-ink-3 border-line text-chalk font-display text-[18px] leading-none font-bold p-[10px_14px] h-auto focus-visible:ring-gold placeholder:text-mute flex-1';
   return (
     <div>
       <SectionLabel>{label}</SectionLabel>
       <div className="flex items-center gap-2">
-        <Input
-          type="number"
-          min="0"
-          step="any"
-          value={value}
-          onChange={e => onChange(e.target.value)}
-          placeholder={placeholder ?? '0'}
-          className="bg-ink-3 border-line text-chalk font-display text-[18px] leading-none font-bold p-[10px_14px] h-auto focus-visible:ring-gold placeholder:text-mute flex-1"
-        />
+        {money ? (
+          <MoneyInput value={value} onChange={onChange} placeholder={placeholder ?? '0'} className={inputCls}/>
+        ) : (
+          <Input
+            type="number"
+            min="0"
+            step="any"
+            value={value}
+            onChange={e => onChange(e.target.value)}
+            placeholder={placeholder ?? '0'}
+            className={inputCls}
+          />
+        )}
         {suffix && <span className="font-mono text-[13px] text-mute shrink-0">{suffix}</span>}
       </div>
     </div>
@@ -155,7 +161,7 @@ export default function CompoundInterestPage() {
         <div className="grid gap-5" style={{ gridTemplateColumns: '1.1fr 1fr' }}>
           {/* Inputs */}
           <div className="bg-ink-2 border border-line rounded-[14px] p-[24px_28px] flex flex-col gap-5">
-            <NumInput label="Vốn ban đầu" value={principal} onChange={setPrincipal} placeholder="100000000" suffix="₫"/>
+            <NumInput label="Vốn ban đầu" value={principal} onChange={setPrincipal} placeholder="100000000" suffix="₫" money/>
             <NumInput label="Lãi suất / năm" value={annualRate} onChange={setAnnualRate} placeholder="8" suffix="%"/>
 
             <div>
@@ -167,7 +173,7 @@ export default function CompoundInterestPage() {
               </div>
             </div>
 
-            <NumInput label="Góp thêm hàng tháng (tùy chọn)" value={monthlyDeposit} onChange={setMonthlyDeposit} placeholder="0" suffix="₫"/>
+            <NumInput label="Góp thêm hàng tháng (tùy chọn)" value={monthlyDeposit} onChange={setMonthlyDeposit} placeholder="0" suffix="₫" money/>
             <NumInput label="Số năm đầu tư" value={years} onChange={setYears} placeholder="10" suffix="năm"/>
           </div>
 

@@ -8,6 +8,7 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { MoneyInput } from '@/components/ui/money-input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -171,11 +172,9 @@ function AssetModal({
 
         <div>
           <div className={labelCls}>Giá trị (₫)</div>
-          <Input
-            type="number"
-            min="0"
+          <MoneyInput
             value={valueStr}
-            onChange={e => setValueStr(e.target.value)}
+            onChange={setValueStr}
             placeholder="100000000"
             className="bg-ink-3 border-line text-chalk font-display text-[20px] leading-none font-bold p-[10px_14px] h-auto focus-visible:ring-gold placeholder:text-mute"
           />
@@ -185,7 +184,7 @@ function AssetModal({
           <Button variant="outline" onClick={onClose} className="h-9 px-4 bg-ink-3 border-line text-bone hover:bg-ink-4 hover:text-chalk font-mono text-[12px] font-bold">
             Hủy
           </Button>
-          <Button onClick={handleSave} disabled={!valueStr || parseFloat(valueStr) <= 0} className="h-9 px-4 font-mono text-[12px] font-bold">
+          <Button onClick={handleSave} disabled={!valueStr || parseInt(valueStr) <= 0} className="h-9 px-4 font-mono text-[12px] font-bold">
             Lưu
           </Button>
         </div>

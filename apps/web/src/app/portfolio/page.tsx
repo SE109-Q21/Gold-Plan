@@ -16,6 +16,7 @@ import type { AddTransactionPayload } from '@/lib/portfolio.api';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { MoneyInput } from '@/components/ui/money-input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -502,13 +503,10 @@ function AddTransactionModal({ onClose }: { onClose: () => void }) {
             </div>
             <div>
               <SectionLabel>Giá / Lượng (VND)</SectionLabel>
-              <Input
-                type="number"
-                min="1"
-                step="1"
+              <MoneyInput
                 value={price}
-                onChange={(e: { target: { value: string } }) => setPrice(e.target.value)}
-                placeholder="vd: 79.000.000"
+                onChange={setPrice}
+                placeholder="79000000"
                 required
                 className={INPUT_CLS}
               />
@@ -673,9 +671,7 @@ function EditTransactionModal({ tx, onClose }: { tx: EditableTx; onClose: () => 
             </div>
             <div>
               <SectionLabel>Giá / Lượng (VND)</SectionLabel>
-              <Input type="number" min="1" step="1" value={price}
-                onChange={(e: { target: { value: string } }) => setPrice(e.target.value)}
-                placeholder="vd: 79.000.000" required className={INPUT_CLS}/>
+              <MoneyInput value={price} onChange={setPrice} placeholder="79000000" required className={INPUT_CLS}/>
             </div>
           </div>
 
