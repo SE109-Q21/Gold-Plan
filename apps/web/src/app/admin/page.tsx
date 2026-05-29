@@ -430,7 +430,8 @@ export default function AdminOverviewPage() {
   const { data: stats, isLoading, isError } = useAdminStats();
 
   return (
-    <div className="p-[32px_36px]">
+    <div className="h-full overflow-auto bg-ink">
+    <div className="p-[32px_36px_60px]">
       <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="font-display text-[28px] leading-none font-extrabold m-0 mb-[6px] tracking-[-0.02em]">
@@ -515,6 +516,7 @@ export default function AdminOverviewPage() {
           </table>
         )}
       </div>
+    </div>
     </div>
   );
 }

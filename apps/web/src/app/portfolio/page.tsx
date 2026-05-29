@@ -160,7 +160,8 @@ function PnlChart({ data, loading }: { data: { date: string; valueVnd: number }[
       return { v, y };
     });
 
-    return { linePath, areaPath, xs, ys, xTicks: uniqueIdxs, yTicks, minV, maxV, points };
+    const isPositive = points[points.length - 1].valueVnd >= points[0].valueVnd;
+    return { linePath, areaPath, xs, ys, xTicks: uniqueIdxs, yTicks, minV, maxV, points, isPositive };
   }, [data]);
 
   if (loading) {
@@ -181,12 +182,14 @@ function PnlChart({ data, loading }: { data: { date: string; valueVnd: number }[
     );
   }
 
+  const lineColor = chartData.isPositive ? '#22c55e' : '#ef4444';
+
   return (
     <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: H, display: 'block', overflow: 'visible' }}>
       <defs>
         <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#60A5FA" stopOpacity="0.22"/>
-          <stop offset="100%" stopColor="#60A5FA" stopOpacity="0"/>
+          <stop offset="0%" stopColor={lineColor} stopOpacity="0.20"/>
+          <stop offset="100%" stopColor={lineColor} stopOpacity="0"/>
         </linearGradient>
       </defs>
       {chartData.yTicks.map((t: { v: number; y: number }, i: number) => (
@@ -205,7 +208,7 @@ function PnlChart({ data, loading }: { data: { date: string; valueVnd: number }[
         </g>
       ))}
       <path d={chartData.areaPath} fill="url(#chartGrad)"/>
-      <path d={chartData.linePath} fill="none" stroke="#60A5FA" strokeWidth="1.75" strokeLinejoin="round" strokeLinecap="round"/>
+      <path d={chartData.linePath} fill="none" stroke={lineColor} strokeWidth="1.75" strokeLinejoin="round" strokeLinecap="round"/>
       {chartData.xTicks.map((i: number) => {
         const d = new Date(chartData.points[i].date);
         const label = `${d.getDate()}/${d.getMonth() + 1}`;
@@ -219,7 +222,7 @@ function PnlChart({ data, loading }: { data: { date: string; valueVnd: number }[
       <circle
         cx={chartData.xs[chartData.xs.length - 1]}
         cy={chartData.ys[chartData.ys.length - 1]}
-        r={3.5} fill="#60A5FA" stroke="var(--ink-2)" strokeWidth="2"
+        r={3.5} fill={lineColor} stroke="var(--ink-2)" strokeWidth="2"
       />
     </svg>
   );
