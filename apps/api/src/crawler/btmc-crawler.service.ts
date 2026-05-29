@@ -75,11 +75,13 @@ export class BtmcCrawlerService extends BaseCrawlerService implements OnModuleIn
         const buy = Number(buyStr.replace(/[^\d]/g, ''));
         const sell = Number(sellStr.replace(/[^\d]/g, ''));
         if (!buy || !sell) continue;
-        // BTMC API returns prices per chỉ (1/10 lượng); multiply to get per-lượng VND
+        // BTMC API returns rings/jewelry per chỉ (×10 to get per lượng),
+        // but MIEN_SJC bars are already quoted per lượng in the API.
+        const multiplier = goldType === 'MIEN_SJC' ? 1n : 10n;
         results.push({
           goldType,
-          buyPrice: BigInt(buy) * 10n,
-          sellPrice: BigInt(sell) * 10n,
+          buyPrice: BigInt(buy) * multiplier,
+          sellPrice: BigInt(sell) * multiplier,
         });
       } catch {
         this.logger.warn(`BTMC: failed to parse "${name}"`);

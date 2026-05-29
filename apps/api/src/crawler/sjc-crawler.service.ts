@@ -10,9 +10,11 @@ const VANG_TODAY_URL = 'https://www.vang.today/api/prices';
 const SJC_DATA_SOURCE_NAME = 'SJC Official';
 
 // Type codes from vang.today API (keys of the `prices` object)
+// SJ9999 is omitted: vang.today returns the SJC bar price under that key,
+// not a distinct nhẫn 9999 product, so mapping it to NHAN_9999 gives a
+// ~6–8 M VND inflated price vs. the real DOJI/PNJ/BAO_TIN ring prices.
 const SJC_TYPE_MAP: Record<string, GoldType> = {
   SJL1L10: 'MIEN_SJC',
-  SJ9999:  'NHAN_9999',
 };
 
 interface VangTodayPriceItem {
