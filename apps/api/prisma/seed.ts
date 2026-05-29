@@ -5,9 +5,75 @@ dotenv.config({ path: path.join(__dirname, '../.env') });
 import { PrismaClient, GoldBrand, GoldType, CrawlStatus, UserStatus, UserRole, AlertCondition, AlertStatus, ForecastDirection } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import * as bcrypt from 'bcrypt';
+import axios from 'axios';
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
+
+// ─── Live price fetch ─────────────────────────────────────────────────────────
+
+type PriceBase = { buy: number; spread: number };
+
+interface VangTodayItem { buy: number; sell: number; }
+interface VangTodayResponse { prices: Record<string, VangTodayItem>; }
+interface BtmcItem { '@row': string; [k: string]: string | undefined; }
+interface BtmcResponse { DataList: { Data: BtmcItem[] }; }
+
+const VANG_TODAY_URL = 'https://www.vang.today/api/prices';
+const BTMC_API_URL   = 'https://btmc.vn/api/BTMCAPI/getpricebtmc?key=3kd8ub1llcg9t45hnoh8hmn7t5kc2v';
+
+async function fetchLivePrices(): Promise<Record<string, PriceBase>> {
+  const result: Record<string, PriceBase> = {};
+
+  // ── vang.today (SJC, DOJI, PNJ) ────────────────────────────────────────────
+  try {
+    const { data } = await axios.get<VangTodayResponse>(VANG_TODAY_URL, { timeout: 10_000 });
+    const p = data.prices;
+    const take = (code: string): PriceBase | null => {
+      const item = p[code];
+      return item ? { buy: item.buy, spread: Math.max(item.sell - item.buy, 0) } : null;
+    };
+    if (p['SJL1L10'])    result['SJC_MIEN_SJC']   = take('SJL1L10')!;
+    if (p['DOHNL'])      result['DOJI_MIEN_SJC']  = take('DOHNL')!;
+    if (p['DOJINHTV'])   result['DOJI_NHAN_9999'] = take('DOJINHTV')!;
+    if (p['PQHNVM'])     result['PNJ_NHAN_9999']  = take('PQHNVM')!;
+    if (p['PQHN24NTT'])  result['PNJ_VANG_24K']   = take('PQHN24NTT')!;
+    console.log('  ✓ vang.today prices fetched');
+  } catch (e: any) {
+    console.warn(`  ⚠ vang.today failed (${(e as Error).message}) – using defaults`);
+  }
+
+  // ── BTMC (BAO_TIN) ─────────────────────────────────────────────────────────
+  try {
+    const { data } = await axios.get<BtmcResponse>(BTMC_API_URL, { timeout: 15_000 });
+    const KEYWORDS: Array<{ kws: string[]; type: string; mul: number }> = [
+      { kws: ['miếng', 'mieng', 'sjc'],         type: 'MIEN_SJC',  mul: 1  },
+      { kws: ['nhẫn', 'nhan', '9999', '99.9'],  type: 'NHAN_9999', mul: 10 },
+      { kws: ['24k', '24 k'],                   type: 'VANG_24K',  mul: 10 },
+    ];
+    const seen = new Set<string>();
+    for (const item of data.DataList.Data) {
+      const row = item['@row'];
+      const name   = item[`@n_${row}`];
+      const buyStr = item[`@pb_${row}`];
+      const selStr = item[`@ps_${row}`];
+      if (!name || !buyStr || !selStr) continue;
+      const lower = name.toLowerCase();
+      const match = KEYWORDS.find(k => k.kws.some(kw => lower.includes(kw)));
+      if (!match || seen.has(match.type)) continue;
+      seen.add(match.type);
+      const buy  = Number(buyStr.replace(/[^\d]/g, '')) * match.mul;
+      const sell = Number(selStr.replace(/[^\d]/g, '')) * match.mul;
+      if (buy > 0 && sell > 0)
+        result[`BAO_TIN_${match.type}`] = { buy, spread: Math.max(sell - buy, 0) };
+    }
+    console.log('  ✓ BTMC prices fetched');
+  } catch (e: any) {
+    console.warn(`  ⚠ BTMC failed (${(e as Error).message}) – using defaults`);
+  }
+
+  return result;
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -49,6 +115,12 @@ function generatePriceSeries(
 
 async function main() {
   console.log('🌱  Seeding database…');
+
+  // ── Live prices (with fallback to hardcoded defaults) ──────────────────────
+  console.log('  → Fetching live prices from APIs…');
+  const livePrices = await fetchLivePrices();
+  const base = (key: string, defaultBuy: number, defaultSpread: number): PriceBase =>
+    livePrices[key] ?? { buy: defaultBuy, spread: defaultSpread };
 
   // ── 0. Cleanup (reverse FK order) ──────────────────────────────────────────
   console.log('  → Cleaning old data');
@@ -105,13 +177,6 @@ async function main() {
   const DAYS_SJC = 365;
   const DAYS_OTHER = 90;
 
-  const basePrices: Record<string, { buy: number; spread: number }> = {
-    SJC:     { buy: 76_420_000, spread: 2_500_000 },
-    DOJI:    { buy: 76_300_000, spread: 2_400_000 },
-    PNJ:     { buy: 76_350_000, spread: 2_450_000 },
-    BAO_TIN: { buy: 76_200_000, spread: 2_350_000 },
-  };
-
   // Create a single seed CrawlSession per DataSource for bulk price inserts
   const seedSessions = await Promise.all([
     prisma.crawlSession.create({ data: { dataSourceId: dsSjc.id, startedAt: new Date(), completedAt: new Date(), status: CrawlStatus.completed } }),
@@ -121,20 +186,26 @@ async function main() {
   ]);
   const [sessSjc, sessDoji, sessPnj, sessBaoTin] = seedSessions;
 
-  type BrandConfig = { sessionId: string; brand: GoldBrand; goldType: GoldType; days: number; dsKey: string };
+  type BrandConfig = { sessionId: string; brand: GoldBrand; goldType: GoldType; days: number; buy: number; spread: number };
   const brandConfigs: BrandConfig[] = [
-    { sessionId: sessSjc.id,    brand: GoldBrand.SJC,     goldType: GoldType.MIEN_SJC,  days: DAYS_SJC,   dsKey: 'SJC' },
-    { sessionId: sessDoji.id,   brand: GoldBrand.DOJI,    goldType: GoldType.NHAN_9999, days: DAYS_OTHER, dsKey: 'DOJI' },
-    { sessionId: sessPnj.id,    brand: GoldBrand.PNJ,     goldType: GoldType.NHAN_9999, days: DAYS_OTHER, dsKey: 'PNJ' },
-    { sessionId: sessBaoTin.id, brand: GoldBrand.BAO_TIN, goldType: GoldType.NHAN_9999, days: DAYS_OTHER, dsKey: 'BAO_TIN' },
+    // SJC only sells MIEN_SJC bars (SJ9999 on vang.today returns bar price, not rings)
+    { sessionId: sessSjc.id,    brand: GoldBrand.SJC,     goldType: GoldType.MIEN_SJC,  days: DAYS_SJC,   ...base('SJC_MIEN_SJC',    76_420_000, 2_500_000) },
+    // DOJI sells both MIEN_SJC and NHAN_9999 — MIEN_SJC gets 365d so 1Y/3M/1M are distinguishable
+    { sessionId: sessDoji.id,   brand: GoldBrand.DOJI,    goldType: GoldType.MIEN_SJC,  days: DAYS_SJC,   ...base('DOJI_MIEN_SJC',   76_350_000, 2_480_000) },
+    { sessionId: sessDoji.id,   brand: GoldBrand.DOJI,    goldType: GoldType.NHAN_9999, days: DAYS_OTHER, ...base('DOJI_NHAN_9999',  76_300_000, 2_400_000) },
+    // PNJ sells NHAN_9999 and VANG_24K
+    { sessionId: sessPnj.id,    brand: GoldBrand.PNJ,     goldType: GoldType.NHAN_9999, days: DAYS_OTHER, ...base('PNJ_NHAN_9999',   76_350_000, 2_450_000) },
+    { sessionId: sessPnj.id,    brand: GoldBrand.PNJ,     goldType: GoldType.VANG_24K,  days: DAYS_OTHER, ...base('PNJ_VANG_24K',    74_100_000, 1_900_000) },
+    // BAO_TIN sells MIEN_SJC and NHAN_9999
+    { sessionId: sessBaoTin.id, brand: GoldBrand.BAO_TIN, goldType: GoldType.MIEN_SJC,  days: DAYS_OTHER, ...base('BAO_TIN_MIEN_SJC',  76_280_000, 2_420_000) },
+    { sessionId: sessBaoTin.id, brand: GoldBrand.BAO_TIN, goldType: GoldType.NHAN_9999, days: DAYS_OTHER, ...base('BAO_TIN_NHAN_9999', 76_200_000, 2_350_000) },
   ];
 
   // Sessions at: 08:30, 10:00, 12:00, 14:00, 15:30 (5 snapshots per day)
   const INTRA_HOURS = [0, 1.5, 3.5, 5.5, 7];
 
-  for (const { sessionId, brand, goldType, days, dsKey } of brandConfigs) {
-    const base = basePrices[dsKey]!;
-    const buySeries = generatePriceSeries(base.buy, days + 1, 0.004, 0.0002);
+  for (const { sessionId, brand, goldType, days, buy, spread: spreadBase0 } of brandConfigs) {
+    const buySeries = generatePriceSeries(buy, days + 1, 0.004, 0.0002);
     const priceRows: {
       crawlSessionId: string;
       brand: GoldBrand;
@@ -147,7 +218,7 @@ async function main() {
     for (let day = days; day >= 0; day--) {
       const baseDate = daysAgo(day);
       const buyPrice = buySeries[days - day]!;
-      const spreadBase = base.spread + rand(-50_000, 50_000);
+      const spreadBase = spreadBase0 + rand(-50_000, 50_000);
 
       for (const offsetH of INTRA_HOURS) {
         const recordedAt = new Date(baseDate.getTime() + offsetH * 3_600_000);
