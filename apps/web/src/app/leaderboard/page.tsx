@@ -1,10 +1,19 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useLeaderboard } from '@/lib/forecast.api';
 import type { LeaderboardEntryDto } from '@gpls/shared';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+
+function IconArrowLeft({ s = 16 }: { s?: number }) {
+  return (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M19 12H5M5 12l7-7M5 12l7 7"/>
+    </svg>
+  );
+}
 
 function prevMonth(ym: string): string {
   const [y, m] = ym.split('-').map(Number);
@@ -91,6 +100,7 @@ function buildMonthOptions(): { value: string; label: string }[] {
 
 
 function LeaderboardContent() {
+  const router = useRouter();
   const [month, setMonth] = useState<string>(() => new Date().toISOString().slice(0, 7));
   const { data, isLoading, isError } = useLeaderboard(month);
 
@@ -98,7 +108,16 @@ function LeaderboardContent() {
   const monthOptions = buildMonthOptions();
 
   return (
+    <div className="h-full overflow-auto bg-ink">
     <div className="p-[32px_28px_60px] max-w-[760px] mx-auto">
+      <Button
+        variant="ghost"
+        onClick={() => router.push('/')}
+        className="text-mute flex items-center gap-[6px] font-mono text-[12px] font-semibold tracking-[0.08em] p-0 pb-6 h-auto hover:bg-transparent hover:text-bone"
+      >
+        <IconArrowLeft s={14}/> quay lại dashboard
+      </Button>
+
       {/* Page header */}
       <div className="mb-7">
         <h1 className="font-display text-[28px] leading-none font-extrabold m-0 mb-2 tracking-[-0.02em]">
@@ -162,6 +181,7 @@ function LeaderboardContent() {
           Mỗi dự báo đúng = +1 điểm · Chuỗi liên tiếp thưởng thêm điểm bonus
         </p>
       )}
+    </div>
     </div>
   );
 }
