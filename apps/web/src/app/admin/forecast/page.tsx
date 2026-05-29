@@ -240,7 +240,7 @@ export default function AdminForecastPage() {
                               <button
                                 type="button"
                                 onClick={() => setShowManualOverride(prev => prev === session.id ? null : session.id)}
-                                className="font-mono text-[9px] leading-none text-mute hover:text-bone tracking-[0.06em] text-left"
+                                className="font-mono text-[9px] leading-none text-mute hover:text-bone tracking-[0.06em] text-left cursor-pointer"
                               >
                                 {showManualOverride === session.id ? '▲ ẩn' : '▼ chấm thủ công'}
                               </button>

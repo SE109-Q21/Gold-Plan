@@ -107,7 +107,7 @@ export default function InflationCalculatorPage() {
     return n.toLocaleString('vi-VN') + ' ₫';
   }
 
-  const TAB = 'flex-1 h-[32px] font-mono text-[11px] leading-none font-bold tracking-[0.06em] rounded-[6px] transition-[background,color] duration-[140ms]';
+  const TAB = 'flex-1 h-[32px] font-mono text-[11px] leading-none font-bold tracking-[0.06em] rounded-[6px] cursor-pointer transition-[background,color] duration-[140ms]';
 
   return (
     <div className="h-full overflow-auto bg-ink">

@@ -66,7 +66,7 @@ export function ComparisonTable() {
         <select
           value={goldType}
           onChange={(e) => setGoldType(e.target.value as GoldType)}
-          className="bg-ink-3 border border-line rounded px-2 py-1 text-[13px] text-chalk outline-none"
+          className="bg-ink-3 border border-line rounded px-2 py-1 text-[13px] text-chalk outline-none cursor-pointer"
         >
           {GOLD_TYPES.map((t) => (
             <option key={t} value={t}>{GOLD_TYPE_LABELS[t]}</option>

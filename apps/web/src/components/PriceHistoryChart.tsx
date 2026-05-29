@@ -36,7 +36,7 @@ function formatVndShort(value: number): string {
   return `${(value / 1_000_000).toFixed(1)}M`;
 }
 
-const SELECT_CLS = 'bg-ink-3 border border-line rounded px-2 py-1 font-sans text-[13px] text-chalk outline-none';
+const SELECT_CLS = 'bg-ink-3 border border-line rounded px-2 py-1 font-sans text-[13px] text-chalk outline-none cursor-pointer';
 
 export function PriceHistoryChart() {
   const [range, setRange] = useState<Range>('1D');
