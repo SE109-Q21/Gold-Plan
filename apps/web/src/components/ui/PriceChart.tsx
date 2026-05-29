@@ -44,6 +44,9 @@ export function PriceChart({
   const containerRef  = useRef<HTMLDivElement>(null);
   const [hoverIdx,    setHoverIdx]    = useState<number | null>(null);
   const [showMA,      setShowMA]      = useState(false);
+  const [showBB,      setShowBB]      = useState(false);
+  const [dragStart,   setDragStart]   = useState<number | null>(null);
+  const [dragCurrent, setDragCurrent] = useState<number | null>(null);
   const [zoomWindow,  setZoomWindow]  = useState<[number, number] | null>(null);
   const [touchPinned, setTouchPinned] = useState(false);
 
@@ -52,6 +55,7 @@ export function PriceChart({
 
   useEffect(() => {
     setZoomWindow(null); setHoverIdx(null); setTouchPinned(false); onHoverPrice(null);
+    setShowBB(false); setDragStart(null); setDragCurrent(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [range, history.length]);
 
@@ -112,9 +116,21 @@ export function PriceChart({
     return { brand: s.brand, color: s.color, values: p.map(px => ((px / base) - 1) * 100) };
   }) : [];
 
+  // ─── Bollinger Bands (computed before allYValues so y-axis includes BB range) ──
+  const BB_N = 20;
+  const bbBands: { upper: number | null; lower: number | null }[] = !isCompareMode ? primaryValues.map((_, i) => {
+    if (i < BB_N - 1) return { upper: null, lower: null };
+    const window = primaryValues.slice(i - BB_N + 1, i + 1);
+    const mean = window.reduce((a, b) => a + b, 0) / BB_N;
+    const variance = window.reduce((a, b) => a + (b - mean) ** 2, 0) / BB_N;
+    const sigma = Math.sqrt(variance);
+    return { upper: mean + 2 * sigma, lower: mean - 2 * sigma };
+  }) : [];
+
   const allYValues = [
     ...primaryValues,
     ...(isCompareMode ? compareNorm.flatMap(s => s.values).filter(Number.isFinite) : []),
+    ...(showBB && !isCompareMode ? bbBands.flatMap(b => [b.upper, b.lower]).filter((v): v is number => v !== null) : []),
   ];
 
   if (isLoading) {
@@ -164,6 +180,22 @@ export function PriceChart({
     return acc + `${(i === 0 || smaVals[i-1] === null) ? 'M' : 'L'} ${xS(i).toFixed(1)} ${yS(v).toFixed(1)} `;
   }, '');
 
+  const bbUpperPath = bbBands.reduce((acc, b, i) => {
+    if (b.upper === null) return acc;
+    const prev = i > 0 ? bbBands[i - 1] : null;
+    return acc + `${(!prev || prev.upper === null) ? 'M' : 'L'} ${xS(i).toFixed(1)} ${yS(b.upper).toFixed(1)} `;
+  }, '');
+  const bbLowerPath = bbBands.reduce((acc, b, i) => {
+    if (b.lower === null) return acc;
+    const prev = i > 0 ? bbBands[i - 1] : null;
+    return acc + `${(!prev || prev.lower === null) ? 'M' : 'L'} ${xS(i).toFixed(1)} ${yS(b.lower).toFixed(1)} `;
+  }, '');
+  const validBB = bbBands.map((b, i) => ({ ...b, i })).filter(b => b.upper !== null);
+  const bbFillPath = validBB.length > 1
+    ? validBB.map((b, j) => `${j === 0 ? 'M' : 'L'} ${xS(b.i).toFixed(1)} ${yS(b.upper!).toFixed(1)}`).join(' ')
+      + ' ' + [...validBB].reverse().map((b) => `L ${xS(b.i).toFixed(1)} ${yS(b.lower!).toFixed(1)}`).join(' ') + ' Z'
+    : '';
+
   // ─── Axes ─────────────────────────────────────────────────────────────────
 
   const yGrid = [0.25, 0.5, 0.75].map(p => minV + vR * p);
@@ -201,8 +233,33 @@ export function PriceChart({
     setHoverIdx(idx);
     onHoverPrice(idx !== null ? rawPrices[idx] : null);
   }
-  function handleMouseMove(e: React.MouseEvent) { if (!touchPinned) doHover(clientXToIdx(e.clientX)); }
-  function handleMouseLeave() { if (!touchPinned) doHover(null); }
+  function handleMouseMove(e: React.MouseEvent) {
+    if (!touchPinned) doHover(clientXToIdx(e.clientX));
+    if (dragStart !== null) setDragCurrent(clientXToIdx(e.clientX));
+  }
+  function handleMouseLeave() {
+    if (!touchPinned) doHover(null);
+    setDragStart(null); setDragCurrent(null);
+  }
+  function handleMouseDown(e: React.MouseEvent) {
+    if (e.button !== 0) return;
+    setDragStart(clientXToIdx(e.clientX));
+    setDragCurrent(clientXToIdx(e.clientX));
+  }
+  function handleMouseUp(e: React.MouseEvent) {
+    if (dragStart !== null && dragCurrent !== null) {
+      const lo = Math.min(dragStart, dragCurrent);
+      const hi = Math.max(dragStart, dragCurrent);
+      if (hi - lo > 2) {
+        const absLo = visStart + lo;
+        const absHi = Math.min(history.length - 1, visStart + hi);
+        setZoomWindow([absLo, absHi]);
+        setDragStart(null); setDragCurrent(null);
+        return;
+      }
+    }
+    setDragStart(null); setDragCurrent(null);
+  }
   function handleTouchStartJSX(e: React.TouchEvent) {
     if (e.touches.length !== 1) return;
     const idx = clientXToIdx(e.touches[0].clientX);
@@ -303,16 +360,38 @@ export function PriceChart({
           </button>
         )}
 
-        {showMA && !isCompareMode && (
+        {!isCompareMode && (
+          <button
+            onClick={() => setShowBB(v => !v)}
+            className={cn(
+              'inline-flex items-center gap-[6px] h-[26px] px-[10px] border rounded font-mono text-[10px] leading-none font-bold tracking-[0.1em] uppercase cursor-pointer transition-all duration-[140ms]',
+              showBB
+                ? 'border-[rgba(167,139,250,0.5)] bg-[rgba(167,139,250,0.08)] text-[#a78bfa]'
+                : 'border-line bg-transparent text-mute',
+            )}
+          >
+            BB(20)
+          </button>
+        )}
+
+        {(showMA || showBB) && !isCompareMode && (
           <div className="flex items-center gap-[14px]">
             <span className="flex items-center gap-[5px] font-mono text-[10px] leading-none font-medium text-mute">
               <span className="inline-block w-[18px] h-[2px] rounded-[1px] bg-[linear-gradient(90deg,#8E7321,#D4AF37)]"/>
               Price
             </span>
-            <span className="flex items-center gap-[5px] font-mono text-[10px] leading-none font-medium text-[rgba(147,197,253,0.8)]">
-              <span className="inline-block w-[18px]" style={{ borderTop: '1.5px dashed rgba(147,197,253,0.65)' }}/>
-              7D SMA
-            </span>
+            {showMA && (
+              <span className="flex items-center gap-[5px] font-mono text-[10px] leading-none font-medium text-[rgba(147,197,253,0.8)]">
+                <span className="inline-block w-[18px]" style={{ borderTop: '1.5px dashed rgba(147,197,253,0.65)' }}/>
+                7D SMA
+              </span>
+            )}
+            {showBB && (
+              <span className="flex items-center gap-[5px] font-mono text-[10px] leading-none font-medium text-[rgba(167,139,250,0.8)]">
+                <span className="inline-block w-[18px]" style={{ borderTop: '1.5px dashed rgba(167,139,250,0.65)' }}/>
+                BB(20)
+              </span>
+            )}
           </div>
         )}
 
@@ -354,6 +433,8 @@ export function PriceChart({
         ref={containerRef}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
         onTouchStart={handleTouchStartJSX}
         onTouchMove={handleTouchMoveJSX}
         onClick={handleChartClick}
@@ -410,6 +491,15 @@ export function PriceChart({
 
             {showMA && !isCompareMode && smaPath && (
               <path d={smaPath} fill="none" stroke="#93c5fd" strokeWidth="1.25" strokeDasharray="5 3" opacity="0.65"/>
+            )}
+            {showBB && !isCompareMode && bbFillPath && (
+              <path d={bbFillPath} fill="rgba(167,139,250,0.06)" stroke="none"/>
+            )}
+            {showBB && !isCompareMode && bbUpperPath && (
+              <path d={bbUpperPath} fill="none" stroke="#a78bfa" strokeWidth="1" strokeDasharray="4 3" opacity="0.6"/>
+            )}
+            {showBB && !isCompareMode && bbLowerPath && (
+              <path d={bbLowerPath} fill="none" stroke="#a78bfa" strokeWidth="1" strokeDasharray="4 3" opacity="0.6"/>
             )}
           </g>
 
@@ -473,6 +563,19 @@ export function PriceChart({
           {safeIdx !== null && tpValue !== null && (
             <circle cx={xS(safeIdx)} cy={yS(tpValue)} r="4.5" fill="#0a0a0d" stroke="#D4AF37" strokeWidth="2"/>
           )}
+
+          {/* Drag-to-zoom selection rectangle */}
+          {dragStart !== null && dragCurrent !== null && Math.abs(dragStart - dragCurrent) > 0 && (
+            <rect
+              x={Math.min(xS(dragStart), xS(dragCurrent)).toFixed(1)}
+              y={PC_PAD.t}
+              width={Math.abs(xS(dragStart) - xS(dragCurrent)).toFixed(1)}
+              height={PC_IH}
+              fill="rgba(212,175,55,0.12)"
+              stroke="rgba(212,175,55,0.5)"
+              strokeWidth="1"
+            />
+          )}
         </svg>
 
         {/* Tooltip overlay */}
@@ -512,6 +615,36 @@ export function PriceChart({
           </div>
         )}
       </div>
+
+      {/* Volume / volatility mini bars */}
+      {!isCompareMode && primaryValues.length > 1 && (
+        <div style={{ marginTop: 2 }}>
+          <svg viewBox={`0 0 ${PC_W} 36`} className="block w-full h-auto">
+            {(() => {
+              const deltas = primaryValues.map((v, i) => i === 0 ? 0 : Math.abs(v - primaryValues[i - 1]));
+              const maxDelta = Math.max(...deltas, 1);
+              const BAR_H = 28;
+              return deltas.map((d, i) => {
+                const h = (d / maxDelta) * BAR_H;
+                const x = xS(i);
+                const barW = Math.max(1, (PC_IW / primaryValues.length) * 0.6);
+                return (
+                  <rect
+                    key={i}
+                    x={(x - barW / 2).toFixed(1)}
+                    y={(BAR_H - h).toFixed(1)}
+                    width={barW.toFixed(1)}
+                    height={h.toFixed(1)}
+                    fill={hoverIdx === i ? '#D4AF37' : 'rgba(212,175,55,0.3)'}
+                    rx="1"
+                  />
+                );
+              });
+            })()}
+            <text x={PC_PAD.l - 5} y={14} textAnchor="end" fill="var(--mute)" fontSize={8} fontFamily="var(--font-mono)">vol</text>
+          </svg>
+        </div>
+      )}
     </div>
   );
 }

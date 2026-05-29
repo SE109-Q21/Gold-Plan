@@ -46,6 +46,41 @@ function OpportunityRow({ opp, quantity }: { opp: ArbitrageOpportunityDto; quant
   );
 }
 
+function HourlyHeatmap({ data }: { data: { recordedAt: string; grossProfit: number }[] }) {
+  const hourlyAvg = Array.from({ length: 24 }, (_, h) => {
+    const pts = data.filter(d => new Date(d.recordedAt).getHours() === h);
+    return pts.length ? pts.reduce((s, p) => s + p.grossProfit, 0) / pts.length : 0;
+  });
+  const maxVal = Math.max(...hourlyAvg, 1);
+  const W = 600, H = 60, CELL_W = W / 24;
+
+  return (
+    <div>
+      <div className="font-mono text-[10px] leading-none text-mute tracking-[0.1em] uppercase mb-2">
+        Trung bình lợi nhuận theo giờ
+      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} className="block w-full h-auto">
+        {hourlyAvg.map((v, h) => {
+          const intensity = v / maxVal;
+          const r = Math.round(212 * intensity);
+          const g = Math.round(175 * intensity);
+          const b = Math.round(55 * intensity);
+          const fill = intensity < 0.05 ? 'rgba(60,60,80,0.4)' : `rgba(${r},${g},${b},${0.2 + intensity * 0.8})`;
+          return (
+            <g key={h}>
+              <rect x={h * CELL_W + 1} y={4} width={CELL_W - 2} height={H - 20} rx={3} fill={fill}/>
+              <text x={h * CELL_W + CELL_W / 2} y={H - 4} textAnchor="middle"
+                fill="var(--mute)" fontSize={8} fontFamily="var(--font-mono)">
+                {h}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
 export default function ArbitragePage() {
   const [goldTypeFilter, setGoldTypeFilter] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
@@ -110,11 +145,12 @@ export default function ArbitragePage() {
 
       {/* 24h history chart */}
       {history && history.length > 1 && (
-        <div className="bg-ink-2 border border-line rounded-[10px] p-4 mt-6">
-          <div className="text-mute text-[13px] mb-3">
+        <div className="bg-ink-2 border border-line rounded-[10px] p-4 mt-6 flex flex-col gap-4">
+          <div className="text-mute text-[13px]">
             Lịch sử chênh lệch 24h — {goldTypeFilter || opps?.[0]?.goldType}
           </div>
-          <ChartContainer config={{ grossProfit: { label: 'Lợi nhuận', color: '#D4AF37' } } satisfies ChartConfig} className="h-[120px] w-full">
+          <HourlyHeatmap data={history as { recordedAt: string; grossProfit: number }[]} />
+          <ChartContainer config={{ grossProfit: { label: 'Lợi nhuận', color: '#D4AF37' } } satisfies ChartConfig} className="h-[100px] w-full">
             <LineChart data={history}>
               <XAxis dataKey="recordedAt" hide />
               <YAxis hide domain={['auto', 'auto']} />

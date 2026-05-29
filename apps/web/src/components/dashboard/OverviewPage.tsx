@@ -33,12 +33,12 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-const RANGE_LABELS = ['1D', '1W', '1M'] as const;
+const RANGE_LABELS = ['1D', '1W', '1M', '3M', '1Y'] as const;
 
 const BRAND_LABELS: Record<string, string> = {
   SJC: 'SJC', DOJI: 'DOJI', PNJ: 'PNJ', BAO_TIN: 'Bảo Tín',
 };
-type Range = '1D' | '1W' | '1M';
+type Range = '1D' | '1W' | '1M' | '3M' | '1Y';
 
 function fmtVnd(n: number) { return (n / 1_000_000).toFixed(2) + 'M₫'; }
 

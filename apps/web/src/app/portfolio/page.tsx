@@ -1,7 +1,7 @@
 'use client';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   usePortfolio,
@@ -136,6 +136,8 @@ function SummaryCard({
 function PnlChart({ data, loading }: { data: { date: string; valueVnd: number }[]; loading: boolean }) {
   const W = 600, H = 180;
   const PAD = { top: 16, right: 20, bottom: 32, left: 56 };
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+  const containerRef = useRef<SVGSVGElement>(null);
 
   const chartData = useMemo(() => {
     const points = data.slice(-30);
@@ -183,9 +185,30 @@ function PnlChart({ data, loading }: { data: { date: string; valueVnd: number }[
   }
 
   const lineColor = chartData.isPositive ? '#22c55e' : '#ef4444';
+  const { xs, ys, points } = chartData;
+
+  function handleMouseMove(e: React.MouseEvent<SVGSVGElement>) {
+    const svg = containerRef.current;
+    if (!svg) return;
+    const rect = svg.getBoundingClientRect();
+    const svgX = (e.clientX - rect.left) * (W / rect.width);
+    const frac = Math.min(1, Math.max(0, (svgX - PAD.left) / (W - PAD.left - PAD.right)));
+    const idx = Math.min(Math.max(Math.round(frac * (points.length - 1)), 0), points.length - 1);
+    setHoverIdx(idx);
+  }
+
+  const hp = hoverIdx !== null ? points[hoverIdx] : null;
+  const hx = hoverIdx !== null ? xs[hoverIdx] : null;
+  const hy = hoverIdx !== null ? ys[hoverIdx] : null;
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: H, display: 'block', overflow: 'visible' }}>
+    <svg
+      ref={containerRef}
+      viewBox={`0 0 ${W} ${H}`}
+      style={{ width: '100%', height: H, display: 'block', overflow: 'visible' }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={() => setHoverIdx(null)}
+    >
       <defs>
         <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={lineColor} stopOpacity="0.20"/>
@@ -210,20 +233,51 @@ function PnlChart({ data, loading }: { data: { date: string; valueVnd: number }[
       <path d={chartData.areaPath} fill="url(#chartGrad)"/>
       <path d={chartData.linePath} fill="none" stroke={lineColor} strokeWidth="1.75" strokeLinejoin="round" strokeLinecap="round"/>
       {chartData.xTicks.map((i: number) => {
-        const d = new Date(chartData.points[i].date);
+        const d = new Date(points[i].date);
         const label = `${d.getDate()}/${d.getMonth() + 1}`;
         return (
-          <text key={i} x={chartData.xs[i]} y={H - PAD.bottom + 14} textAnchor="middle"
+          <text key={i} x={xs[i]} y={H - PAD.bottom + 14} textAnchor="middle"
             style={{ font: '400 9px var(--font-mono)', fill: 'var(--mute)' }}>
             {label}
           </text>
         );
       })}
       <circle
-        cx={chartData.xs[chartData.xs.length - 1]}
-        cy={chartData.ys[chartData.ys.length - 1]}
+        cx={xs[xs.length - 1]}
+        cy={ys[ys.length - 1]}
         r={3.5} fill={lineColor} stroke="var(--ink-2)" strokeWidth="2"
       />
+      {/* Hover crosshair + tooltip */}
+      {hoverIdx !== null && hp && hx !== null && hy !== null && (
+        <>
+          <line x1={hx.toFixed(1)} y1={PAD.top} x2={hx.toFixed(1)} y2={H - PAD.bottom} stroke="rgba(128,128,148,0.4)" strokeWidth="1"/>
+          <circle cx={hx.toFixed(1)} cy={hy.toFixed(1)} r="4" fill={lineColor} stroke="var(--ink-2)" strokeWidth="2"/>
+          <g>
+            <rect
+              x={hx > W * 0.6 ? hx - 112 : hx + 8}
+              y={PAD.top}
+              width={104} height={38} rx={4}
+              fill="rgba(10,10,15,0.95)" stroke="rgba(255,255,255,0.1)" strokeWidth="0.75"
+            />
+            <text
+              x={hx > W * 0.6 ? hx - 60 : hx + 60}
+              y={PAD.top + 14}
+              textAnchor="middle"
+              style={{ font: '600 9px var(--font-mono)', fill: 'var(--mute)' }}
+            >
+              {(() => { const d = new Date(hp.date); return `${d.getDate()}/${d.getMonth() + 1}`; })()}
+            </text>
+            <text
+              x={hx > W * 0.6 ? hx - 60 : hx + 60}
+              y={PAD.top + 28}
+              textAnchor="middle"
+              style={{ font: '700 10px var(--font-mono)', fill: lineColor }}
+            >
+              {fmtM(hp.valueVnd)}
+            </text>
+          </g>
+        </>
+      )}
     </svg>
   );
 }
@@ -245,6 +299,7 @@ function allocColor(label: string, idx: number): string {
 
 function DonutChart({ items }: { items: { label: string; pct: number }[] }) {
   const CX = 80, CY = 80, OR = 70, IR = 45;
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
   function describeArc(startDeg: number, endDeg: number): string {
     const toRad = (d: number) => (d - 90) * (Math.PI / 180);
@@ -276,7 +331,7 @@ function DonutChart({ items }: { items: { label: string; pct: number }[] }) {
     );
   }
 
-  const slices: { path: string; color: string }[] = [];
+  const slices: { path: string; color: string; itemIdx: number }[] = [];
   let cursor = 0;
   for (let i = 0; i < items.length; i++) {
     const sweep = (items[i].pct / 100) * 360;
@@ -284,17 +339,38 @@ function DonutChart({ items }: { items: { label: string; pct: number }[] }) {
       slices.push({
         path: describeArc(cursor, cursor + sweep - 0.4),
         color: allocColor(items[i].label, i),
+        itemIdx: i,
       });
     }
     cursor += sweep;
   }
 
+  const hoveredItem = hoveredIdx !== null ? items[hoveredIdx] : null;
+
   return (
     <svg viewBox="0 0 160 160" width={160} height={160} style={{ display: 'block' }}>
       {slices.map((s, i) => (
-        <path key={i} d={s.path} fill={s.color}/>
+        <path
+          key={i}
+          d={s.path}
+          fill={s.color}
+          opacity={hoveredIdx !== null ? (hoveredIdx === s.itemIdx ? 1 : 0.6) : 1}
+          style={{ cursor: 'pointer', transition: 'opacity 0.15s' }}
+          onMouseEnter={() => setHoveredIdx(s.itemIdx)}
+          onMouseLeave={() => setHoveredIdx(null)}
+        />
       ))}
       <circle cx={CX} cy={CY} r={IR} fill="var(--ink-2)"/>
+      {hoveredItem && (
+        <g pointerEvents="none">
+          <text x={CX} y={76} textAnchor="middle" style={{ font: '700 9px var(--font-mono)', fill: 'var(--bone)' }}>
+            {hoveredItem.label.slice(0, 10)}
+          </text>
+          <text x={CX} y={88} textAnchor="middle" style={{ font: '700 11px var(--font-mono)', fill: 'var(--chalk)' }}>
+            {hoveredItem.pct.toFixed(1)}%
+          </text>
+        </g>
+      )}
     </svg>
   );
 }
@@ -711,6 +787,51 @@ function EditTransactionModal({ tx, onClose }: { tx: EditableTx; onClose: () => 
   );
 }
 
+// ─── Waterfall P&L Chart ──────────────────────────────────────────────────────
+
+function WaterfallChart({ holdings, loading }: {
+  holdings: { brand: string; goldType: string; netQty: number; pnlVnd: number; pnlPct: number }[];
+  loading: boolean;
+}) {
+  if (loading) return <div style={{ height: 120 }} className="animate-pulse bg-ink-3 rounded-lg"/>;
+  if (!holdings.length) return null;
+
+  const sorted = [...holdings].sort((a, b) => Math.abs(b.pnlVnd) - Math.abs(a.pnlVnd));
+  const maxAbs = Math.max(...sorted.map(h => Math.abs(h.pnlVnd)), 1);
+  const LABEL_W = 140, BAR_MAX = 340, ROW_H = 28, GAP = 6;
+  const H = sorted.length * (ROW_H + GAP) + 8;
+  const W = LABEL_W + BAR_MAX + 80;
+  const MID = LABEL_W + 4;
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="block w-full h-auto">
+      {sorted.map((h, i) => {
+        const y = i * (ROW_H + GAP) + 4;
+        const barLen = (Math.abs(h.pnlVnd) / maxAbs) * (BAR_MAX / 2 - 4);
+        const isPos = h.pnlVnd >= 0;
+        const color = isPos ? '#58C896' : '#E5484D';
+        const label = `${h.brand} ${GOLD_TYPE_LABELS[h.goldType] ?? h.goldType}`;
+        return (
+          <g key={i}>
+            <text x={LABEL_W - 6} y={y + ROW_H / 2 + 4} textAnchor="end"
+              fill="var(--bone)" fontSize={10} fontFamily="var(--font-mono)"
+              style={{ fontWeight: 600 }}>
+              {label.slice(0, 22)}
+            </text>
+            <rect x={isPos ? MID : MID - barLen} y={y + 4} width={barLen} height={ROW_H - 8} rx={3} fill={color} opacity="0.85"/>
+            <text x={isPos ? MID + barLen + 5 : MID - barLen - 5} y={y + ROW_H / 2 + 4}
+              textAnchor={isPos ? 'start' : 'end'}
+              fill={color} fontSize={10} fontFamily="var(--font-mono)" style={{ fontWeight: 700 }}>
+              {isPos ? '+' : ''}{(h.pnlVnd / 1_000_000).toFixed(2)}M₫
+            </text>
+          </g>
+        );
+      })}
+      <line x1={MID} y1={0} x2={MID} y2={H} stroke="rgba(128,128,148,0.25)" strokeWidth="1"/>
+    </svg>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 const TH_BASE = 'font-mono text-[9px] leading-none font-bold tracking-[0.14em] uppercase text-mute pb-[14px] px-3 border-b border-line';
@@ -827,6 +948,17 @@ function PortfolioContent() {
             <SectionLabel>lịch sử giá trị danh mục</SectionLabel>
             <PnlChart data={chartData ?? []} loading={chartLoading || (chartFetching && !chartData)}/>
           </div>
+
+          {/* ── Waterfall P&L ── */}
+          {summary?.holdings && summary.holdings.some((h: any) => h.pnlVnd !== 0) && (
+            <div className="bg-ink-2 border border-line rounded-xl p-[20px_24px] mb-7">
+              <SectionLabel>lãi / lỗ theo tài sản</SectionLabel>
+              <WaterfallChart
+                holdings={summary.holdings}
+                loading={summaryLoading || (summaryFetching && !summary)}
+              />
+            </div>
+          )}
 
           {/* ── Holdings table ── */}
           <div className="bg-ink-2 border border-line rounded-xl p-[20px_24px] mb-7 overflow-x-auto">

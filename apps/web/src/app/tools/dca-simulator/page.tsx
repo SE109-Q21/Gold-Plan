@@ -99,15 +99,24 @@ function IconArrowLeft({ s = 16 }: { s?: number }) {
   );
 }
 
-function DcaChart({ points }: { points: DcaDataPointDto[] }) {
+function DcaChart({ points, altPoints, altLabel }: {
+  points: DcaDataPointDto[];
+  altPoints?: DcaDataPointDto[];
+  altLabel?: string;
+}) {
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
 
   if (points.length < 2) return null;
 
   const W = 800, H = 240, PAD = 40;
-  const maxVal = Math.max(...points.flatMap(p => [p.cumulativeValue, p.lumpSumValue]));
-  const minVal = Math.min(...points.flatMap(p => [p.cumulativeValue, p.lumpSumValue]));
+
+  const allValues = [
+    ...points.flatMap(p => [p.cumulativeValue, p.lumpSumValue]),
+    ...(altPoints ? altPoints.map(p => p.cumulativeValue) : []),
+  ];
+  const maxVal = Math.max(...allValues);
+  const minVal = Math.min(...allValues);
   const range = maxVal - minVal || 1;
 
   const xFor = (i: number) => PAD + (i / (points.length - 1)) * (W - 2 * PAD);
@@ -115,6 +124,10 @@ function DcaChart({ points }: { points: DcaDataPointDto[] }) {
 
   const dcaPath = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${xFor(i).toFixed(1)},${yFor(p.cumulativeValue).toFixed(1)}`).join(' ');
   const lsPath = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${xFor(i).toFixed(1)},${yFor(p.lumpSumValue).toFixed(1)}`).join(' ');
+
+  const altPath = altPoints && altPoints.length > 1
+    ? altPoints.map((p, i) => `${i === 0 ? 'M' : 'L'}${xFor(i).toFixed(1)},${yFor(p.cumulativeValue).toFixed(1)}`).join(' ')
+    : null;
 
   const labelStep = Math.max(1, Math.floor(points.length / 6));
   const xLabels = points.map((p, i) => ({ i, date: p.date })).filter((_, i) => i % labelStep === 0 || i === points.length - 1);
@@ -131,6 +144,7 @@ function DcaChart({ points }: { points: DcaDataPointDto[] }) {
 
   const hp = hoverIdx !== null ? points[hoverIdx] : null;
   const hx = hoverIdx !== null ? xFor(hoverIdx) : 0;
+  const altHp = hoverIdx !== null && altPoints ? altPoints[Math.min(hoverIdx, altPoints.length - 1)] : null;
 
   return (
     <div className="relative">
@@ -143,6 +157,14 @@ function DcaChart({ points }: { points: DcaDataPointDto[] }) {
           <span className="w-[10px] h-[10px] rounded-full bg-[#F97316] inline-block"/>
           <span className="font-mono text-[10px] leading-none font-semibold text-bone tracking-[0.06em]">Lump Sum</span>
         </div>
+        {altPath && (
+          <div className="flex items-center gap-[6px]">
+            <span className="w-[10px] h-[10px] rounded-full bg-[#34D399] inline-block"/>
+            <span className="font-mono text-[10px] leading-none font-semibold text-bone tracking-[0.06em]">
+              {altLabel ?? 'Alt DCA'}
+            </span>
+          </div>
+        )}
       </div>
       <svg
         ref={svgRef}
@@ -157,6 +179,9 @@ function DcaChart({ points }: { points: DcaDataPointDto[] }) {
         })}
         <path d={lsPath} stroke="#F97316" strokeWidth="2" fill="none" strokeLinejoin="round"/>
         <path d={dcaPath} stroke="#60A5FA" strokeWidth="2" fill="none" strokeLinejoin="round"/>
+        {altPath && (
+          <path d={altPath} stroke="#34D399" strokeWidth="1.5" fill="none" strokeLinejoin="round" strokeDasharray="5 3"/>
+        )}
         {xLabels.map(({ i, date }) => (
           <text key={i} x={xFor(i).toFixed(1)} y={H - 8} textAnchor="middle" style={{ font: '500 9px var(--font-mono)', fill: 'var(--mute)' }}>
             {date.slice(5)}
@@ -167,16 +192,26 @@ function DcaChart({ points }: { points: DcaDataPointDto[] }) {
             <line x1={hx.toFixed(1)} y1={PAD} x2={hx.toFixed(1)} y2={H - PAD} stroke="var(--line)" strokeWidth="1"/>
             <circle cx={hx.toFixed(1)} cy={yFor(hp.cumulativeValue).toFixed(1)} r="4" fill="#60A5FA" stroke="var(--ink-2)" strokeWidth="1.5"/>
             <circle cx={hx.toFixed(1)} cy={yFor(hp.lumpSumValue).toFixed(1)} r="4" fill="#F97316" stroke="var(--ink-2)" strokeWidth="1.5"/>
+            {altHp && altPath && (
+              <circle cx={hx.toFixed(1)} cy={yFor(altHp.cumulativeValue).toFixed(1)} r="4" fill="#34D399" stroke="var(--ink-2)" strokeWidth="1.5"/>
+            )}
             {(() => {
-              const tx = hx > W * 0.65 ? hx - 158 : hx + 12;
+              const tx = hx > W * 0.65 ? hx - 168 : hx + 12;
+              const tooltipH = altHp && altPath ? 90 : 72;
               return (
                 <g>
-                  <rect x={tx} y={PAD} width={148} height={72} rx={6} fill="var(--ink-3)" stroke="var(--line)" strokeWidth="0.75"/>
+                  <rect x={tx} y={PAD} width={158} height={tooltipH} rx={6} fill="var(--ink-3)" stroke="var(--line)" strokeWidth="0.75"/>
                   <text x={tx + 10} y={PAD + 16} style={{ font: '600 10px var(--font-mono)', fill: 'var(--mute)' }}>{hp.date}</text>
                   <circle cx={tx + 10} cy={PAD + 31} r="3" fill="#60A5FA"/>
                   <text x={tx + 18} y={PAD + 34} style={{ font: '600 10px var(--font-mono)', fill: 'var(--bone)' }}>{fmtMillions(hp.cumulativeValue)}</text>
                   <circle cx={tx + 10} cy={PAD + 50} r="3" fill="#F97316"/>
                   <text x={tx + 18} y={PAD + 53} style={{ font: '600 10px var(--font-mono)', fill: 'var(--bone)' }}>{fmtMillions(hp.lumpSumValue)}</text>
+                  {altHp && altPath && (
+                    <>
+                      <circle cx={tx + 10} cy={PAD + 69} r="3" fill="#34D399"/>
+                      <text x={tx + 18} y={PAD + 72} style={{ font: '600 10px var(--font-mono)', fill: 'var(--bone)' }}>{fmtMillions(altHp.cumulativeValue)}</text>
+                    </>
+                  )}
                 </g>
               );
             })()}
@@ -206,7 +241,13 @@ function DcaSimulatorContent() {
     ? { brand, goldType, startDate, frequency, qtyPerPurchase: qty }
     : null;
 
+  const altFrequency: Frequency = frequency === 'weekly' ? 'monthly' : 'weekly';
+  const altParams = submitted && startDate
+    ? { brand, goldType, startDate, frequency: altFrequency, qtyPerPurchase: qty }
+    : null;
+
   const { data, isLoading, error } = useDcaSimulate(params);
+  const { data: altData } = useDcaSimulate(altParams);
   const addTransaction = useAddTransaction();
 
   const handleSimulate = () => {
@@ -406,7 +447,11 @@ function DcaSimulatorContent() {
                     {data.dataPoints.length} data points · {data.dataPoints[0]?.date} → {data.dataPoints[data.dataPoints.length - 1]?.date}
                   </div>
                 </div>
-                <DcaChart points={data.dataPoints}/>
+                <DcaChart
+                  points={data.dataPoints}
+                  altPoints={altData?.dataPoints}
+                  altLabel={altFrequency === 'weekly' ? 'DCA hàng tuần' : 'DCA hàng tháng'}
+                />
               </div>
             )}
 
