@@ -92,7 +92,7 @@ export default function InflationCalculatorPage() {
   }, [amount, inflation, years, mode]);
 
   const [resultVersion, setResultVersion] = useState(0);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
     if (!result) return;

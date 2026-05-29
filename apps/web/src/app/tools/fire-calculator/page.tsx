@@ -114,8 +114,8 @@ export default function FireCalculatorPage() {
 
   const [resultVersion, setResultVersion] = useState(0);
   const [displayYears, setDisplayYears] = useState(0);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
-  const countUpRef = useRef<number>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const countUpRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     if (!result) return;
