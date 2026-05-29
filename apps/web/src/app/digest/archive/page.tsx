@@ -48,6 +48,9 @@ function DigestCard({ item }: { item: DigestDto }) {
         <span className="font-display text-[14px] leading-none font-bold text-chalk [font-variant-numeric:tabular-nums]">
           {fmtVnd(item.sjcBuyVnd)}
         </span>
+        <span className="font-mono text-[11px] leading-none text-mute hidden sm:inline">
+          chênh <span className="text-down font-bold">{fmtVnd(item.sjcSellVnd - item.sjcBuyVnd)}</span>
+        </span>
         <span className={cn('font-mono text-[14px] leading-none font-bold ml-1', expanded ? 'text-gold' : 'text-mute')}>
           {expanded ? '▲' : '▼'}
         </span>
@@ -57,17 +60,18 @@ function DigestCard({ item }: { item: DigestDto }) {
       {expanded && (
         <div onClick={e => e.stopPropagation()} className="mt-4 flex flex-col gap-[14px]">
           {/* Price grid */}
-          <div className="grid grid-cols-3 gap-[10px]">
+          <div className="grid grid-cols-2 gap-[10px]">
             {[
-              { lbl: 'SJC Buy',  val: fmtVnd(item.sjcBuyVnd)  },
-              { lbl: 'SJC Sell', val: fmtVnd(item.sjcSellVnd) },
-              { lbl: 'XAU/USD',  val: `$${item.xauUsd.toFixed(2)}` },
+              { lbl: 'SJC Mua',      val: fmtVnd(item.sjcBuyVnd),                    cls: 'text-chalk' },
+              { lbl: 'SJC Bán',      val: fmtVnd(item.sjcSellVnd),                   cls: 'text-chalk' },
+              { lbl: 'Chênh lệch',   val: fmtVnd(item.sjcSellVnd - item.sjcBuyVnd),  cls: 'text-down'  },
+              { lbl: 'XAU/USD',      val: `$${item.xauUsd.toFixed(2)}`,              cls: 'text-chalk' },
             ].map(cell => (
               <div key={cell.lbl} className="bg-ink-3 rounded-md p-[10px_12px] border border-hairline">
                 <div className="font-mono text-[9px] leading-none font-bold tracking-[0.14em] uppercase text-mute mb-[6px]">
                   {cell.lbl}
                 </div>
-                <div className="font-display text-[15px] leading-none font-bold text-chalk [font-variant-numeric:tabular-nums]">
+                <div className={cn('font-display text-[15px] leading-none font-bold [font-variant-numeric:tabular-nums]', cell.cls)}>
                   {cell.val}
                 </div>
               </div>
@@ -118,8 +122,8 @@ function DigestArchiveContent() {
   const total = data?.total ?? 0;
 
   return (
-    <div className="bg-ink min-h-screen text-chalk">
-      <div className="p-[32px_40px] max-w-[860px] mx-auto">
+    <div className="h-full overflow-auto bg-ink text-chalk">
+      <div className="p-[32px_40px_60px] max-w-[860px] mx-auto">
         {/* Back button */}
         <Button variant="ghost" onClick={() => router.back()} className="text-mute flex items-center gap-[6px] font-sans text-[13px] font-medium p-0 pb-6 h-auto hover:bg-transparent hover:text-bone">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
