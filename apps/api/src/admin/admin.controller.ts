@@ -145,6 +145,15 @@ export class AdminController {
     return this.adminService.closeForecastSession(id);
   }
 
+  // POST /admin/forecast/sessions/:id/auto-score — derive result from price data
+  @Post('forecast/sessions/:id/auto-score')
+  autoScoreForecastSession(
+    @Param('id') id: string,
+    @Req() req: { user: { sub: string } },
+  ) {
+    return this.adminService.autoScoreSession(id, req.user.sub);
+  }
+
   // PATCH /admin/forecast/sessions/:id/result  body: { actualResult: "up"|"down"|"flat" }
   @Patch('forecast/sessions/:id/result')
   setForecastResult(
@@ -189,23 +198,4 @@ export class AdminController {
     return this.adminService.reviewAnomaly(priceRecordId, body.action, req.user.sub);
   }
 
-  // GET /admin/benchmarks?assetType=GOLD
-  @Get('benchmarks')
-  getBenchmarks(@Query('assetType') assetType?: string) {
-    return this.adminService.getBenchmarks(assetType);
-  }
-
-  // POST /admin/benchmarks  body: { assetType, date, value, note? }
-  @Post('benchmarks')
-  upsertBenchmark(
-    @Body() body: { assetType: string; date: string; value: number; note?: string },
-  ) {
-    return this.adminService.upsertBenchmark(body);
-  }
-
-  // DELETE /admin/benchmarks/:id
-  @Delete('benchmarks/:id')
-  deleteBenchmark(@Param('id') id: string) {
-    return this.adminService.deleteBenchmark(id);
-  }
 }

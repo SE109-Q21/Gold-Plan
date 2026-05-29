@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useAdminUsers, useLockUser, useUnlockUser, useChangeUserRole } from '@/lib/admin.api';
+import { useAuth } from '@/contexts/auth-context';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,6 +33,7 @@ export default function AdminUsersPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
 
+  const { user: currentUser } = useAuth();
   const { data, isLoading, isError } = useAdminUsers({ page, search: search || undefined, status: statusFilter || undefined, role: roleFilter || undefined });
   const { mutate: lock, isPending: isLocking } = useLockUser();
   const { mutate: unlock, isPending: isUnlocking } = useUnlockUser();
@@ -58,7 +60,8 @@ export default function AdminUsersPage() {
   );
 
   return (
-    <div className="p-[32px_36px]">
+    <div className="h-full overflow-auto bg-ink">
+    <div className="p-[32px_36px_60px]">
       <div className="mb-6">
         <h1 className="font-display text-[28px] leading-none font-extrabold m-0 mb-[6px] tracking-[-0.02em]">Người dùng</h1>
         <div className="font-mono text-[12px] leading-none text-mute">
@@ -116,9 +119,14 @@ export default function AdminUsersPage() {
                   <tr>
                     <td colSpan={7} className="p-[24px_16px] font-mono text-[13px] text-mute text-center">Không tìm thấy người dùng.</td>
                   </tr>
-                ) : users.map(u => (
-                  <tr key={u.id} className="border-t border-hairline">
-                    <td className={cn(TD, 'font-mono text-[13px] leading-none text-bone')}>{u.email}</td>
+                ) : users.map(u => {
+                  const isSelf = u.email === currentUser?.email;
+                  return (
+                  <tr key={u.id} className={cn('border-t border-hairline', isSelf && 'bg-[rgba(212,175,55,0.03)]')}>
+                    <td className={cn(TD, 'font-mono text-[13px] leading-none text-bone')}>
+                      {u.email}
+                      {isSelf && <span className="ml-2 font-mono text-[8px] leading-none font-bold tracking-[0.1em] uppercase text-gold bg-[rgba(212,175,55,0.15)] border border-[rgba(212,175,55,0.3)] px-[5px] py-[2px] rounded-[3px]">Bạn</span>}
+                    </td>
                     <td className={cn(TD, 'font-display text-[13px] leading-none text-chalk')}>
                       {u.displayName ?? <span className="text-mute">—</span>}
                     </td>
@@ -139,21 +147,28 @@ export default function AdminUsersPage() {
                       {new Date(u.createdAt).toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}
                     </td>
                     <td className="p-[10px_16px]">
-                      <div className="flex gap-[6px] flex-wrap">
-                        {u.status === 'locked' ? (
-                          <Button variant="outline" size="sm" onClick={() => unlock(u.id)} disabled={isMutating} className="px-[10px] py-[5px] h-auto border-up text-up hover:bg-[rgba(88,200,150,0.08)] hover:text-up font-mono text-[9px] font-bold tracking-[0.08em] uppercase">Mở khóa</Button>
-                        ) : (u.status === 'active' || u.status === 'pending') ? (
-                          <Button variant="outline" size="sm" onClick={() => lock(u.id)} disabled={isMutating} className="px-[10px] py-[5px] h-auto border-down text-down hover:bg-[rgba(229,72,77,0.08)] hover:text-down font-mono text-[9px] font-bold tracking-[0.08em] uppercase">Khóa</Button>
-                        ) : null}
-                        {u.role === 'user' ? (
-                          <Button variant="outline" size="sm" onClick={() => changeRole({ id: u.id, role: 'admin' })} disabled={isMutating} className="px-[10px] py-[5px] h-auto border-[rgba(212,175,55,0.5)] text-gold hover:bg-[rgba(212,175,55,0.08)] hover:text-gold font-mono text-[9px] font-bold tracking-[0.08em] uppercase">Nâng quyền</Button>
-                        ) : u.role === 'admin' ? (
-                          <Button variant="outline" size="sm" onClick={() => changeRole({ id: u.id, role: 'user' })} disabled={isMutating} className="px-[10px] py-[5px] h-auto border-line text-mute hover:bg-ink-3 hover:text-bone font-mono text-[9px] font-bold tracking-[0.08em] uppercase">Hạ quyền</Button>
-                        ) : null}
+                      <div className="flex gap-[6px] flex-wrap items-center">
+                        {isSelf ? (
+                          <span className="font-mono text-[9px] leading-none font-bold tracking-[0.08em] uppercase text-mute">—</span>
+                        ) : (
+                          <>
+                            {u.status === 'locked' ? (
+                              <Button variant="outline" size="sm" onClick={() => unlock(u.id)} disabled={isMutating} className="px-[10px] py-[5px] h-auto border-up text-up hover:bg-[rgba(88,200,150,0.08)] hover:text-up font-mono text-[9px] font-bold tracking-[0.08em] uppercase">Mở khóa</Button>
+                            ) : (u.status === 'active' || u.status === 'pending') ? (
+                              <Button variant="outline" size="sm" onClick={() => lock(u.id)} disabled={isMutating} className="px-[10px] py-[5px] h-auto border-down text-down hover:bg-[rgba(229,72,77,0.08)] hover:text-down font-mono text-[9px] font-bold tracking-[0.08em] uppercase">Khóa</Button>
+                            ) : null}
+                            {u.role === 'user' ? (
+                              <Button variant="outline" size="sm" onClick={() => changeRole({ id: u.id, role: 'admin' })} disabled={isMutating} className="px-[10px] py-[5px] h-auto border-[rgba(212,175,55,0.5)] text-gold hover:bg-[rgba(212,175,55,0.08)] hover:text-gold font-mono text-[9px] font-bold tracking-[0.08em] uppercase">Nâng quyền</Button>
+                            ) : u.role === 'admin' ? (
+                              <Button variant="outline" size="sm" onClick={() => changeRole({ id: u.id, role: 'user' })} disabled={isMutating} className="px-[10px] py-[5px] h-auto border-line text-mute hover:bg-ink-3 hover:text-bone font-mono text-[9px] font-bold tracking-[0.08em] uppercase">Hạ quyền</Button>
+                            ) : null}
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
 
@@ -175,6 +190,7 @@ export default function AdminUsersPage() {
           </>
         )}
       </div>
+    </div>
     </div>
   );
 }

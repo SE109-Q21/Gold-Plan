@@ -200,6 +200,15 @@ export function useSetForecastResult() {
   });
 }
 
+export function useAutoScoreForecastSession() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiClient.post(`/admin/forecast/sessions/${id}/auto-score`).then(r => r.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin', 'forecast'] }),
+  });
+}
+
 // ─── Data Source enable/create/update ─────────────────────────────────────────
 
 export function useEnableDataSource() {

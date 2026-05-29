@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import {
   useAdminForecastSessions, useAdminSessionVotes,
   useOpenForecastSession, useCloseForecastSession, useSetForecastResult,
+  useAutoScoreForecastSession,
 } from '@/lib/admin.api';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -148,13 +149,16 @@ export default function AdminForecastPage() {
   const { data: sessions, isLoading, isError } = useAdminForecastSessions();
   const { mutate: closeSession, isPending: isClosing } = useCloseForecastSession();
   const { mutate: setResult, isPending: isSettingResult } = useSetForecastResult();
+  const { mutate: autoScore, isPending: isAutoScoring } = useAutoScoreForecastSession();
   const [showNewForm, setShowNewForm] = useState(false);
   const [expandedVotes, setExpandedVotes] = useState<string | null>(null);
+  const [showManualOverride, setShowManualOverride] = useState<string | null>(null);
 
   function toggleVotes(id: string) { setExpandedVotes(prev => prev === id ? null : id); }
 
   return (
-    <div className="p-[32px_36px]">
+    <div className="h-full overflow-auto bg-ink">
+    <div className="p-[32px_36px_60px]">
       <div className="flex items-center justify-between mb-7">
         <div>
           <h1 className="font-display text-[28px] leading-none font-extrabold m-0 mb-[6px] tracking-[-0.02em]">Phiên Dự Báo</h1>
@@ -221,11 +225,34 @@ export default function AdminForecastPage() {
                             </Button>
                           )}
                           {status === 'closed' && (
-                            <>
-                              <Button variant="outline" size="sm" onClick={() => setResult({ id: session.id, actualResult: 'up' })}   disabled={isSettingResult} className="px-[9px] py-[5px] h-auto border-[#22c55e] bg-transparent text-[#22c55e] hover:bg-[rgba(34,197,94,0.08)] hover:text-[#22c55e] font-mono text-[10px] font-bold tracking-[0.06em] uppercase">↑ Tăng</Button>
-                              <Button variant="outline" size="sm" onClick={() => setResult({ id: session.id, actualResult: 'flat' })} disabled={isSettingResult} className="px-[9px] py-[5px] h-auto border-gold bg-transparent text-gold hover:bg-[rgba(212,175,55,0.08)] hover:text-gold font-mono text-[10px] font-bold tracking-[0.06em] uppercase">→ Đi ngang</Button>
-                              <Button variant="outline" size="sm" onClick={() => setResult({ id: session.id, actualResult: 'down' })} disabled={isSettingResult} className="px-[9px] py-[5px] h-auto border-[#ef4444] bg-transparent text-[#ef4444] hover:bg-[rgba(239,68,68,0.08)] hover:text-[#ef4444] font-mono text-[10px] font-bold tracking-[0.06em] uppercase">↓ Giảm</Button>
-                            </>
+                            <div className="flex flex-col gap-[6px]">
+                              {/* Primary: auto-score from price data */}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => autoScore(session.id)}
+                                disabled={isAutoScoring || isSettingResult}
+                                className="px-[9px] py-[5px] h-auto border-gold bg-[rgba(212,175,55,0.08)] text-gold hover:bg-[rgba(212,175,55,0.16)] hover:text-gold font-mono text-[10px] font-bold tracking-[0.06em] uppercase whitespace-nowrap"
+                              >
+                                {isAutoScoring ? '⏳ Đang chấm…' : '⚡ Chấm tự động'}
+                              </Button>
+                              {/* Override toggle */}
+                              <button
+                                type="button"
+                                onClick={() => setShowManualOverride(prev => prev === session.id ? null : session.id)}
+                                className="font-mono text-[9px] leading-none text-mute hover:text-bone tracking-[0.06em] text-left"
+                              >
+                                {showManualOverride === session.id ? '▲ ẩn' : '▼ chấm thủ công'}
+                              </button>
+                              {showManualOverride === session.id && (
+                                <div className="flex gap-[4px] flex-wrap mt-[2px]">
+                                  <span className="font-mono text-[8px] leading-none text-mute uppercase tracking-[0.08em] self-center mr-1">override:</span>
+                                  <Button variant="outline" size="sm" onClick={() => setResult({ id: session.id, actualResult: 'up' })}   disabled={isSettingResult || isAutoScoring} className="px-[8px] py-[4px] h-auto border-[#22c55e] bg-transparent text-[#22c55e] hover:bg-[rgba(34,197,94,0.08)] hover:text-[#22c55e] font-mono text-[9px] font-bold tracking-[0.06em] uppercase">↑</Button>
+                                  <Button variant="outline" size="sm" onClick={() => setResult({ id: session.id, actualResult: 'flat' })} disabled={isSettingResult || isAutoScoring} className="px-[8px] py-[4px] h-auto border-gold bg-transparent text-gold hover:bg-[rgba(212,175,55,0.08)] hover:text-gold font-mono text-[9px] font-bold tracking-[0.06em] uppercase">→</Button>
+                                  <Button variant="outline" size="sm" onClick={() => setResult({ id: session.id, actualResult: 'down' })} disabled={isSettingResult || isAutoScoring} className="px-[8px] py-[4px] h-auto border-[#ef4444] bg-transparent text-[#ef4444] hover:bg-[rgba(239,68,68,0.08)] hover:text-[#ef4444] font-mono text-[9px] font-bold tracking-[0.06em] uppercase">↓</Button>
+                                </div>
+                              )}
+                            </div>
                           )}
                           <Button
                             variant="outline"
@@ -249,6 +276,7 @@ export default function AdminForecastPage() {
           </table>
         )}
       </div>
+    </div>
     </div>
   );
 }

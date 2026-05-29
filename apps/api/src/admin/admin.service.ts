@@ -160,6 +160,7 @@ export class AdminService {
   }
 
   async lockUser(id: string, adminId: string) {
+    if (id === adminId) throw new BadRequestException('Không thể khóa tài khoản của chính mình');
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) throw new NotFoundException(`User ${id} not found`);
 
@@ -202,8 +203,17 @@ export class AdminService {
   }
 
   async changeUserRole(id: string, role: 'user' | 'admin', adminId: string) {
+    if (id === adminId && role === 'user')
+      throw new BadRequestException('Không thể hạ quyền chính mình');
+
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) throw new NotFoundException(`User ${id} not found`);
+
+    if (role === 'user' && user.role === 'admin') {
+      const adminCount = await this.prisma.user.count({ where: { role: 'admin' } });
+      if (adminCount <= 1)
+        throw new BadRequestException('Không thể hạ quyền admin cuối cùng của hệ thống');
+    }
 
     const updated = await this.prisma.user.update({
       where: { id },
@@ -463,6 +473,42 @@ export class AdminService {
     });
   }
 
+  async autoScoreSession(id: string, adminId: string) {
+    const session = await this.prisma.forecastSession.findUnique({
+      where: { id },
+      include: { votes: true },
+    });
+    if (!session) throw new NotFoundException(`Session ${id} not found`);
+    if (!session.sessionClosed) throw new BadRequestException('Phiên chưa đóng');
+    if (session.scoredAt) throw new BadRequestException('Phiên đã được chấm điểm rồi');
+
+    const [openRecord, closeRecord] = await Promise.all([
+      this.prisma.priceRecord.findFirst({
+        where: { brand: 'SJC' as any, goldType: 'MIEN_SJC' as any, isAnomalous: false, recordedAt: { gte: session.opensAt } },
+        orderBy: { recordedAt: 'asc' },
+        select: { buyPrice: true },
+      }),
+      this.prisma.priceRecord.findFirst({
+        where: { brand: 'SJC' as any, goldType: 'MIEN_SJC' as any, isAnomalous: false, recordedAt: { lte: session.closesAt } },
+        orderBy: { recordedAt: 'desc' },
+        select: { buyPrice: true },
+      }),
+    ]);
+
+    if (!openRecord || !closeRecord)
+      throw new BadRequestException(
+        'Không tìm thấy dữ liệu giá SJC cho khoảng thời gian này – dùng chấm thủ công.',
+      );
+
+    const diff = Number(closeRecord.buyPrice) - Number(openRecord.buyPrice);
+    const actualResult =
+      diff > 0 ? ForecastDirection.up :
+      diff < 0 ? ForecastDirection.down :
+                 ForecastDirection.flat;
+
+    return this.setForecastResult(id, actualResult, adminId);
+  }
+
   async setForecastResult(id: string, actualResult: ForecastDirection, adminId: string) {
     const session = await this.prisma.forecastSession.findUnique({
       where: { id },
@@ -574,25 +620,4 @@ export class AdminService {
     };
   }
 
-  // ── Asset benchmarks ───────────────────────────────────────────────────────────
-
-  async getBenchmarks(assetType?: string) {
-    return this.prisma.assetBenchmark.findMany({
-      where: assetType ? { assetType } : undefined,
-      orderBy: [{ assetType: 'asc' }, { date: 'desc' }],
-    });
-  }
-
-  async upsertBenchmark(dto: { assetType: string; date: string; value: number; note?: string }) {
-    const date = new Date(dto.date);
-    return this.prisma.assetBenchmark.upsert({
-      where: { assetType_date: { assetType: dto.assetType, date } },
-      create: { assetType: dto.assetType, date, value: dto.value, note: dto.note },
-      update: { value: dto.value, note: dto.note },
-    });
-  }
-
-  async deleteBenchmark(id: string) {
-    return this.prisma.assetBenchmark.delete({ where: { id } });
-  }
 }
