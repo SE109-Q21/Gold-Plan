@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -112,6 +112,32 @@ export default function FireCalculatorPage() {
     };
   }, [currentSavings, monthlyIncome, monthlyExpenses, annualReturn, inflation, withdrawalRate]);
 
+  const [resultVersion, setResultVersion] = useState(0);
+  const [displayYears, setDisplayYears] = useState(0);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const countUpRef = useRef<number>();
+
+  useEffect(() => {
+    if (!result) return;
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => setResultVersion(v => v + 1), 350);
+    return () => clearTimeout(debounceRef.current);
+  }, [result]);
+
+  useEffect(() => {
+    cancelAnimationFrame(countUpRef.current!);
+    if (!result || result.years === 0) { setDisplayYears(0); return; }
+    const target = result.years;
+    const t0 = performance.now();
+    const run = (now: number) => {
+      const p = Math.min((now - t0) / 900, 1);
+      setDisplayYears(Math.round((1 - (1 - p) ** 3) * target));
+      if (p < 1) countUpRef.current = requestAnimationFrame(run);
+    };
+    countUpRef.current = requestAnimationFrame(run);
+    return () => cancelAnimationFrame(countUpRef.current!);
+  }, [resultVersion]);
+
   function fmtVnd(n: number) {
     if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(2) + ' tỷ ₫';
     return (n / 1_000_000).toFixed(2) + ' triệu ₫';
@@ -119,6 +145,22 @@ export default function FireCalculatorPage() {
 
   return (
     <div className="h-full overflow-auto bg-ink">
+      <style>{`
+        @keyframes result-in {
+          from { opacity: 0; transform: translateY(10px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes years-pop {
+          0%   { opacity: 0; transform: scale(0.65); }
+          65%  { transform: scale(1.06); }
+          100% { opacity: 1; transform: scale(1); }
+        }
+        @keyframes celebrate-in {
+          0%   { opacity: 0; transform: scale(0.4) rotate(-12deg); }
+          60%  { transform: scale(1.15) rotate(6deg); }
+          100% { opacity: 1; transform: scale(1) rotate(0deg); }
+        }
+      `}</style>
       <div className="p-[32px_24px_60px] flex flex-col items-center">
       <div className="w-full max-w-[800px]">
 
@@ -153,7 +195,7 @@ export default function FireCalculatorPage() {
 
           {/* Results */}
           <div className="flex flex-col gap-5">
-            <div className="bg-ink-2 border border-line rounded-[14px] p-[24px_28px]">
+            <div key={resultVersion} className="bg-ink-2 border border-line rounded-[14px] p-[24px_28px]" style={{ animation: 'result-in 0.4s ease-out both' }}>
               <SectionLabel>Kết quả ước tính</SectionLabel>
               {!result ? (
                 <div className="py-6 text-center text-mute font-mono text-[13px]">
@@ -163,14 +205,14 @@ export default function FireCalculatorPage() {
                 <>
                   {result.years === 0 ? (
                     <div className="py-4 text-center">
-                      <div className="text-[48px] leading-none font-extrabold text-gold">🎉</div>
-                      <div className="font-display text-[22px] font-extrabold text-gold mt-3">Bạn đã đạt FIRE!</div>
+                      <div className="text-[48px] leading-none font-extrabold text-gold" style={{ animation: 'celebrate-in 0.65s cubic-bezier(0.34,1.56,0.64,1) both' }}>🎉</div>
+                      <div className="font-display text-[22px] font-extrabold text-gold mt-3" style={{ animation: 'result-in 0.4s ease-out 0.15s both' }}>Bạn đã đạt FIRE!</div>
                       <div className="font-mono text-[12px] text-mute mt-2">Tài sản hiện tại đủ để nghỉ hưu</div>
                     </div>
                   ) : (
                     <div className="text-center py-4 mb-4 border-b border-hairline">
                       <div className="font-mono text-[11px] text-mute tracking-[0.12em] uppercase mb-1">Số năm đến FIRE</div>
-                      <div className="font-display text-[72px] leading-none font-extrabold text-gold tabular-nums">{result.years}</div>
+                      <div className="font-display text-[72px] leading-none font-extrabold text-gold tabular-nums" style={{ animation: 'years-pop 0.55s cubic-bezier(0.34,1.56,0.64,1) both' }}>{displayYears}</div>
                       <div className="font-mono text-[12px] text-mute mt-1">năm nữa</div>
                     </div>
                   )}

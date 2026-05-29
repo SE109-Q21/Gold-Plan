@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -54,9 +54,9 @@ function NumInput({
 
 type Mode = 'future' | 'past';
 
-function ResultCard({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: string }) {
+function ResultCard({ label, value, sub, color, delay = 0 }: { label: string; value: string; sub?: string; color?: string; delay?: number }) {
   return (
-    <div className="p-[18px] bg-ink-3 border border-line rounded-[12px]">
+    <div className="p-[18px] bg-ink-3 border border-line rounded-[12px]" style={{ animation: `result-in 0.4s ease-out ${delay}ms both` }}>
       <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-[8px]">{label}</div>
       <div className={cn('font-display text-[26px] leading-none font-extrabold tabular-nums', color ?? 'text-chalk')}>{value}</div>
       {sub && <div className="font-mono text-[11px] text-mute mt-[6px]">{sub}</div>}
@@ -91,6 +91,16 @@ export default function InflationCalculatorPage() {
     }
   }, [amount, inflation, years, mode]);
 
+  const [resultVersion, setResultVersion] = useState(0);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => {
+    if (!result) return;
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => setResultVersion(v => v + 1), 350);
+    return () => clearTimeout(debounceRef.current);
+  }, [result]);
+
   function fmtVnd(n: number) {
     if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(3) + ' tỷ ₫';
     if (n >= 1_000_000) return (n / 1_000_000).toFixed(2) + ' triệu ₫';
@@ -101,6 +111,12 @@ export default function InflationCalculatorPage() {
 
   return (
     <div className="h-full overflow-auto bg-ink">
+      <style>{`
+        @keyframes result-in {
+          from { opacity: 0; transform: translateY(10px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
       <div className="p-[32px_24px_60px] flex flex-col items-center">
       <div className="w-full max-w-[800px]">
 
@@ -158,7 +174,7 @@ export default function InflationCalculatorPage() {
           </div>
 
           {/* Results */}
-          <div className="flex flex-col gap-4">
+          <div key={resultVersion} className="flex flex-col gap-4">
             {!result ? (
               <div className="bg-ink-2 border border-line rounded-[14px] p-[24px_28px] flex items-center justify-center h-full">
                 <span className="text-mute font-mono text-[13px]">Nhập số liệu để tính</span>
@@ -170,18 +186,21 @@ export default function InflationCalculatorPage() {
                   value={fmtVnd(result.futureValue!)}
                   sub={`Số tiền gốc ${fmtVnd(parseFloat(amount) || 0)} chỉ mua được hàng hóa trị giá này`}
                   color="text-down"
+                  delay={0}
                 />
                 <ResultCard
                   label="Sức mua mất đi"
                   value={`-${result.purchasePowerLoss!.toFixed(1)}%`}
                   sub={`Sau ${years} năm ở lạm phát ${inflation}%/năm`}
                   color="text-down"
+                  delay={80}
                 />
                 <ResultCard
                   label="Cần có để giữ nguyên sức mua"
                   value={fmtVnd(result.neededToKeep!)}
                   sub="Số tiền cần tích lũy để mua được hàng hóa tương đương"
                   color="text-up"
+                  delay={160}
                 />
               </>
             ) : (
@@ -191,11 +210,13 @@ export default function InflationCalculatorPage() {
                   value={fmtVnd(result.pastValue!)}
                   sub={`${fmtVnd(parseFloat(amount) || 0)} hiện tại tương đương số tiền này X năm trước`}
                   color="text-gold"
+                  delay={0}
                 />
                 <ResultCard
                   label="Giá đã tăng bao nhiêu"
                   value={`+${result.purchasePowerGrowth!.toFixed(1)}%`}
                   sub={`Sau ${years} năm ở lạm phát ${inflation}%/năm`}
+                  delay={80}
                 />
               </>
             )}
