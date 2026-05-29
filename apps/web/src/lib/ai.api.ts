@@ -1,6 +1,6 @@
 import type { AiChatMessageDto } from '@gpls/shared';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
 
 export async function* streamAiChat(
   messages: AiChatMessageDto[],

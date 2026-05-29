@@ -426,7 +426,7 @@ function AddTransactionModal({ onClose }: { onClose: () => void }) {
         goldType,
         quantity: qtyNum,
         pricePerTael: priceNum,
-        transactedAt: new Date(date + 'T00:00:00').toISOString(),
+        transactedAt: date + 'T00:00:00+07:00',
         note: note || undefined,
       };
       await addTx.mutateAsync(payload);
@@ -606,7 +606,7 @@ function EditTransactionModal({ tx, onClose }: { tx: EditableTx; onClose: () => 
         goldType,
         quantity: qtyNum,
         pricePerTael: priceNum,
-        transactedAt: new Date(date + 'T00:00:00').toISOString(),
+        transactedAt: date + 'T00:00:00+07:00',
         note: note || undefined,
       });
       toast.success('Giao dịch đã được cập nhật');

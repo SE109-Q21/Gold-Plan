@@ -12,6 +12,8 @@ import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import type { Response } from 'express';
 
+const oauthCodes = new Map<string, { accessToken: string; expiresAt: number }>();
+
 export interface RegisterDto {
   email: string;
   password: string;
@@ -249,6 +251,12 @@ export class AuthService {
       return SAFE_RESPONSE;
     }
 
+    // Invalidate any existing unused reset tokens before creating a new one
+    await this.prisma.passwordReset.updateMany({
+      where: { userId: user.id, usedAt: null },
+      data: { usedAt: new Date() },
+    });
+
     const token = crypto.randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // +1h
 
@@ -290,7 +298,7 @@ export class AuthService {
     await this.prisma.$transaction([
       this.prisma.user.update({
         where: { id: resetRecord.userId },
-        data: { passwordHash },
+        data: { passwordHash, tokenVersion: { increment: 1 } },
       }),
       this.prisma.passwordReset.update({
         where: { id: resetRecord.id },
@@ -326,7 +334,7 @@ export class AuthService {
     const passwordHash = await bcrypt.hash(newPassword, 10);
     await this.prisma.user.update({
       where: { id: userId },
-      data: { passwordHash },
+      data: { passwordHash, tokenVersion: { increment: 1 } },
     });
 
     return { message: 'Password changed successfully' };
@@ -400,6 +408,28 @@ export class AuthService {
     });
 
     return { accessToken };
+  }
+
+  // ─── OAuth one-time code exchange ────────────────────────────────────────────
+
+  generateOAuthCode(accessToken: string): string {
+    const code = crypto.randomBytes(32).toString('hex');
+    const expiresAt = Date.now() + 60_000; // 60 seconds
+    // Prune expired codes to avoid memory growth
+    for (const [k, v] of oauthCodes) {
+      if (Date.now() >= v.expiresAt) oauthCodes.delete(k);
+    }
+    oauthCodes.set(code, { accessToken, expiresAt });
+    return code;
+  }
+
+  exchangeOAuthCode(code: string): string {
+    const entry = oauthCodes.get(code);
+    if (!entry || Date.now() >= entry.expiresAt) {
+      throw new UnauthorizedException('Invalid or expired OAuth code');
+    }
+    oauthCodes.delete(code);
+    return entry.accessToken;
   }
 
   // ─── Private Helpers ──────────────────────────────────────────────────────────

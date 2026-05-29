@@ -123,6 +123,16 @@ export async function apiChangePassword(
   return handleResponse<{ message: string }>(res);
 }
 
+export async function apiExchangeOAuthCode(code: string): Promise<{ accessToken: string }> {
+  const res = await fetch(`${API}/auth/oauth/exchange`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code }),
+  });
+  return handleResponse<{ accessToken: string }>(res);
+}
+
 export async function apiDeleteAccount(accessToken: string): Promise<void> {
   const res = await fetch(`${API}/users/me`, {
     method: 'DELETE',

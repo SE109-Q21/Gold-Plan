@@ -10,6 +10,7 @@ import {
   UseGuards,
   UsePipes,
   ValidationPipe,
+  BadRequestException,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
@@ -88,8 +89,19 @@ export class AuthController {
   @UseGuards(GoogleAuthGuard)
   async googleCallback(@Req() req: any, @Res() res: Response) {
     const { accessToken } = await this.authService.googleLogin(req.user, res);
+    const code = this.authService.generateOAuthCode(accessToken);
     const webUrl =
       this.configService.get<string>('WEB_URL') ?? 'http://localhost:3000';
-    res.redirect(`${webUrl}/auth/oauth-callback?token=${accessToken}`);
+    res.redirect(`${webUrl}/auth/oauth-callback?code=${code}`);
+  }
+
+  @Post('oauth/exchange')
+  @HttpCode(200)
+  oauthExchange(@Body() body: { code?: string }): { accessToken: string } {
+    if (!body?.code || typeof body.code !== 'string') {
+      throw new BadRequestException('code is required');
+    }
+    const accessToken = this.authService.exchangeOAuthCode(body.code);
+    return { accessToken };
   }
 }

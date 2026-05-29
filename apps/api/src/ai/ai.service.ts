@@ -46,6 +46,12 @@ export class AiService {
 
   checkGuestLimit(ip: string): void {
     const now = Date.now();
+
+    // Evict expired entries to prevent unbounded memory growth
+    for (const [k, v] of guestCounters) {
+      if (now >= v.resetAt) guestCounters.delete(k);
+    }
+
     const entry = guestCounters.get(ip);
     const midnight = new Date(); midnight.setHours(24, 0, 0, 0);
     const resetAt = midnight.getTime();

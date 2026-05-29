@@ -2,6 +2,7 @@
 import { Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
+import { apiExchangeOAuthCode } from '@/lib/auth.api';
 
 function OAuthCallbackContent() {
   const router = useRouter();
@@ -9,12 +10,13 @@ function OAuthCallbackContent() {
   const { loginWithToken } = useAuth();
 
   useEffect(() => {
-    const token = params.get('token');
-    if (!token) {
+    const code = params.get('code');
+    if (!code) {
       router.push('/auth/login?error=oauth_failed');
       return;
     }
-    loginWithToken(token)
+    apiExchangeOAuthCode(code)
+      .then(({ accessToken }) => loginWithToken(accessToken))
       .then(() => router.push('/'))
       .catch(() => router.push('/auth/login?error=oauth_failed'));
   }, [params, router, loginWithToken]);
