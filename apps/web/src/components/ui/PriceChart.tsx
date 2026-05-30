@@ -18,6 +18,14 @@ export interface CompareSeries {
   color: string;
 }
 
+interface OhlcCandle {
+  time: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+}
+
 const PC_W = 920, PC_H = 320;
 const PC_PAD = { l: 52, r: 12, t: 16, b: 32 };
 const PC_IW = PC_W - PC_PAD.l - PC_PAD.r;
@@ -26,6 +34,31 @@ const PC_IH = PC_H - PC_PAD.t - PC_PAD.b;
 function fmtDT(iso: string) {
   const d = new Date(iso);
   return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+function buildCandles(points: PricePoint[], range: string): OhlcCandle[] {
+  if (points.length < 2) return [];
+  const getKey = (iso: string): string => {
+    const d = new Date(iso);
+    const Y = d.getFullYear(), M = d.getMonth(), D = d.getDate(), H = d.getHours();
+    if (range === '1D') return `${Y}-${M}-${D}-${H}`;
+    if (range === '1Y') return `${Y}-${M}`;
+    if (range === '3M') return `${Y}-${M}-W${Math.floor((D - 1) / 7)}`;
+    return `${Y}-${M}-${D}`;
+  };
+  const groups = new Map<string, { prices: number[]; time: string }>();
+  for (const pt of points) {
+    const key = getKey(pt.recordedAt);
+    if (!groups.has(key)) groups.set(key, { prices: [], time: pt.recordedAt });
+    groups.get(key)!.prices.push(pt.buyPrice);
+  }
+  return Array.from(groups.values()).map(({ prices, time }) => ({
+    time,
+    open:  prices[0],
+    close: prices[prices.length - 1],
+    high:  Math.max(...prices),
+    low:   Math.min(...prices),
+  }));
 }
 
 export function PriceChart({
@@ -47,10 +80,13 @@ export function PriceChart({
   const [hoverIdx,    setHoverIdx]    = useState<number | null>(null);
   const [showMA,      setShowMA]      = useState(false);
   const [showBB,      setShowBB]      = useState(false);
+  const [showCandle,  setShowCandle]  = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const [dragStart,   setDragStart]   = useState<number | null>(null);
   const [dragCurrent, setDragCurrent] = useState<number | null>(null);
   const [zoomWindow,  setZoomWindow]  = useState<[number, number] | null>(null);
   const [touchPinned, setTouchPinned] = useState(false);
+  const [dataVersion, setDataVersion] = useState(0);
 
   const zoomRef = useRef(zoomWindow); zoomRef.current = zoomWindow;
   const histRef = useRef(history);   histRef.current = history;
@@ -58,6 +94,7 @@ export function PriceChart({
   useEffect(() => {
     setZoomWindow(null); setHoverIdx(null); setTouchPinned(false); onHoverPrice(null);
     setShowBB(false); setDragStart(null); setDragCurrent(null);
+    setDataVersion(v => v + 1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [range, history.length]);
 
@@ -101,10 +138,13 @@ export function PriceChart({
   // ─── Data preparation ─────────────────────────────────────────────────────
 
   const [visStart, visEnd] = zoomWindow ?? [0, Math.max(0, history.length - 1)];
-  const visible    = history.slice(visStart, visEnd + 1);
-  const rawPrices  = visible.map(p => p.buyPrice);
+  const visible   = history.slice(visStart, visEnd + 1);
+  const rawPrices = visible.map(p => p.buyPrice);
 
   const isCompareMode = !!compareData?.length;
+
+  const candleData    = showCandle && !isCompareMode ? buildCandles(visible, range) : [];
+  const useCandleMode = showCandle && !isCompareMode && candleData.length >= 2;
 
   const primaryValues = isCompareMode && rawPrices.length > 0
     ? rawPrices.map(p => ((p / rawPrices[0]) - 1) * 100)
@@ -118,9 +158,9 @@ export function PriceChart({
     return { brand: s.brand, color: s.color, values: p.map(px => ((px / base) - 1) * 100) };
   }) : [];
 
-  // ─── Bollinger Bands (computed before allYValues so y-axis includes BB range) ──
+  // ─── Bollinger Bands ──────────────────────────────────────────────────────
   const BB_N = 20;
-  const bbBands: { upper: number | null; lower: number | null }[] = !isCompareMode ? primaryValues.map((_, i) => {
+  const bbBands: { upper: number | null; lower: number | null }[] = !isCompareMode && !useCandleMode ? primaryValues.map((_, i) => {
     if (i < BB_N - 1) return { upper: null, lower: null };
     const window = primaryValues.slice(i - BB_N + 1, i + 1);
     const mean = window.reduce((a, b) => a + b, 0) / BB_N;
@@ -129,18 +169,17 @@ export function PriceChart({
     return { upper: mean + 2 * sigma, lower: mean - 2 * sigma };
   }) : [];
 
-  const allYValues = [
-    ...primaryValues,
-    ...(isCompareMode ? compareNorm.flatMap(s => s.values).filter(Number.isFinite) : []),
-    ...(showBB && !isCompareMode ? bbBands.flatMap(b => [b.upper, b.lower]).filter((v): v is number => v !== null) : []),
-  ];
+  const allYValues = useCandleMode
+    ? candleData.flatMap(c => [c.high, c.low])
+    : [
+        ...primaryValues,
+        ...(isCompareMode ? compareNorm.flatMap(s => s.values).filter(Number.isFinite) : []),
+        ...(showBB && !isCompareMode ? bbBands.flatMap(b => [b.upper, b.lower]).filter((v): v is number => v !== null) : []),
+      ];
 
   if (isLoading) {
     return (
-      <div
-        className="flex items-center justify-center text-mute font-mono text-[12px] leading-none font-medium"
-        style={{ height: PC_H }}
-      >
+      <div className="flex items-center justify-center text-mute font-mono text-[12px] leading-none font-medium" style={{ height: PC_H }}>
         Đang tải biểu đồ…
       </div>
     );
@@ -148,10 +187,7 @@ export function PriceChart({
 
   if (allYValues.length < 2) {
     return (
-      <div
-        className="flex flex-col items-center justify-center gap-2 text-mute font-mono text-[12px] leading-none font-medium"
-        style={{ height: PC_H }}
-      >
+      <div className="flex flex-col items-center justify-center gap-2 text-mute font-mono text-[12px] leading-none font-medium" style={{ height: PC_H }}>
         <span className="text-[20px]">📊</span>
         Chưa có dữ liệu cho khoảng thời gian này
       </div>
@@ -162,17 +198,22 @@ export function PriceChart({
   const pad4 = (maxP - minP || 1) * 0.04;
   const minV = minP - pad4, maxV = maxP + pad4, vR = maxV - minV;
 
-  const xS = (i: number, total = primaryValues.length) =>
-    PC_PAD.l + (total <= 1 ? PC_IW / 2 : (i / (total - 1)) * PC_IW);
+  const xS = (i: number, total?: number) => {
+    const n = total ?? primaryValues.length;
+    return PC_PAD.l + (n <= 1 ? PC_IW / 2 : (i / (n - 1)) * PC_IW);
+  };
   const yS = (v: number) => PC_PAD.t + PC_IH * (1 - (v - minV) / vR);
 
-  // ─── Paths ────────────────────────────────────────────────────────────────
-
-  const linePath = primaryValues.map((v, i) => `${i === 0 ? 'M' : 'L'} ${xS(i).toFixed(1)} ${yS(v).toFixed(1)}`).join(' ');
-  const fillPath = `${linePath} L ${xS(primaryValues.length-1).toFixed(1)} ${(PC_PAD.t+PC_IH).toFixed(1)} L ${xS(0).toFixed(1)} ${(PC_PAD.t+PC_IH).toFixed(1)} Z`;
+  // ─── Line paths ───────────────────────────────────────────────────────────
+  const linePath = !useCandleMode
+    ? primaryValues.map((v, i) => `${i === 0 ? 'M' : 'L'} ${xS(i).toFixed(1)} ${yS(v).toFixed(1)}`).join(' ')
+    : '';
+  const fillPath = !useCandleMode
+    ? `${linePath} L ${xS(primaryValues.length-1).toFixed(1)} ${(PC_PAD.t+PC_IH).toFixed(1)} L ${xS(0).toFixed(1)} ${(PC_PAD.t+PC_IH).toFixed(1)} Z`
+    : '';
 
   const SMA_N = 7;
-  const smaVals: (number | null)[] = !isCompareMode ? primaryValues.map((_, i) => {
+  const smaVals: (number | null)[] = !isCompareMode && !useCandleMode ? primaryValues.map((_, i) => {
     if (i < SMA_N - 1) return null;
     const sl = primaryValues.slice(i - SMA_N + 1, i + 1);
     return sl.reduce((a, b) => a + b, 0) / SMA_N;
@@ -199,15 +240,18 @@ export function PriceChart({
     : '';
 
   // ─── Axes ─────────────────────────────────────────────────────────────────
-
   const yGrid = [0.25, 0.5, 0.75].map(p => minV + vR * p);
   const fmtY  = isCompareMode
     ? (v: number) => `${v >= 0 ? '+' : ''}${v.toFixed(2)}%`
     : (v: number) => (v / 1_000_000).toFixed(2);
 
-  const xLabelCount = Math.min(6, primaryValues.length);
-  const xLabelIdxs  = xLabelCount <= 1 ? [0] : Array.from({ length: xLabelCount }, (_, k) =>
-    Math.round((k / (xLabelCount - 1)) * (primaryValues.length - 1))
+  const displayLen   = useCandleMode ? candleData.length : primaryValues.length;
+  const displayItems = useCandleMode
+    ? candleData.map(c => ({ recordedAt: c.time }))
+    : (visible as { recordedAt: string }[]);
+  const xLabelCount  = Math.min(6, displayLen);
+  const xLabelIdxs   = xLabelCount <= 1 ? [0] : Array.from({ length: xLabelCount }, (_, k) =>
+    Math.round((k / (xLabelCount - 1)) * (displayLen - 1))
   );
   function fmtXLabel(iso: string) {
     const d = new Date(iso);
@@ -218,22 +262,55 @@ export function PriceChart({
   }
 
   const today    = new Date();
-  const todayIdx = range !== '1D' ? visible.findIndex(pt => {
+  const todayIdx = range !== '1D' && !useCandleMode ? visible.findIndex(pt => {
     const d = new Date(pt.recordedAt);
     return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth() && d.getDate() === today.getDate();
   }) : -1;
 
-  // ─── Interaction ──────────────────────────────────────────────────────────
+  // ─── Volume Profile ───────────────────────────────────────────────────────
+  const PROFILE_N = 28, PROFILE_MAX_W = 56;
+  const profileBars = showProfile && !isCompareMode && primaryValues.length > 1 ? (() => {
+    const bucketH = PC_IH / PROFILE_N;
+    const counts  = Array.from({ length: PROFILE_N }, () => 0);
+    const vals    = useCandleMode
+      ? candleData.flatMap(c => [c.open, c.close, c.high, c.low])
+      : primaryValues;
+    for (const v of vals) {
+      const ratio  = (v - minV) / vR;
+      const bucket = PROFILE_N - 1 - Math.min(PROFILE_N - 1, Math.floor(ratio * PROFILE_N));
+      if (bucket >= 0 && bucket < PROFILE_N) counts[bucket]++;
+    }
+    const maxCount = Math.max(...counts, 1);
+    const total    = counts.reduce((a, b) => a + b, 0);
+    const sorted   = [...counts].sort((a, b) => b - a);
+    let cumulative = 0, vaThreshold = sorted[0];
+    for (const c of sorted) {
+      cumulative += c; vaThreshold = c;
+      if (cumulative >= total * 0.7) break;
+    }
+    return counts.map((count, i) => ({
+      y: PC_PAD.t + i * bucketH,
+      h: Math.max(0.5, bucketH - 0.5),
+      w: (count / maxCount) * PROFILE_MAX_W,
+      isValueArea: count >= vaThreshold && count > 0,
+    }));
+  })() : [];
 
+  // ─── Interaction ──────────────────────────────────────────────────────────
   function clientXToIdx(clientX: number) {
     if (!containerRef.current) return 0;
     const rect = containerRef.current.getBoundingClientRect();
     const svgX = (clientX - rect.left) * (PC_W / rect.width);
-    return Math.min(Math.max(Math.round(((svgX - PC_PAD.l) / PC_IW) * (primaryValues.length - 1)), 0), primaryValues.length - 1);
+    const n    = useCandleMode ? candleData.length : primaryValues.length;
+    return Math.min(Math.max(Math.round(((svgX - PC_PAD.l) / PC_IW) * (n - 1)), 0), n - 1);
   }
   function doHover(idx: number | null) {
     setHoverIdx(idx);
-    onHoverPrice(idx !== null ? rawPrices[idx] : null);
+    if (useCandleMode) {
+      onHoverPrice(idx !== null && candleData[idx] ? candleData[idx].close : null);
+    } else {
+      onHoverPrice(idx !== null ? rawPrices[idx] : null);
+    }
   }
   function handleMouseMove(e: React.MouseEvent) {
     if (!touchPinned) doHover(clientXToIdx(e.clientX));
@@ -273,7 +350,7 @@ export function PriceChart({
   }
 
   function handleChartClick(e: React.MouseEvent) {
-    if (!onAddAlertAtPrice || isCompareMode) return;
+    if (!onAddAlertAtPrice || isCompareMode || useCandleMode) return;
     const rect = containerRef.current!.getBoundingClientRect();
     const scale = PC_W / rect.width;
     const svgX  = (e.clientX - rect.left) * scale;
@@ -286,13 +363,13 @@ export function PriceChart({
   }
 
   // ─── Summary stats ────────────────────────────────────────────────────────
+  const periodOpen  = useCandleMode && candleData.length ? candleData[0].open                       : primaryValues[0];
+  const periodClose = useCandleMode && candleData.length ? candleData[candleData.length - 1].close  : primaryValues[primaryValues.length - 1];
+  const periodHigh  = useCandleMode && candleData.length ? Math.max(...candleData.map(c => c.high)) : Math.max(...primaryValues);
+  const periodLow   = useCandleMode && candleData.length ? Math.min(...candleData.map(c => c.low))  : Math.min(...primaryValues);
 
-  const open  = primaryValues[0];
-  const close = primaryValues[primaryValues.length - 1];
-  const high  = Math.max(...primaryValues);
-  const low   = Math.min(...primaryValues);
-  const pDelta    = close - open;
-  const pDeltaPct = open !== 0 ? (pDelta / Math.abs(open)) * 100 : 0;
+  const pDelta    = periodClose - periodOpen;
+  const pDeltaPct = periodOpen !== 0 ? (pDelta / Math.abs(periodOpen)) * 100 : 0;
 
   const fmtPrice = formatPrice ?? ((v: number) => (v / 1_000_000).toFixed(2) + 'M₫');
   const fmtSummary = isCompareMode
@@ -303,23 +380,32 @@ export function PriceChart({
     : `${pDelta >= 0 ? '+' : ''}${fmtPrice(pDelta)} (${pDeltaPct >= 0 ? '+' : ''}${pDeltaPct.toFixed(2)}%)`;
 
   const summaryStats = [
-    { l: 'Open',   v: fmtSummary(open),  colorClass: null as string | null },
-    { l: 'Close',  v: fmtSummary(close), colorClass: null },
-    { l: 'Change', v: fmtChange,         colorClass: pDelta >= 0 ? 'text-up' : 'text-down' },
-    { l: 'High',   v: fmtSummary(high),  colorClass: null },
-    { l: 'Low',    v: fmtSummary(low),   colorClass: null },
+    { l: 'Open',   v: fmtSummary(periodOpen),  colorClass: null as string | null },
+    { l: 'Close',  v: fmtSummary(periodClose), colorClass: null },
+    { l: 'Change', v: fmtChange,               colorClass: pDelta >= 0 ? 'text-up' : 'text-down' },
+    { l: 'High',   v: fmtSummary(periodHigh),  colorClass: null },
+    { l: 'Low',    v: fmtSummary(periodLow),   colorClass: null },
   ];
 
   // ─── Hover/tooltip state ──────────────────────────────────────────────────
-
-  const safeIdx      = hoverIdx !== null ? Math.min(hoverIdx, primaryValues.length - 1) : null;
-  const tp           = safeIdx !== null ? visible[safeIdx] : null;
-  const tpValue      = safeIdx !== null ? primaryValues[safeIdx] : null;
-  const tpRawPrice   = safeIdx !== null ? rawPrices[safeIdx] : null;
-  const tpPrevValue  = safeIdx !== null && safeIdx > 0 ? primaryValues[safeIdx - 1] : null;
+  const maxIdx       = useCandleMode ? candleData.length - 1 : primaryValues.length - 1;
+  const safeIdx      = hoverIdx !== null ? Math.min(hoverIdx, maxIdx) : null;
+  const hoveredCandle = useCandleMode && safeIdx !== null ? candleData[safeIdx] : null;
+  const tp           = useCandleMode
+    ? (hoveredCandle ? { recordedAt: hoveredCandle.time } as PricePoint : null)
+    : (safeIdx !== null ? visible[safeIdx] : null);
+  const tpValue      = useCandleMode
+    ? (hoveredCandle?.close ?? null)
+    : (safeIdx !== null ? primaryValues[safeIdx] : null);
+  const tpRawPrice   = useCandleMode
+    ? (hoveredCandle?.close ?? null)
+    : (safeIdx !== null ? rawPrices[safeIdx] : null);
+  const tpPrevValue  = !useCandleMode && safeIdx !== null && safeIdx > 0 ? primaryValues[safeIdx - 1] : null;
   const tpDelta      = tpPrevValue !== null && tpValue !== null ? tpValue - tpPrevValue : null;
   const tpDeltaPct   = tpPrevValue ? ((tpValue! - tpPrevValue) / Math.abs(tpPrevValue)) * 100 : null;
-  const ttXPct       = safeIdx !== null ? (xS(safeIdx) / PC_W) * 100 : 0;
+
+  const crosshairX = safeIdx !== null ? xS(safeIdx, useCandleMode ? candleData.length : undefined) : null;
+  const ttXPct     = crosshairX !== null ? (crosshairX / PC_W) * 100 : 0;
 
   const visibleAlerts = !isCompareMode && alerts
     ? alerts.filter(a => {
@@ -328,9 +414,13 @@ export function PriceChart({
       })
     : [];
 
-  const fillId   = `${chartId}Fill`;
-  const strokeId = `${chartId}Stroke`;
-  const clipId   = `${chartId}Clip`;
+  const fillId     = `${chartId}Fill`;
+  const strokeId   = `${chartId}Stroke`;
+  const clipId     = `${chartId}Clip`;
+  const drawClipId = `${chartId}Draw`;
+
+  // Candle body width (responsive to number of candles)
+  const candleBarW = useCandleMode ? Math.max(2, Math.min(14, (PC_IW / candleData.length) * 0.65)) : 0;
 
   return (
     <div>
@@ -346,7 +436,49 @@ export function PriceChart({
 
       {/* Controls row */}
       <div className="flex items-center gap-2 mb-[10px] flex-wrap">
+        {/* Candlestick toggle */}
         {!isCompareMode && (
+          <button
+            onClick={() => { setShowCandle(v => !v); setShowMA(false); setShowBB(false); }}
+            className={cn(
+              'inline-flex items-center gap-[6px] h-[26px] px-[10px] border rounded font-mono text-[10px] leading-none font-bold tracking-[0.1em] uppercase cursor-pointer transition-all duration-[140ms]',
+              showCandle
+                ? 'border-[rgba(34,197,94,0.5)] bg-[rgba(34,197,94,0.08)] text-[#22c55e]'
+                : 'border-line bg-transparent text-mute',
+            )}
+          >
+            <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+              <rect x="3" y="1" width="2" height="10" rx="0.5" fill={showCandle ? '#22c55e' : 'currentColor'} opacity="0.4"/>
+              <rect x="3" y="3" width="2" height="5" rx="0.5" fill={showCandle ? '#22c55e' : 'currentColor'}/>
+              <rect x="7" y="1" width="2" height="10" rx="0.5" fill={showCandle ? '#ef4444' : 'currentColor'} opacity="0.4"/>
+              <rect x="7" y="4" width="2" height="5" rx="0.5" fill={showCandle ? '#ef4444' : 'currentColor'}/>
+            </svg>
+            Nến
+          </button>
+        )}
+
+        {/* Profile toggle */}
+        {!isCompareMode && (
+          <button
+            onClick={() => setShowProfile(v => !v)}
+            className={cn(
+              'inline-flex items-center gap-[6px] h-[26px] px-[10px] border rounded font-mono text-[10px] leading-none font-bold tracking-[0.1em] uppercase cursor-pointer transition-all duration-[140ms]',
+              showProfile
+                ? 'border-[rgba(212,175,55,0.5)] bg-[rgba(212,175,55,0.08)] text-gold'
+                : 'border-line bg-transparent text-mute',
+            )}
+          >
+            <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+              {[0,1,2,3].map(i => (
+                <rect key={i} x="1" y={1+i*2.5} width={5 + i * 1.5} height="1.8" rx="0.5"
+                  fill={showProfile ? '#D4AF37' : 'currentColor'} opacity={0.4 + i * 0.2}/>
+              ))}
+            </svg>
+            Phân phối
+          </button>
+        )}
+
+        {!isCompareMode && !showCandle && (
           <button
             onClick={() => setShowMA(v => !v)}
             className={cn(
@@ -356,14 +488,12 @@ export function PriceChart({
                 : 'border-line bg-transparent text-mute',
             )}
           >
-            <span
-              className={cn('inline-block w-4 h-[1.5px] rounded-[1px]', showMA ? 'bg-[#93c5fd]' : 'bg-mute')}
-            />
+            <span className={cn('inline-block w-4 h-[1.5px] rounded-[1px]', showMA ? 'bg-[#93c5fd]' : 'bg-mute')} />
             7D MA
           </button>
         )}
 
-        {!isCompareMode && (
+        {!isCompareMode && !showCandle && (
           <button
             onClick={() => setShowBB(v => !v)}
             className={cn(
@@ -377,7 +507,7 @@ export function PriceChart({
           </button>
         )}
 
-        {(showMA || showBB) && !isCompareMode && (
+        {(showMA || showBB) && !isCompareMode && !showCandle && (
           <div className="flex items-center gap-[14px]">
             <span className="flex items-center gap-[5px] font-mono text-[10px] leading-none font-medium text-mute">
               <span className="inline-block w-[18px] h-[2px] rounded-[1px] bg-[linear-gradient(90deg,#8E7321,#D4AF37)]"/>
@@ -414,7 +544,7 @@ export function PriceChart({
           </div>
         )}
 
-        {onAddAlertAtPrice && !isCompareMode && (
+        {onAddAlertAtPrice && !isCompareMode && !useCandleMode && (
           <span className="inline-flex items-center gap-[5px] font-mono text-[10px] leading-none font-medium text-mute">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
             Click chart to set alert
@@ -458,6 +588,22 @@ export function PriceChart({
             <clipPath id={clipId}>
               <rect x={PC_PAD.l} y={0} width={PC_IW} height={PC_H}/>
             </clipPath>
+            {/* Draw-in animation clip — key forces remount on data change */}
+            <clipPath id={drawClipId} key={`${drawClipId}-${dataVersion}`}>
+              <rect x={PC_PAD.l} y={PC_PAD.t - 10} height={PC_IH + 20}>
+                <animate
+                  attributeName="width"
+                  from="0"
+                  to={String(PC_IW + PC_PAD.r)}
+                  dur="0.85s"
+                  begin="0s"
+                  fill="freeze"
+                  calcMode="spline"
+                  keySplines="0.4 0 0.2 1"
+                  keyTimes="0;1"
+                />
+              </rect>
+            </clipPath>
           </defs>
 
           {/* Y grid lines + labels */}
@@ -470,17 +616,19 @@ export function PriceChart({
 
           {/* X labels */}
           {xLabelIdxs.map((idx, k) => (
-            <text key={k} x={xS(idx)} y={PC_H - 4} textAnchor="middle" fill="var(--mute)" fontSize={9} fontFamily="var(--font-mono)">
-              {fmtXLabel(visible[idx].recordedAt)}
+            <text key={k} x={xS(idx, displayLen)} y={PC_H - 4} textAnchor="middle" fill="var(--mute)" fontSize={9} fontFamily="var(--font-mono)">
+              {fmtXLabel(displayItems[idx].recordedAt)}
             </text>
           ))}
 
           {/* Today marker */}
           {todayIdx >= 0 && (
-            <line x1={xS(todayIdx)} x2={xS(todayIdx)} y1={PC_PAD.t} y2={PC_PAD.t + PC_IH} stroke="rgba(212,175,55,0.25)" strokeWidth="1" strokeDasharray="3 6"/>
+            <line x1={xS(todayIdx)} x2={xS(todayIdx)} y1={PC_PAD.t} y2={PC_PAD.t + PC_IH}
+              stroke="rgba(212,175,55,0.25)" strokeWidth="1" strokeDasharray="3 6"/>
           )}
 
           <g clipPath={`url(#${clipId})`}>
+            {/* Compare series */}
             {isCompareMode && compareNorm.map(s => {
               if (!s.values.length) return null;
               const path = s.values.map((v, i) =>
@@ -489,19 +637,78 @@ export function PriceChart({
               return <path key={s.brand} d={path} fill="none" stroke={s.color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.85"/>;
             })}
 
-            <path d={fillPath} fill={`url(#${fillId})`}/>
-            <path d={linePath} fill="none" stroke={`url(#${strokeId})`} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
+            {/* Line mode: fill + animated line */}
+            {!useCandleMode && (
+              <>
+                <path d={fillPath} fill={`url(#${fillId})`}/>
+                <path
+                  d={linePath}
+                  fill="none"
+                  stroke={`url(#${strokeId})`}
+                  strokeWidth="1.75"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  clipPath={`url(#${drawClipId})`}
+                />
+              </>
+            )}
 
-            {showMA && !isCompareMode && smaPath && (
+            {/* Candlestick mode */}
+            {useCandleMode && candleData.map((c, i) => {
+              const cx      = xS(i, candleData.length);
+              const isUp    = c.close >= c.open;
+              const color   = isUp ? '#22c55e' : '#ef4444';
+              const bodyTop = yS(Math.max(c.open, c.close));
+              const bodyBot = yS(Math.min(c.open, c.close));
+              const bodyH   = Math.max(1.5, bodyBot - bodyTop);
+              return (
+                <g key={i}>
+                  {/* High-low wick */}
+                  <line
+                    x1={cx.toFixed(1)} x2={cx.toFixed(1)}
+                    y1={yS(c.high).toFixed(1)} y2={yS(c.low).toFixed(1)}
+                    stroke={color} strokeWidth="1.2" opacity="0.75"
+                  />
+                  {/* Open-close body */}
+                  <rect
+                    x={(cx - candleBarW / 2).toFixed(1)}
+                    y={bodyTop.toFixed(1)}
+                    width={candleBarW.toFixed(1)}
+                    height={bodyH.toFixed(1)}
+                    fill={color}
+                    opacity={safeIdx === i ? '1' : '0.82'}
+                    rx="1"
+                  />
+                  {/* Highlight on hover */}
+                  {safeIdx === i && (
+                    <rect
+                      x={(cx - candleBarW / 2 - 1).toFixed(1)}
+                      y={bodyTop.toFixed(1)}
+                      width={(candleBarW + 2).toFixed(1)}
+                      height={bodyH.toFixed(1)}
+                      fill="none"
+                      stroke={color}
+                      strokeWidth="1"
+                      opacity="0.6"
+                      rx="1"
+                    />
+                  )}
+                </g>
+              );
+            })}
+
+            {/* MA */}
+            {showMA && !isCompareMode && !useCandleMode && smaPath && (
               <path d={smaPath} fill="none" stroke="#93c5fd" strokeWidth="1.25" strokeDasharray="5 3" opacity="0.65"/>
             )}
-            {showBB && !isCompareMode && bbFillPath && (
+            {/* BB */}
+            {showBB && !isCompareMode && !useCandleMode && bbFillPath && (
               <path d={bbFillPath} fill="rgba(167,139,250,0.06)" stroke="none"/>
             )}
-            {showBB && !isCompareMode && bbUpperPath && (
+            {showBB && !isCompareMode && !useCandleMode && bbUpperPath && (
               <path d={bbUpperPath} fill="none" stroke="#a78bfa" strokeWidth="1" strokeDasharray="4 3" opacity="0.6"/>
             )}
-            {showBB && !isCompareMode && bbLowerPath && (
+            {showBB && !isCompareMode && !useCandleMode && bbLowerPath && (
               <path d={bbLowerPath} fill="none" stroke="#a78bfa" strokeWidth="1" strokeDasharray="4 3" opacity="0.6"/>
             )}
           </g>
@@ -535,21 +742,48 @@ export function PriceChart({
             );
           })}
 
+          {/* Volume Profile bars */}
+          {showProfile && profileBars.map((bar, i) => (
+            <rect
+              key={i}
+              x={(PC_W - PC_PAD.r - bar.w).toFixed(1)}
+              y={bar.y.toFixed(1)}
+              width={bar.w.toFixed(1)}
+              height={bar.h.toFixed(1)}
+              fill={bar.isValueArea ? 'rgba(212,175,55,0.22)' : 'rgba(212,175,55,0.07)'}
+              rx="1"
+            />
+          ))}
+          {showProfile && (
+            <text
+              x={PC_W - PC_PAD.r - 2}
+              y={PC_PAD.t + 8}
+              textAnchor="end"
+              fill="rgba(212,175,55,0.5)"
+              fontSize={7}
+              fontFamily="var(--font-mono)"
+              fontWeight="700"
+              letterSpacing="0.08em"
+            >
+              VOL PROFILE
+            </text>
+          )}
+
           {/* Vertical crosshair */}
-          {safeIdx !== null && (
-            <line x1={xS(safeIdx)} x2={xS(safeIdx)} y1={PC_PAD.t} y2={PC_PAD.t + PC_IH}
+          {crosshairX !== null && (
+            <line x1={crosshairX} x2={crosshairX} y1={PC_PAD.t} y2={PC_PAD.t + PC_IH}
               stroke="rgba(128,128,148,0.4)" strokeWidth="1"/>
           )}
 
           {/* Horizontal crosshair */}
-          {safeIdx !== null && tpValue !== null && (
+          {crosshairX !== null && tpValue !== null && (
             <line x1={PC_PAD.l} x2={PC_W - PC_PAD.r}
               y1={yS(tpValue)} y2={yS(tpValue)}
               stroke="rgba(128,128,148,0.3)" strokeWidth="1" strokeDasharray="3 5"/>
           )}
 
           {/* Y-axis hover price pill */}
-          {safeIdx !== null && tpValue !== null && (
+          {crosshairX !== null && tpValue !== null && (
             <g>
               <rect x={1} y={yS(tpValue) - 9} width={PC_PAD.l - 4} height={18} rx={3}
                 fill="rgba(11,11,15,0.96)" stroke="rgba(212,175,55,0.6)" strokeWidth="1"/>
@@ -562,17 +796,33 @@ export function PriceChart({
             </g>
           )}
 
-          {/* Hover dot */}
-          {safeIdx !== null && tpValue !== null && (
-            <circle cx={xS(safeIdx)} cy={yS(tpValue)} r="4.5" fill="#0a0a0d" stroke="#D4AF37" strokeWidth="2"/>
+          {/* Hover dot (line mode only) */}
+          {!useCandleMode && crosshairX !== null && tpValue !== null && (
+            <circle cx={crosshairX} cy={yS(tpValue)} r="4.5" fill="#0a0a0d" stroke="#D4AF37" strokeWidth="2"/>
           )}
+
+          {/* Live pulse at latest data point (line mode, not hovering) */}
+          {!isCompareMode && !useCandleMode && safeIdx === null && primaryValues.length > 0 && (() => {
+            const lx = xS(primaryValues.length - 1);
+            const ly = yS(primaryValues[primaryValues.length - 1]);
+            return (
+              <g>
+                <circle cx={lx.toFixed(1)} cy={ly.toFixed(1)} r="4" fill="none" stroke="#D4AF37" strokeWidth="1.5">
+                  <animate attributeName="r"       values="4;16"  dur="2s" repeatCount="indefinite"/>
+                  <animate attributeName="opacity" values="0.7;0" dur="2s" repeatCount="indefinite"/>
+                </circle>
+                <circle cx={lx.toFixed(1)} cy={ly.toFixed(1)} r="3.5" fill="#D4AF37" opacity="0.95"/>
+                <circle cx={lx.toFixed(1)} cy={ly.toFixed(1)} r="1.5" fill="#0a0a0d"/>
+              </g>
+            );
+          })()}
 
           {/* Drag-to-zoom selection rectangle */}
           {dragStart !== null && dragCurrent !== null && Math.abs(dragStart - dragCurrent) > 0 && (
             <rect
-              x={Math.min(xS(dragStart), xS(dragCurrent)).toFixed(1)}
+              x={Math.min(xS(dragStart, useCandleMode ? candleData.length : undefined), xS(dragCurrent, useCandleMode ? candleData.length : undefined)).toFixed(1)}
               y={PC_PAD.t}
-              width={Math.abs(xS(dragStart) - xS(dragCurrent)).toFixed(1)}
+              width={Math.abs(xS(dragStart, useCandleMode ? candleData.length : undefined) - xS(dragCurrent, useCandleMode ? candleData.length : undefined)).toFixed(1)}
               height={PC_IH}
               fill="rgba(212,175,55,0.12)"
               stroke="rgba(212,175,55,0.5)"
@@ -582,7 +832,7 @@ export function PriceChart({
         </svg>
 
         {/* Tooltip overlay */}
-        {safeIdx !== null && tp && tpValue !== null && (
+        {crosshairX !== null && tp && tpValue !== null && (
           <div
             className="absolute top-2 bg-[rgba(10,10,15,0.96)] border border-[rgba(255,255,255,0.1)] rounded-lg p-[10px_14px] min-w-[160px] pointer-events-none z-20 shadow-[0_4px_20px_rgba(0,0,0,0.7)]"
             style={ttXPct < 58
@@ -590,37 +840,70 @@ export function PriceChart({
               : { right: `calc(${(100 - ttXPct).toFixed(1)}% + 14px)` }
             }
           >
-            <div className="font-display text-[18px] leading-none font-extrabold tabular-nums text-[#F0EAE0] mb-[5px]">
-              {isCompareMode
-                ? `${tpValue >= 0 ? '+' : ''}${tpValue.toFixed(3)}%`
-                : fmtPrice(tpRawPrice!)}
-            </div>
-            {isCompareMode && tpRawPrice && (
-              <div className="font-mono text-[10px] leading-none text-[rgba(160,155,148,0.9)] mb-[3px]">
-                {fmtPrice(tpRawPrice)} actual
-              </div>
-            )}
-            <div className="font-mono text-[10px] leading-[1.4] text-[rgba(160,155,148,0.9)] mb-[5px]">{fmtDT(tp.recordedAt)}</div>
-            {tpDelta !== null && (
-              <div className={cn('font-mono text-[11px] leading-none font-bold', tpDelta >= 0 ? 'text-up' : 'text-down')}>
-                {tpDelta >= 0 ? '+' : ''}
-                {isCompareMode ? tpDelta.toFixed(3) + 'pp' : fmtPrice(tpDelta)}
-                {tpDeltaPct !== null && !isCompareMode && (
-                  <span className="ml-[5px] opacity-75">({tpDeltaPct >= 0 ? '+' : ''}{tpDeltaPct.toFixed(3)}%)</span>
+            {/* Candle OHLC tooltip */}
+            {useCandleMode && hoveredCandle ? (
+              <>
+                <div className="font-display text-[18px] leading-none font-extrabold tabular-nums text-[#F0EAE0] mb-[5px]">
+                  {fmtPrice(hoveredCandle.close)}
+                </div>
+                <div className="font-mono text-[10px] leading-[1.4] text-[rgba(160,155,148,0.9)] mb-[6px]">{fmtDT(hoveredCandle.time)}</div>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-[3px]">
+                  {[
+                    { l: 'O', v: fmtPrice(hoveredCandle.open)  },
+                    { l: 'H', v: fmtPrice(hoveredCandle.high)  },
+                    { l: 'C', v: fmtPrice(hoveredCandle.close) },
+                    { l: 'L', v: fmtPrice(hoveredCandle.low)   },
+                  ].map(s => (
+                    <div key={s.l} className="flex items-center gap-[5px]">
+                      <span className="font-mono text-[9px] text-mute">{s.l}</span>
+                      <span className="font-mono text-[11px] font-bold tabular-nums text-chalk">{s.v}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className={cn(
+                  'font-mono text-[11px] leading-none font-bold mt-[6px] pt-[6px] border-t border-[rgba(255,255,255,0.06)]',
+                  hoveredCandle.close >= hoveredCandle.open ? 'text-up' : 'text-down',
+                )}>
+                  {hoveredCandle.close >= hoveredCandle.open ? '▲' : '▼'}{' '}
+                  {fmtPrice(Math.abs(hoveredCandle.close - hoveredCandle.open))}
+                </div>
+              </>
+            ) : (
+              /* Standard line tooltip */
+              <>
+                <div className="font-display text-[18px] leading-none font-extrabold tabular-nums text-[#F0EAE0] mb-[5px]">
+                  {isCompareMode
+                    ? `${tpValue >= 0 ? '+' : ''}${tpValue.toFixed(3)}%`
+                    : fmtPrice(tpRawPrice!)}
+                </div>
+                {isCompareMode && tpRawPrice && (
+                  <div className="font-mono text-[10px] leading-none text-[rgba(160,155,148,0.9)] mb-[3px]">
+                    {fmtPrice(tpRawPrice)} actual
+                  </div>
                 )}
-              </div>
-            )}
-            {onAddAlertAtPrice && !isCompareMode && (
-              <div className="font-mono text-[9px] leading-none text-[rgba(212,175,55,0.6)] mt-2 pt-[7px] border-t border-[rgba(255,255,255,0.06)]">
-                click to set alert here
-              </div>
+                <div className="font-mono text-[10px] leading-[1.4] text-[rgba(160,155,148,0.9)] mb-[5px]">{fmtDT(tp.recordedAt)}</div>
+                {tpDelta !== null && (
+                  <div className={cn('font-mono text-[11px] leading-none font-bold', tpDelta >= 0 ? 'text-up' : 'text-down')}>
+                    {tpDelta >= 0 ? '+' : ''}
+                    {isCompareMode ? tpDelta.toFixed(3) + 'pp' : fmtPrice(tpDelta)}
+                    {tpDeltaPct !== null && !isCompareMode && (
+                      <span className="ml-[5px] opacity-75">({tpDeltaPct >= 0 ? '+' : ''}{tpDeltaPct.toFixed(3)}%)</span>
+                    )}
+                  </div>
+                )}
+                {onAddAlertAtPrice && !isCompareMode && (
+                  <div className="font-mono text-[9px] leading-none text-[rgba(212,175,55,0.6)] mt-2 pt-[7px] border-t border-[rgba(255,255,255,0.06)]">
+                    click to set alert here
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
       </div>
 
-      {/* Volume / volatility mini bars */}
-      {!isCompareMode && primaryValues.length > 1 && (
+      {/* Volume / volatility mini bars (line mode only) */}
+      {!isCompareMode && !useCandleMode && primaryValues.length > 1 && (
         <div style={{ marginTop: 2 }}>
           <svg viewBox={`0 0 ${PC_W} 36`} className="block w-full h-auto">
             {(() => {
@@ -638,7 +921,7 @@ export function PriceChart({
                     y={(BAR_H - h).toFixed(1)}
                     width={barW.toFixed(1)}
                     height={h.toFixed(1)}
-                    fill={hoverIdx === i ? '#D4AF37' : 'rgba(212,175,55,0.3)'}
+                    fill={safeIdx === i ? '#D4AF37' : 'rgba(212,175,55,0.3)'}
                     rx="1"
                   />
                 );
