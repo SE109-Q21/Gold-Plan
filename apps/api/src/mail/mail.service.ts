@@ -26,8 +26,10 @@ export class MailService {
         host: smtpHost,
         port: smtpPort,
         secure: smtpPort === 465,
-        // family:4 forces IPv4 on Railway (IPv6 not routed); cast needed as nodemailer types omit this option
+        // family:4 forces IPv4 — IPv6 not routed on Railway; global dns.setDefaultResultOrder('ipv4first') in main.ts is the primary guard
         family: 4,
+        connectionTimeout: 10_000,
+        greetingTimeout: 10_000,
         auth: {
           user: this.config.get<string>('SMTP_USER'),
           pass: this.config.get<string>('SMTP_PASS'),

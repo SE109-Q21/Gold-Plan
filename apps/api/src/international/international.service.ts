@@ -41,38 +41,25 @@ export class InternationalService {
       return this.cache.data;
     }
 
-    const goldApiKey = process.env.GOLD_API_KEY || '';
-    const exchangeApiKey = process.env.EXCHANGE_RATE_API_KEY || '';
-
-    if (!goldApiKey) {
-      this.logger.warn('GOLD_API_KEY not set — using fallback international price');
-      const dto = this.buildDto(2_345, 2_345 * 0.92, 25_480);
-      this.cache = { data: dto, expiresAt: Date.now() + CACHE_TTL_MS };
-      return dto;
-    }
-
     try {
-      let spotPriceUsd: number;
       let usdVnd = 25_480;
       let eurPerUsd = 0.92;
 
       const goldRes = await axios.get<{ price: number; currency: string }>(
-        `https://www.goldapi.io/api/XAU/USD`,
-        { headers: { 'x-access-token': goldApiKey }, timeout: 8_000 },
+        'https://api.gold-api.com/price/XAU',
+        { timeout: 8_000 },
       );
-      spotPriceUsd = goldRes.data.price;
+      const spotPriceUsd: number = goldRes.data.price;
 
-      if (exchangeApiKey) {
-        try {
-          const fxRes = await axios.get<{ rates: Record<string, number> }>(
-            `https://v6.exchangerate-api.com/v6/${exchangeApiKey}/latest/USD`,
-            { timeout: 8_000 },
-          );
-          usdVnd = fxRes.data.rates['VND'] ?? usdVnd;
-          eurPerUsd = fxRes.data.rates['EUR'] ?? eurPerUsd;
-        } catch {
-          this.logger.warn('Exchange rate fetch failed — using fallback rates');
-        }
+      try {
+        const fxRes = await axios.get<{ rates: Record<string, number> }>(
+          'https://open.er-api.com/v6/latest/USD',
+          { timeout: 8_000 },
+        );
+        usdVnd = fxRes.data.rates['VND'] ?? usdVnd;
+        eurPerUsd = fxRes.data.rates['EUR'] ?? eurPerUsd;
+      } catch {
+        this.logger.warn('Exchange rate fetch failed — using fallback rates');
       }
 
       const spotPriceEur = spotPriceUsd * eurPerUsd;

@@ -3,6 +3,10 @@ import { ValidationPipe } from '@nestjs/common';
 import cookieParser = require('cookie-parser');
 import helmet from 'helmet';
 import { AppModule } from './app.module';
+import * as dns from 'dns';
+
+// Railway does not route IPv6; force all DNS lookups to resolve IPv4 addresses first
+dns.setDefaultResultOrder('ipv4first');
 
 // BigInt is not JSON-serializable by default; serialize as string to match DTO contracts
 (BigInt.prototype as unknown as { toJSON: () => string }).toJSON = function () {

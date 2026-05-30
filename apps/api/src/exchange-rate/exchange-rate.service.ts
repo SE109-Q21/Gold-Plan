@@ -36,23 +36,9 @@ export class ExchangeRateService {
       return this.cache.data;
     }
 
-    const apiKey = process.env.EXCHANGE_RATE_API_KEY ?? '';
-
-    if (!apiKey) {
-      this.logger.warn('EXCHANGE_RATE_API_KEY not set — using fallback defaults');
-      const fallback: ExchangeRateDto = {
-        usdVnd: DEFAULT_USD_VND,
-        eurVnd: DEFAULT_EUR_VND,
-        updatedAt: new Date().toISOString(),
-        source: 'fallback',
-      };
-      this.cache = { data: fallback, expiresAt: Date.now() + CACHE_TTL_MS };
-      return fallback;
-    }
-
     try {
       const res = await axios.get<{ rates: Record<string, number> }>(
-        `https://v6.exchangerate-api.com/v6/${apiKey}/latest/USD`,
+        'https://open.er-api.com/v6/latest/USD',
         { timeout: 8_000 },
       );
 
