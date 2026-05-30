@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap&subset=vietnamese');
 
 :root {
   --ink:        #0B0B0F;
@@ -18,7 +18,7 @@
   --up:    #58C896;
   --down:  #E5484D;
   --live:  #9DCC6E;
-  --font-display: 'Bricolage Grotesque', ui-sans-serif, sans-serif;
+  --font-display: 'Be Vietnam Pro', ui-sans-serif, sans-serif;
   --font-mono:    'JetBrains Mono', ui-monospace, monospace;
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   --radius: 0.5rem;

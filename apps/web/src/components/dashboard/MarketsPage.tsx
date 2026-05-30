@@ -19,7 +19,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
 
-const ASSETS = ['XAU/USD', 'XAU/VND', 'SJC', 'DOJI', 'PNJ'] as const;
+const ASSETS = ['SJC', 'DOJI', 'PNJ'] as const;
 type Range = HistoryRange;
 const RANGES: Range[] = ['1D', '1W', '1M', '3M', '1Y'];
 
@@ -41,8 +41,6 @@ const COMPARE_COLORS: Record<string, string> = {
 };
 
 const ASSET_CONFIG: Record<string, { brand: GoldBrand; goldType: GoldType }> = {
-  'XAU/USD': { brand: 'SJC',    goldType: 'MIEN_SJC' },
-  'XAU/VND': { brand: 'SJC',    goldType: 'MIEN_SJC' },
   'SJC':     { brand: 'SJC',    goldType: 'MIEN_SJC' },
   'DOJI':    { brand: 'DOJI',   goldType: 'MIEN_SJC' },
   'PNJ':     { brand: 'PNJ',    goldType: 'NHAN_9999' },
@@ -408,7 +406,7 @@ export function MarketsPage({ currency = 'VND' }: { currency?: string }) {
   ] : [];
 
   const fmt = (vnd: number): string => {
-    const effectiveCurrency = asset === 'XAU/USD' ? 'USD' : asset === 'XAU/VND' ? 'VND' : currency;
+    const effectiveCurrency = currency;
     if (effectiveCurrency === 'USD' && rates) return '$' + (vnd / rates.usdVnd).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     if (effectiveCurrency === 'EUR' && rates) return '€' + (vnd / rates.eurVnd).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     return (vnd / 1_000_000).toFixed(2) + 'M₫';

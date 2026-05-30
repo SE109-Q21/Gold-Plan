@@ -482,20 +482,6 @@ function TopBar({ currency, onCurrency, onTab }: { currency: string; onCurrency:
           live
         </span>
 
-        {/* Currency switcher */}
-        <div className="flex bg-ink-3 border border-line rounded-md p-0.5">
-          {['USD', 'VND', 'EUR'].map(c => (
-            <Button
-              key={c}
-              variant="ghost"
-              onClick={() => onCurrency(c)}
-              className={cn(
-                'px-[10px] py-[5px] h-auto font-bold font-mono text-[10px] leading-none tracking-[0.1em] rounded',
-                currency === c ? 'bg-gold text-gold-ink hover:bg-gold hover:text-gold-ink' : 'bg-transparent text-bone hover:bg-ink-3/60',
-              )}
-            >{c}</Button>
-          ))}
-        </div>
 
         {/* Divider */}
         <div className="w-px h-5 bg-line shrink-0" />
