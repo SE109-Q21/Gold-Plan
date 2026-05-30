@@ -57,10 +57,14 @@ export abstract class BaseCrawlerService {
           orderBy: { recordedAt: 'desc' },
         });
 
-        const isAnomalous = this.anomalyDetector.isAnomalous(
-          prevRecord?.buyPrice ?? null,
-          price.buyPrice,
-        );
+        // If the last good record is stale (>2h), the market may have moved legitimately.
+        // Reset the baseline to avoid permanently locking out all future data.
+        const prevAge = prevRecord
+          ? Date.now() - new Date(prevRecord.recordedAt).getTime()
+          : Infinity;
+        const prevPrice = prevAge < 2 * 60 * 60 * 1000 ? (prevRecord?.buyPrice ?? null) : null;
+
+        const isAnomalous = this.anomalyDetector.isAnomalous(prevPrice, price.buyPrice);
 
         await this.prisma.priceRecord.create({
           data: {
