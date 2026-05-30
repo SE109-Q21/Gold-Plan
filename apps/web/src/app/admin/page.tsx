@@ -30,21 +30,29 @@ function StatCard({ label, value, unit, sub }: { label: string; value: string | 
 // ─── SVG Charts ───────────────────────────────────────────────────────────────
 
 const W = 400;
+const H = 110;
+const GRIDS = 4;
 
 function BarChart({ data, color }: { data: { label: string; value: number }[]; color: string }) {
   const max = Math.max(...data.map(d => d.value), 1);
-  const H = 72;
-  const gap = 2;
-  const bw = (W - gap * (data.length - 1)) / data.length;
+  const padT = 8;
+  const padB = 0;
+  const chartH = H - padT - padB;
+  const gap = data.length > 20 ? 1 : 3;
+  const bw = Math.max((W - gap * (data.length - 1)) / data.length, 1);
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full block" style={{ height: H }} preserveAspectRatio="none">
+      {Array.from({ length: GRIDS }, (_, i) => {
+        const y = padT + (i / GRIDS) * chartH;
+        return <line key={i} x1={0} y1={y} x2={W} y2={y} stroke="rgba(255,255,255,0.045)" strokeWidth={1} />;
+      })}
       {data.map((d, i) => {
-        const bh = Math.max((d.value / max) * (H - 2), d.value > 0 ? 2 : 0);
+        const bh = Math.max((d.value / max) * chartH, d.value > 0 ? 3 : 0);
         const x = i * (bw + gap);
-        const y = H - bh;
+        const y = H - padB - bh;
         return (
-          <rect key={i} x={x} y={y} width={bw} height={bh} fill={color} opacity={0.75} rx={1.5}>
+          <rect key={i} x={x} y={y} width={bw} height={bh} fill={color} opacity={0.85} rx={2}>
             <title>{d.label}: {d.value}</title>
           </rect>
         );
@@ -55,8 +63,7 @@ function BarChart({ data, color }: { data: { label: string; value: number }[]; c
 
 function LineChart({ data, color }: { data: { label: string; value: number }[]; color: string }) {
   const max = Math.max(...data.map(d => d.value), 1);
-  const H = 72;
-  const pad = 4;
+  const pad = 6;
   const n = data.length;
 
   if (n < 2) return null;
@@ -68,25 +75,33 @@ function LineChart({ data, color }: { data: { label: string; value: number }[]; 
     value: d.value,
   }));
 
-  const linePath = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
-  const fillPath = `${linePath} L ${pts[n - 1].x.toFixed(1)} ${H} L ${pts[0].x.toFixed(1)} ${H} Z`;
+  const smoothPath = pts.reduce((acc, p, i) => {
+    if (i === 0) return `M ${p.x.toFixed(1)} ${p.y.toFixed(1)}`;
+    const prev = pts[i - 1];
+    const cpx = ((prev.x + p.x) / 2).toFixed(1);
+    return `${acc} C ${cpx} ${prev.y.toFixed(1)}, ${cpx} ${p.y.toFixed(1)}, ${p.x.toFixed(1)} ${p.y.toFixed(1)}`;
+  }, '');
+
+  const fillPath = `${smoothPath} L ${pts[n - 1].x.toFixed(1)} ${H} L ${pts[0].x.toFixed(1)} ${H} Z`;
   const gid = `lg-${color.replace(/[^a-z0-9]/gi, '')}`;
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full block" style={{ height: H }} preserveAspectRatio="none">
       <defs>
         <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.28" />
+          <stop offset="0%" stopColor={color} stopOpacity="0.32" />
           <stop offset="100%" stopColor={color} stopOpacity="0.02" />
         </linearGradient>
       </defs>
+      {Array.from({ length: GRIDS }, (_, i) => {
+        const y = pad + (i / GRIDS) * (H - pad * 2);
+        return <line key={i} x1={pad} y1={y} x2={W - pad} y2={y} stroke="rgba(255,255,255,0.045)" strokeWidth={1} />;
+      })}
       <path d={fillPath} fill={`url(#${gid})`} />
-      <path d={linePath} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      {pts.map((p, i) => (
-        <circle key={i} cx={p.x} cy={p.y} r="2.5" fill={color}>
-          <title>{p.label}: {p.value}</title>
-        </circle>
-      ))}
+      <path d={smoothPath} fill="none" stroke={color} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx={pts[pts.length - 1].x} cy={pts[pts.length - 1].y} r="3" fill={color}>
+        <title>{pts[pts.length - 1].label}: {pts[pts.length - 1].value}</title>
+      </circle>
     </svg>
   );
 }
@@ -158,26 +173,28 @@ function ChartCard({
   accent: string;
 }) {
   return (
-    <div className="bg-ink-2 border border-line rounded-[12px] p-[18px_20px_14px]">
-      <div className="flex justify-between items-start mb-[14px]">
+    <div className="bg-ink-2 border border-line rounded-[12px] p-[18px_20px_16px]">
+      <div className="flex justify-between items-start mb-[16px]">
         <div>
-          <div className="font-mono text-[10px] leading-none font-bold text-mute tracking-[0.14em] uppercase mb-[6px]">
+          <div className="font-mono text-[10px] leading-none font-bold text-mute tracking-[0.14em] uppercase mb-[8px]">
             {title}
           </div>
-          <div className="font-display text-[26px] leading-none font-extrabold tabular-nums text-chalk">
+          <div className="font-display text-[28px] leading-none font-extrabold tabular-nums text-chalk">
             {value}
           </div>
         </div>
         {delta !== undefined && (
           <span
-            className="font-mono text-[10px] leading-none font-semibold px-2 py-[3px] rounded border"
-            style={{ color: accent, background: `${accent}18`, borderColor: `${accent}40` }}
+            className="font-mono text-[10px] leading-none font-semibold px-[8px] py-[4px] rounded-[5px] border"
+            style={{ color: accent, background: `${accent}14`, borderColor: `${accent}38` }}
           >
             {delta}
           </span>
         )}
       </div>
-      {chart}
+      <div className="rounded-[8px] overflow-hidden bg-ink-3/40">
+        {chart}
+      </div>
     </div>
   );
 }
