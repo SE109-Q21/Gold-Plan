@@ -216,7 +216,7 @@ function SpreadRankingSection() {
 }
 
 const SPREAD_CHART_CONFIG = {
-  spreadVnd: { label: 'Spread (₫)', color: 'var(--gold)' },
+  spreadVnd: { label: 'Chênh lệch (₫)', color: 'var(--gold)' },
 } satisfies ChartConfig;
 
 function SpreadHistoryChart() {
@@ -242,7 +242,7 @@ function SpreadHistoryChart() {
   return (
     <div className="bg-ink-2 border border-line rounded-[14px] p-[22px]">
       <div className="mb-[14px]">
-        <h3 className="text-[16px] leading-none font-bold font-sans m-0 mb-1">xu hướng spread 7 ngày</h3>
+        <h3 className="text-[16px] leading-none font-bold font-sans m-0 mb-1">xu hướng chênh lệch 7 ngày</h3>
       </div>
 
       <div className="flex gap-1 mb-2 flex-wrap">
@@ -305,12 +305,12 @@ function SpreadHistoryChart() {
               axisLine={false}
               tickLine={false}
               width={52}
-              label={{ value: 'Spread (₫)', angle: -90, position: 'insideLeft', offset: 12, style: { fill: '#5a5b65', fontSize: 9, fontFamily: 'var(--font-mono)' } }}
+              label={{ value: 'Chênh lệch (₫)', angle: -90, position: 'insideLeft', offset: 12, style: { fill: '#5a5b65', fontSize: 9, fontFamily: 'var(--font-mono)' } }}
             />
             <ChartTooltip
               content={
                 <ChartTooltipContent
-                  formatter={(value) => [typeof value === 'number' ? (value / 1_000_000).toFixed(3) + 'M₫' : '-', 'spread']}
+                  formatter={(value) => [typeof value === 'number' ? (value / 1_000_000).toFixed(3) + 'M₫' : '-', 'chênh lệch']}
                 />
               }
             />
@@ -362,7 +362,7 @@ export function MarketsPage({ currency = 'VND' }: { currency?: string }) {
   }, [range, activeBrand, activeGoldType, getAccessToken]);
 
   const { data: history, isLoading: historyLoading } = usePriceHistory(activeBrand, activeGoldType, range);
-  const { data: history1D } = usePriceHistory(activeBrand, activeGoldType, '1D');
+  const { data: history1D, isLoading: history1DLoading } = usePriceHistory(activeBrand, activeGoldType, '1D');
   const { data: dojiHistory } = usePriceHistory('DOJI' as GoldBrand, 'NHAN_9999' as GoldType, range);
   const { data: baoTinHistory } = usePriceHistory('BAO_TIN' as GoldBrand, 'NHAN_9999' as GoldType, range);
   const chartData = (history ?? []).map(p => p.buyPrice);
@@ -441,7 +441,7 @@ export function MarketsPage({ currency = 'VND' }: { currency?: string }) {
       <div className="bg-ink-2 border border-line rounded-[14px] p-7">
         <div className="flex justify-between items-start mb-5">
           <div>
-            <div className="font-mono text-[10px] text-mute tracking-[0.14em] uppercase mb-2">{asset} · 24K · spot</div>
+            <div className="font-mono text-[10px] text-mute tracking-[0.14em] uppercase mb-2">{asset} · 24K · giao ngay</div>
             <div className="flex items-baseline gap-[14px]">
               <span className="text-[56px] leading-[0.95] font-extrabold font-sans tracking-[-0.03em] tabular-nums">{fmt(hoverVal)}</span>
               <span className={cn(
@@ -505,7 +505,7 @@ export function MarketsPage({ currency = 'VND' }: { currency?: string }) {
         <div className="grid grid-cols-2 mt-[22px] pt-[18px] border-t border-hairline">
           {[
             { l: 'σ Vol',  v: vol ?? '—',   tint: 'text-gold' },
-            { l: 'Signal', v: 'Buy bias', tint: 'text-up'   },
+            { l: 'Tín hiệu', v: 'Xu hướng mua', tint: 'text-up'   },
           ].map((s, i) => (
             <div key={s.l} className={cn('', i !== 0 && 'pl-5 border-l border-hairline')}>
               <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-[6px]">{s.l}</div>
@@ -529,7 +529,9 @@ export function MarketsPage({ currency = 'VND' }: { currency?: string }) {
         <div className="bg-ink-2 border border-line rounded-[14px] p-[22px]">
           <h3 className="text-[16px] leading-none font-bold font-sans m-0 mb-[14px]">giá gần đây</h3>
           {ticks.length === 0 && (
-            <div className="py-6 text-center font-mono text-[12px] leading-none font-medium text-mute">đang tải…</div>
+            <div className="py-6 text-center font-mono text-[12px] leading-none font-medium text-mute">
+              {history1DLoading ? 'đang tải…' : 'chưa có dữ liệu'}
+            </div>
           )}
           {ticks.map((r, i) => (
             <div

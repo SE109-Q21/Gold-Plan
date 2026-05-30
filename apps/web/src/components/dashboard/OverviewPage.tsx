@@ -373,7 +373,7 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
             style={{ clipPath: 'polygon(0 0, calc(100% - 22px) 0, 100% 22px, 100% 100%, 0 100%)' }}
           >
             <div className="flex justify-between items-center mb-[18px]">
-              <span className="stamp">XAU/USD · london spot · 24K</span>
+              <span className="stamp">XAU/USD · london giao ngay · 24K</span>
               <span className="font-mono text-[11px] text-mute">{intl ? 'trực tiếp' : 'đang tải…'}</span>
             </div>
             <div className="flex items-end gap-8">
