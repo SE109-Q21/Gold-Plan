@@ -27,7 +27,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (isLoading || !user || user.role !== 'admin') return null;
 
   return (
-    <div className="flex min-h-screen bg-ink text-chalk font-display">
+    <div className="flex h-screen bg-ink text-chalk font-display">
       {/* Sidebar */}
       <aside className="w-[200px] bg-ink-2 border-r border-line py-6 flex flex-col shrink-0">
         <div className="px-5 pb-5 border-b border-hairline">

@@ -528,24 +528,26 @@ export function MarketsPage({ currency = 'VND' }: { currency?: string }) {
 
         <div className="bg-ink-2 border border-line rounded-[14px] p-[22px]">
           <h3 className="text-[16px] leading-none font-bold font-sans m-0 mb-[14px]">Giá gần đây</h3>
-          {ticks.length === 0 && (
-            <div className="py-6 text-center font-mono text-[12px] leading-none font-medium text-mute">
-              {history1DLoading ? 'đang tải…' : 'chưa có dữ liệu'}
-            </div>
-          )}
-          {ticks.map((r, i) => (
-            <div
-              key={r.t}
-              className={cn('grid py-2 font-mono text-[12px] leading-none font-medium', i !== 0 && 'border-t border-hairline')}
-              style={{ gridTemplateColumns: '90px 1fr 90px' }}
-            >
-              <span className="text-mute">{r.t}</span>
-              <span className="text-[13px] font-sans tabular-nums">{fmt(r.p)}</span>
-              <span className={cn('text-right font-bold', r.down ? 'text-down' : 'text-up')}>
-                {r.down ? '▼' : '▲'} {(r.diff >= 0 ? '+' : '') + fmt(Math.abs(r.diff))}
-              </span>
-            </div>
-          ))}
+          <div className="overflow-y-auto max-h-[260px] pr-1">
+            {ticks.length === 0 && (
+              <div className="py-6 text-center font-mono text-[12px] leading-none font-medium text-mute">
+                {history1DLoading ? 'đang tải…' : 'chưa có dữ liệu'}
+              </div>
+            )}
+            {ticks.map((r, i) => (
+              <div
+                key={r.t}
+                className={cn('grid py-2 font-mono text-[12px] leading-none font-medium', i !== 0 && 'border-t border-hairline')}
+                style={{ gridTemplateColumns: '90px 1fr 90px' }}
+              >
+                <span className="text-mute">{r.t}</span>
+                <span className="text-[13px] font-sans tabular-nums">{fmt(r.p)}</span>
+                <span className={cn('text-right font-bold', r.down ? 'text-down' : 'text-up')}>
+                  {r.down ? '▼' : '▲'} {(r.diff >= 0 ? '+' : '') + fmt(Math.abs(r.diff))}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
