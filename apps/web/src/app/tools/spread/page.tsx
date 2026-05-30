@@ -12,7 +12,6 @@ const GOLD_TYPES: { value: GoldType; label: string }[] = [
   { value: 'MIEN_SJC' as GoldType, label: 'Miếng SJC' },
   { value: 'NHAN_9999' as GoldType, label: 'Nhẫn 9999' },
   { value: 'VANG_24K' as GoldType, label: 'Vàng 24K' },
-  { value: 'VANG_18K' as GoldType, label: 'Vàng 18K' },
 ];
 
 const DAY_OPTIONS = [3, 7, 14, 30];
@@ -165,7 +164,7 @@ export default function SpreadPage() {
             <Button variant="ghost" onClick={() => router.back()} className="text-mute flex items-center gap-1 font-mono text-[12px] font-medium mb-3 p-0 h-auto hover:bg-transparent hover:text-bone">
               ← Quay lại
             </Button>
-            <h1 className="font-display text-[36px] leading-none font-extrabold m-0 tracking-[-0.025em]">xếp hạng spread</h1>
+            <h1 className="font-display text-[36px] leading-none font-extrabold m-0 tracking-[-0.025em]">xếp hạng chênh lệch</h1>
             <p className="font-display text-[14px] leading-[1.5] text-mute m-0 mt-2 max-w-[480px]">
               So sánh spread mua/bán giữa các thương hiệu — spread thấp = giao dịch rẻ hơn.
             </p>

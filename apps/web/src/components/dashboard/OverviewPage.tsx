@@ -7,6 +7,7 @@ import { useExchangeRates } from '@/lib/exchange-rate.api';
 import { useAlerts } from '@/lib/alerts.api';
 import { PriceChart } from '@/components/ui/PriceChart';
 import { BrandLogo } from '@/components/ui/BrandLogo';
+import { LiveBadge } from '@/components/ui/LiveBadge';
 import { IconPlus } from '@/components/dashboard/DashboardShell';
 import type { GoldType, ComparisonBrandDto } from '@gpls/shared';
 import { useAuth } from '@/contexts/auth-context';
@@ -38,6 +39,14 @@ const RANGE_LABELS = ['1D', '1W', '1M', '3M', '1Y'] as const;
 const BRAND_LABELS: Record<string, string> = {
   SJC: 'SJC', DOJI: 'DOJI', PNJ: 'PNJ', BAO_TIN: 'Bảo Tín',
 };
+
+const GOLD_TYPE_LABELS: Record<string, string> = {
+  MIEN_SJC: 'Miếng SJC',
+  NHAN_9999: 'Nhẫn 9999',
+  VANG_24K: 'Vàng 24K',
+};
+
+const DISPLAY_GOLD_TYPES = ['MIEN_SJC', 'NHAN_9999', 'VANG_24K'] as const;
 type Range = '1D' | '1W' | '1M' | '3M' | '1Y';
 
 function fmtVnd(n: number) { return (n / 1_000_000).toFixed(2) + 'M₫'; }
@@ -312,6 +321,11 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
   const displayData = chartData.length > 1 ? chartData : [2280, 2295, 2310, 2325, 2345];
   const hoverVal = hoverPrice ?? displayData[displayData.length - 1];
 
+  const liveTableRows = DISPLAY_GOLD_TYPES.map(gt => {
+    const entries = (domestic ?? []).filter(d => d.goldType === gt);
+    return entries.find(d => d.brand === 'SJC') ?? entries[0] ?? null;
+  }).filter((r): r is NonNullable<typeof r> => r !== null);
+
   const compRow = comparison?.[0];
   const compBrands = compRow?.brands ?? [];
   const compGoldType = compRow?.goldType ?? 'MIEN_SJC';
@@ -455,6 +469,54 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
               </div>
             </div>
             <PriceChart history={history ?? []} range={range} onHoverPrice={setHoverPrice} chartId="overview-pc" isLoading={historyLoading} />
+          </div>
+
+          {/* Live gold price table */}
+          <div className="bg-ink-2 border border-line rounded-[14px]">
+            <div className="flex items-center justify-between px-6 py-[18px] border-b border-hairline">
+              <h3 className="text-[18px] leading-none font-bold font-sans m-0 tracking-[-0.01em]">Bảng giá vàng trực tiếp</h3>
+              <LiveBadge />
+            </div>
+            <div
+              className="px-6 py-3 font-mono text-[10px] text-mute tracking-[0.14em] uppercase bg-ink-3 border-b border-hairline grid"
+              style={{ gridTemplateColumns: '2fr 1fr 1fr 1fr' }}
+            >
+              <span>Loại vàng</span>
+              <span className="text-right">Mua vào</span>
+              <span className="text-right">Bán ra</span>
+              <span className="text-right">Chênh lệch</span>
+            </div>
+            {!domestic && (
+              <div className="p-[24px_20px] flex flex-col gap-3">
+                {[0, 1, 2].map(i => (
+                  <div key={i} className="grid gap-3 items-center" style={{ gridTemplateColumns: '2fr 1fr 1fr 1fr' }}>
+                    {[120, 80, 80, 70].map((w, j) => (
+                      <div key={j} className={cn('h-[14px] rounded bg-ink-3 animate-pulse', j > 0 && 'ml-auto')} style={{ width: w }} />
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )}
+            {domestic && liveTableRows.length === 0 && (
+              <div className="p-[32px_20px] text-center text-mute font-mono text-[12px]">
+                Không có dữ liệu
+              </div>
+            )}
+            {liveTableRows.map((row, i) => (
+              <div
+                key={row.goldType}
+                className={cn('grid px-6 py-4 items-center', i !== 0 && 'border-t border-hairline')}
+                style={{ gridTemplateColumns: '2fr 1fr 1fr 1fr' }}
+              >
+                <div>
+                  <div className="text-[14px] leading-none font-bold font-sans">{GOLD_TYPE_LABELS[row.goldType] ?? row.goldType}</div>
+                  <div className="font-mono text-[10px] text-mute mt-[5px]">{BRAND_LABELS[row.brand] ?? row.brand}</div>
+                </div>
+                <div className="text-right font-sans text-[14px] leading-none font-bold tabular-nums">{fmt(row.buyPrice)}</div>
+                <div className="text-right font-sans text-[14px] leading-none font-bold tabular-nums">{fmt(row.sellPrice)}</div>
+                <div className="text-right font-mono text-[13px] leading-none font-bold tabular-nums text-down">{fmt(row.sellPrice - row.buyPrice)}</div>
+              </div>
+            ))}
           </div>
 
           {/* Brand spreads table */}
