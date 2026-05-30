@@ -18,6 +18,13 @@ function fmtDate(iso: string): string {
   });
 }
 
+function isToday(iso: string): boolean {
+  const ICT = 7 * 60 * 60 * 1000;
+  const digestDay = new Date(new Date(iso).getTime() + ICT).toISOString().slice(0, 10);
+  const todayDay  = new Date(Date.now() + ICT).toISOString().slice(0, 10);
+  return digestDay === todayDay;
+}
+
 function fmtVnd(n: number): string {
   return (n / 1_000_000).toFixed(2) + 'M₫';
 }
@@ -49,7 +56,7 @@ export function DigestCard() {
         <div className="flex items-center gap-2 font-display text-[13px] leading-none font-semibold text-chalk">
           <span>📊</span>
           <span>
-            Bản tin hôm nay
+            {isToday(digest.date) ? 'Bản tin hôm nay' : 'Bản tin mới nhất'}
             <span className="text-mute ml-[6px]">·</span>
             <span className="font-mono text-[11px] text-mute ml-[6px]">{fmtDate(digest.date)}</span>
           </span>
@@ -77,7 +84,7 @@ export function DigestCard() {
       {expanded && (
         <div className="mt-4 pt-4 border-t border-hairline">
           <div className="font-display text-[15px] leading-none font-bold text-chalk mb-[14px]">
-            Bản tin thị trường — {fmtDate(digest.date)}
+            {isToday(digest.date) ? 'Bản tin hôm nay' : 'Bản tin mới nhất'} — {fmtDate(digest.date)}
           </div>
 
           {/* 3-column price row */}
