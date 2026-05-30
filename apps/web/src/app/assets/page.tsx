@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePortfolio } from '@/lib/portfolio.api';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, Label, Tooltip, ResponsiveContainer } from 'recharts';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -87,13 +87,15 @@ function IconPencil({ s = 13 }: { s?: number }) {
 
 // ─── Donut center label ───────────────────────────────────────────────────────
 
-function DonutCenter({ total }: { total: number }) {
+function DonutCenterLabel({ viewBox, total }: { viewBox?: { cx: number; cy: number }; total: number }) {
+  if (!viewBox) return null;
+  const { cx, cy } = viewBox;
   return (
     <g>
-      <text x="50%" y="45%" textAnchor="middle" dominantBaseline="middle" fill="#e8e8e8" fontSize="14" fontWeight="800" fontFamily="sans-serif">
+      <text x={cx} y={cy - 8} textAnchor="middle" dominantBaseline="middle" fill="#e8e8e8" fontSize="14" fontWeight="800" fontFamily="sans-serif">
         {total >= 1_000_000_000 ? (total / 1_000_000_000).toFixed(2) : (total / 1_000_000).toFixed(0)}
       </text>
-      <text x="50%" y="58%" textAnchor="middle" dominantBaseline="middle" fill="#6b6b7a" fontSize="10" fontFamily="monospace">
+      <text x={cx} y={cy + 10} textAnchor="middle" dominantBaseline="middle" fill="#6b6b7a" fontSize="10" fontFamily="monospace">
         {total >= 1_000_000_000 ? 'tỷ đồng' : 'triệu ₫'}
       </text>
     </g>
@@ -374,7 +376,10 @@ function AssetsContent() {
                         {chartData.map((entry, i) => (
                           <Cell key={i} fill={entry.color} stroke="transparent"/>
                         ))}
-                        <DonutCenter total={totalValue}/>
+                        <Label
+                          content={(props) => <DonutCenterLabel viewBox={props.viewBox as { cx: number; cy: number }} total={totalValue}/>}
+                          position="center"
+                        />
                       </Pie>
                       <Tooltip
                         formatter={(value: number) => [fmtVnd(value), '']}
