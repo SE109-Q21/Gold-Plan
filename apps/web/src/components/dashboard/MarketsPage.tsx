@@ -242,7 +242,7 @@ function SpreadHistoryChart() {
   return (
     <div className="bg-ink-2 border border-line rounded-[14px] p-[22px]">
       <div className="mb-[14px]">
-        <h3 className="text-[16px] leading-none font-bold font-sans m-0 mb-1">xu hướng chênh lệch 7 ngày</h3>
+        <h3 className="text-[16px] leading-none font-bold font-sans m-0 mb-1">Xu hướng chênh lệch 7 ngày</h3>
       </div>
 
       <div className="flex gap-1 mb-2 flex-wrap">
@@ -529,7 +529,7 @@ export function MarketsPage({ currency = 'VND' }: { currency?: string }) {
         <SpreadRankingSection />
 
         <div className="bg-ink-2 border border-line rounded-[14px] p-[22px]">
-          <h3 className="text-[16px] leading-none font-bold font-sans m-0 mb-[14px]">giá gần đây</h3>
+          <h3 className="text-[16px] leading-none font-bold font-sans m-0 mb-[14px]">Giá gần đây</h3>
           {ticks.length === 0 && (
             <div className="py-6 text-center font-mono text-[12px] leading-none font-medium text-mute">
               {history1DLoading ? 'đang tải…' : 'chưa có dữ liệu'}

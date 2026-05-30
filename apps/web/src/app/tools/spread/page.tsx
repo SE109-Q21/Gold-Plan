@@ -221,7 +221,7 @@ export default function SpreadPage() {
         <div className="bg-ink-2 border border-line rounded-[14px] overflow-hidden overflow-x-auto">
           <div className="px-5 py-4 border-b border-hairline flex justify-between items-center">
             <div className="flex items-center gap-3">
-              <h3 className="font-display text-[16px] leading-none font-bold m-0">bảng xếp hạng</h3>
+              <h3 className="font-display text-[16px] leading-none font-bold m-0">Bảng xếp hạng</h3>
               <LiveBadge />
             </div>
             <span className="font-mono text-[10px] text-mute">sắp xếp theo spread % · thấp = tốt nhất</span>

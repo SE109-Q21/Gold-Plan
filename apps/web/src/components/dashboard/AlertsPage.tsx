@@ -155,7 +155,7 @@ export function AlertsPage({ onOpenAdd }: { onOpenAdd: () => void }) {
           <TabsContent value="rules" className="mt-0">
             <div className="bg-ink-2 border border-line rounded-[14px]">
               <div className="flex items-center justify-between px-[22px] py-4 border-b border-hairline">
-                <h3 className="text-[16px] leading-none font-bold font-sans m-0">quy tắc đang dùng</h3>
+                <h3 className="text-[16px] leading-none font-bold font-sans m-0">Quy tắc đang dùng</h3>
               </div>
               <div
                 className="grid px-[22px] py-3 font-mono text-[10px] text-mute tracking-[0.14em] uppercase bg-ink-3 border-b border-hairline"
@@ -254,7 +254,7 @@ export function AlertsPage({ onOpenAdd }: { onOpenAdd: () => void }) {
           <TabsContent value="history" className="mt-0">
             <div className="bg-ink-2 border border-line rounded-[14px]">
               <div className="px-[22px] py-4 border-b border-hairline">
-                <h3 className="text-[16px] leading-none font-bold font-sans m-0">lịch sử kích hoạt</h3>
+                <h3 className="text-[16px] leading-none font-bold font-sans m-0">Lịch sử kích hoạt</h3>
               </div>
               <div
                 className="grid px-[22px] py-3 font-mono text-[10px] text-mute tracking-[0.14em] uppercase bg-ink-3 border-b border-hairline"

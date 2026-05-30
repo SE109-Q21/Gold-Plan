@@ -348,7 +348,7 @@ export function AccountPage({ currency = 'USD', onCurrency }: { currency?: strin
 
           <div className="bg-ink-2 border border-[rgba(229,72,77,0.3)] rounded-[14px]">
             <div className="px-[22px] py-4">
-              <h3 className="font-display text-[16px] leading-none font-bold m-0 text-down">vùng nguy hiểm</h3>
+              <h3 className="font-display text-[16px] leading-none font-bold m-0 text-down">Vùng nguy hiểm</h3>
             </div>
             <Row label="Đăng xuất" detail="kết thúc phiên làm việc" right={<SmallBtn onClick={handleSignOut}>đăng xuất</SmallBtn>}/>
             <Row
