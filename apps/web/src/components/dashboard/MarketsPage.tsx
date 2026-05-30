@@ -45,7 +45,7 @@ const ASSET_CONFIG: Record<string, { brand: GoldBrand; goldType: GoldType }> = {
   'XAU/VND': { brand: 'SJC',    goldType: 'MIEN_SJC' },
   'SJC':     { brand: 'SJC',    goldType: 'MIEN_SJC' },
   'DOJI':    { brand: 'DOJI',   goldType: 'MIEN_SJC' },
-  'PNJ':     { brand: 'PNJ',    goldType: 'MIEN_SJC' },
+  'PNJ':     { brand: 'PNJ',    goldType: 'NHAN_9999' },
 };
 
 function QuickAlertPanel({
@@ -442,7 +442,7 @@ export function MarketsPage({ currency = 'VND' }: { currency?: string }) {
       <div className="bg-ink-2 border border-line rounded-[14px] p-7">
         <div className="flex justify-between items-start mb-5">
           <div>
-            <div className="font-mono text-[10px] text-mute tracking-[0.14em] uppercase mb-2">{asset} · 24K · giao ngay</div>
+            <div className="font-mono text-[10px] text-mute tracking-[0.14em] uppercase mb-2">{asset} · {GOLD_TYPE_LABELS[activeGoldType] ?? activeGoldType} · giao ngay</div>
             <div className="flex items-baseline gap-[14px]">
               <span className="text-[56px] leading-[0.95] font-extrabold font-sans tracking-[-0.03em] tabular-nums">{fmt(hoverVal)}</span>
               <span className={cn(
