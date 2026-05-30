@@ -31,6 +31,7 @@ function fmtDT(iso: string) {
 export function PriceChart({
   history, range, onHoverPrice, chartId = 'pc',
   alerts, onAddAlertAtPrice, compareData, isLoading = false,
+  formatPrice,
 }: {
   history: PricePoint[];
   range: string;
@@ -40,6 +41,7 @@ export function PriceChart({
   onAddAlertAtPrice?: (price: number) => void;
   compareData?: CompareSeries[];
   isLoading?: boolean;
+  formatPrice?: (vnd: number) => string;
 }) {
   const containerRef  = useRef<HTMLDivElement>(null);
   const [hoverIdx,    setHoverIdx]    = useState<number | null>(null);
@@ -292,12 +294,13 @@ export function PriceChart({
   const pDelta    = close - open;
   const pDeltaPct = open !== 0 ? (pDelta / Math.abs(open)) * 100 : 0;
 
+  const fmtPrice = formatPrice ?? ((v: number) => (v / 1_000_000).toFixed(2) + 'M₫');
   const fmtSummary = isCompareMode
     ? (n: number) => `${n >= 0 ? '+' : ''}${n.toFixed(2)}%`
-    : (n: number) => (n / 1_000_000).toFixed(2) + 'M₫';
+    : fmtPrice;
   const fmtChange = isCompareMode
     ? `${pDelta >= 0 ? '+' : ''}${pDelta.toFixed(2)}pp (${pDeltaPct >= 0 ? '+' : ''}${pDeltaPct.toFixed(2)}%)`
-    : `${pDelta >= 0 ? '+' : ''}${(pDelta / 1_000_000).toFixed(2)}M₫ (${pDeltaPct >= 0 ? '+' : ''}${pDeltaPct.toFixed(2)}%)`;
+    : `${pDelta >= 0 ? '+' : ''}${fmtPrice(pDelta)} (${pDeltaPct >= 0 ? '+' : ''}${pDeltaPct.toFixed(2)}%)`;
 
   const summaryStats = [
     { l: 'Open',   v: fmtSummary(open),  colorClass: null as string | null },
@@ -590,18 +593,18 @@ export function PriceChart({
             <div className="font-display text-[18px] leading-none font-extrabold tabular-nums text-[#F0EAE0] mb-[5px]">
               {isCompareMode
                 ? `${tpValue >= 0 ? '+' : ''}${tpValue.toFixed(3)}%`
-                : (tpRawPrice! / 1_000_000).toFixed(2) + 'M₫'}
+                : fmtPrice(tpRawPrice!)}
             </div>
             {isCompareMode && tpRawPrice && (
               <div className="font-mono text-[10px] leading-none text-[rgba(160,155,148,0.9)] mb-[3px]">
-                {(tpRawPrice / 1_000_000).toFixed(2)}M₫ actual
+                {fmtPrice(tpRawPrice)} actual
               </div>
             )}
             <div className="font-mono text-[10px] leading-[1.4] text-[rgba(160,155,148,0.9)] mb-[5px]">{fmtDT(tp.recordedAt)}</div>
             {tpDelta !== null && (
               <div className={cn('font-mono text-[11px] leading-none font-bold', tpDelta >= 0 ? 'text-up' : 'text-down')}>
                 {tpDelta >= 0 ? '+' : ''}
-                {isCompareMode ? tpDelta.toFixed(3) + 'pp' : (tpDelta / 1_000_000).toFixed(3) + 'M₫'}
+                {isCompareMode ? tpDelta.toFixed(3) + 'pp' : fmtPrice(tpDelta)}
                 {tpDeltaPct !== null && !isCompareMode && (
                   <span className="ml-[5px] opacity-75">({tpDeltaPct >= 0 ? '+' : ''}{tpDeltaPct.toFixed(3)}%)</span>
                 )}

@@ -408,8 +408,9 @@ export function MarketsPage({ currency = 'VND' }: { currency?: string }) {
   ] : [];
 
   const fmt = (vnd: number): string => {
-    if (currency === 'USD' && rates) return '$' + (vnd / rates.usdVnd).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    if (currency === 'EUR' && rates) return '€' + (vnd / rates.eurVnd).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const effectiveCurrency = asset === 'XAU/USD' ? 'USD' : asset === 'XAU/VND' ? 'VND' : currency;
+    if (effectiveCurrency === 'USD' && rates) return '$' + (vnd / rates.usdVnd).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    if (effectiveCurrency === 'EUR' && rates) return '€' + (vnd / rates.eurVnd).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     return (vnd / 1_000_000).toFixed(2) + 'M₫';
   };
 
@@ -500,6 +501,7 @@ export function MarketsPage({ currency = 'VND' }: { currency?: string }) {
           onAddAlertAtPrice={user && !showCompare ? (p) => { setPendingAlertPrice(p); } : undefined}
           compareData={compareData}
           isLoading={historyLoading}
+          formatPrice={fmt}
         />
 
         <div className="grid grid-cols-2 mt-[22px] pt-[18px] border-t border-hairline">
