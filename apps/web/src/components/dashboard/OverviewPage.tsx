@@ -468,9 +468,9 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
                     >{r}</Button>
                   ))}
                 </div>
-                {history && history.length > 0 && (
+                {liveTableRows[0]?.recordedAt && (
                   <span className="font-mono text-[9px] text-mute tracking-[0.06em] leading-none">
-                    cập nhật {minsAgo(history[history.length - 1].recordedAt)}
+                    cập nhật {minsAgo(liveTableRows[0].recordedAt)}
                   </span>
                 )}
               </div>
