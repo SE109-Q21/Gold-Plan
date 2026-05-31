@@ -77,7 +77,7 @@ export class BtmcCrawlerService extends BaseCrawlerService implements OnModuleIn
         if (!buy || !sell) continue;
         // BTMC API returns rings/jewelry per chỉ (×10 to get per lượng),
         // but MIEN_SJC bars are already quoted per lượng in the API.
-        const multiplier = goldType === 'MIEN_SJC' ? 1n : 10n;
+        const multiplier = 10n;
         results.push({
           goldType,
           buyPrice: BigInt(buy) * multiplier,

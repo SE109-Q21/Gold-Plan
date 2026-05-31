@@ -111,7 +111,7 @@ export class AuthService {
     password: string,
     res: Response,
     ip: string | null = null,
-  ): Promise<{ accessToken: string; user: { id: string; email: string; role: string } }> {
+  ): Promise<{ accessToken: string; user: { id: string; email: string; role: string; digestOptIn: boolean } }> {
     const user = await this.prisma.user.findFirst({
       where: { email, status: { not: 'deleted' } },
     });
@@ -185,7 +185,7 @@ export class AuthService {
 
     return {
       accessToken,
-      user: { id: user.id, email: user.email, role: user.role },
+      user: { id: user.id, email: user.email, role: user.role, digestOptIn: user.digestOptIn },
     };
   }
 

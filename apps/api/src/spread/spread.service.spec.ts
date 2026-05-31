@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { SpreadService } from './spread.service';
 import { PrismaService } from '../database/prisma.service';
 
@@ -46,6 +47,7 @@ describe('SpreadService', () => {
       providers: [
         SpreadService,
         { provide: PrismaService, useValue: prismaService },
+        { provide: EventEmitter2, useValue: { emit: jest.fn() } },
       ],
     }).compile();
 

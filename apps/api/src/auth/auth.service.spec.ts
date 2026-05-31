@@ -9,6 +9,7 @@ import { AuthService } from './auth.service';
 import { PrismaService } from '../database/prisma.service';
 import { MailService } from '../mail/mail.service';
 import { JwtService } from './jwt.service';
+import * as bcrypt from 'bcrypt';
 
 // ─── Mock factories ───────────────────────────────────────────────────────────
 
@@ -150,6 +151,27 @@ describe('AuthService', () => {
   // ─── login ──────────────────────────────────────────────────────────────────
 
   describe('login', () => {
+    it('returns digestOptIn in the login user payload', async () => {
+      const activeUser = {
+        id: 'user-1',
+        email: 'digest@example.com',
+        passwordHash: await bcrypt.hash('Password1', 10),
+        status: 'active',
+        role: 'user',
+        digestOptIn: true,
+        tokenVersion: 0,
+      };
+      prisma.user.findFirst.mockResolvedValue(activeUser);
+      prisma.loginAttempt.count.mockResolvedValue(0);
+      prisma.loginAttempt.create.mockResolvedValue({});
+
+      const fakeRes = { cookie: jest.fn() } as any;
+
+      const result = await service.login('digest@example.com', 'Password1', fakeRes);
+
+      expect(result.user.digestOptIn).toBe(true);
+    });
+
     it('non-existent user: throws UnauthorizedException without crash', async () => {
       prisma.user.findFirst.mockResolvedValue(null);
       prisma.loginAttempt.create.mockResolvedValue({});

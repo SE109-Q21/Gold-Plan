@@ -85,6 +85,7 @@ describe('BaseCrawlerService', () => {
     mockPrisma.crawlSession.update.mockResolvedValue({});
     mockPrisma.priceRecord.findFirst.mockResolvedValue({
       buyPrice: 8_500_000n,
+      recordedAt: new Date(),
     });
     mockPrisma.priceRecord.create.mockResolvedValue({});
 

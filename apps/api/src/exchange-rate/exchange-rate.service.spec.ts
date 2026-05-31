@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import axios from 'axios';
 import { ExchangeRateService } from './exchange-rate.service';
 
@@ -17,7 +18,10 @@ describe('ExchangeRateService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [ExchangeRateService],
+      providers: [
+        ExchangeRateService,
+        { provide: EventEmitter2, useValue: { emit: jest.fn() } },
+      ],
     }).compile();
 
     service = module.get<ExchangeRateService>(ExchangeRateService);

@@ -18,9 +18,9 @@ describe('SjcCrawlerService.parseItems', () => {
     service = new SjcCrawlerService(mockPrisma, mockDetector);
   });
 
-  it('returns 2 price records from sample prices', () => {
+  it('returns only the SJC bar price from sample prices', () => {
     const result = service.parseItems(SAMPLE_PRICES);
-    expect(result).toHaveLength(2);
+    expect(result).toHaveLength(1);
   });
 
   it('maps SJL1L10 to MIEN_SJC with correct prices', () => {
@@ -31,12 +31,10 @@ describe('SjcCrawlerService.parseItems', () => {
     expect(mien!.sellPrice).toBe(85_520_000n);
   });
 
-  it('maps SJ9999 to NHAN_9999 with correct prices', () => {
+  it('does not map SJ9999 to NHAN_9999 because vang.today reports an SJC bar-like price', () => {
     const result = service.parseItems(SAMPLE_PRICES);
     const nhan = result.find((r) => r.goldType === 'NHAN_9999');
-    expect(nhan).toBeDefined();
-    expect(nhan!.buyPrice).toBe(83_400_000n);
-    expect(nhan!.sellPrice).toBe(84_100_000n);
+    expect(nhan).toBeUndefined();
   });
 
   it('ignores unknown type codes', () => {
