@@ -17,30 +17,33 @@ export class AiService {
   ) {}
 
   async buildSystemPrompt(): Promise<string> {
-    // Fetch SJC prices + international
     const [prices, intl] = await Promise.allSettled([
       this.priceService.getCurrentPrices(),
       this.internationalService.getInternationalPrice(),
     ]);
 
-    const sjc = prices.status === 'fulfilled'
-      ? prices.value.find(p => p.brand === 'SJC')
-      : null;
-
+    const domesticPrices = prices.status === 'fulfilled' ? prices.value : [];
     const intlPrice = intl.status === 'fulfilled' ? intl.value : null;
 
     const priceContext = [
-      sjc ? `SJC buy=${(sjc.buyPrice / 1_000_000).toFixed(2)}M VND, sell=${(sjc.sellPrice / 1_000_000).toFixed(2)}M VND` : '',
+      ...domesticPrices.map((p) =>
+        `${p.brand} ${p.goldType} buy=${(p.buyPrice / 1_000_000).toFixed(2)}M VND, sell=${(p.sellPrice / 1_000_000).toFixed(2)}M VND`,
+      ),
       intlPrice ? `XAU/USD=${intlPrice.spotPriceUsd.toFixed(2)}, USD/VND=${intlPrice.exchangeRate.toLocaleString()}` : '',
     ].filter(Boolean).join('; ');
 
     return [
       'You are a Vietnamese gold market assistant for GPLS (Gold Price Lookup System).',
       `Current market data: ${priceContext || 'unavailable'}.`,
-      'Answer questions about gold prices, market trends, buying/selling gold, and Vietnamese gold market (SJC, DOJI, PNJ, BAO_TIN brands).',
-      'Decline all questions unrelated to gold with: "I can only help with gold market questions."',
-      'Append "For reference only — not financial advice." to any response containing price values.',
-      'Keep responses concise (under 150 words). Respond in the same language the user writes in.',
+      'Answer only questions about gold prices, market trends, buying/selling gold, and the Vietnamese gold market.',
+      'Supported brands in this product are SJC, DOJI, PNJ, and BAO_TIN. Gold types may include MIEN_SJC, NHAN_9999, VANG_24K, and VANG_18K.',
+      'For exact brand or gold type prices, use only the prices listed in Current market data.',
+      'If the requested brand or gold type is present in Current market data, answer with its buy and sell prices.',
+      'If the requested brand or gold type is missing from Current market data, say you do not have current data for that exact item and suggest checking the official brand source. Do not infer its price from SJC.',
+      'For unrelated questions, respond with exactly: "I can only help with gold market questions."',
+      'Do not add a financial disclaimer to unrelated-question refusals.',
+      'For answers that include price values, market analysis, or buying/selling guidance, append exactly: "For reference only - not financial advice."',
+      'Keep responses concise under 150 words. Respond in the same language the user writes in.',
     ].join(' ');
   }
 
@@ -74,7 +77,7 @@ export class AiService {
 
     if (!apiKey) {
       // Fallback: canned response when no API key configured
-      const fallback = 'OpenAI API key not configured. For reference only — not financial advice.';
+      const fallback = 'OpenAI API key not configured. For reference only - not financial advice.';
       for (const char of fallback) {
         yield char;
         await new Promise(r => setTimeout(r, 10));
@@ -88,7 +91,7 @@ export class AiService {
       const mod = await import('openai');
       OpenAI = mod.default;
     } catch {
-      yield 'AI service unavailable. For reference only — not financial advice.';
+      yield 'AI service unavailable. For reference only - not financial advice.';
       return;
     }
 
