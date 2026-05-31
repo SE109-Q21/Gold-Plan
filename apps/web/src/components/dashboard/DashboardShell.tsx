@@ -319,7 +319,7 @@ function Sidebar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
   );
 }
 
-function TopBar({ currency, onCurrency, onTab }: { currency: string; onCurrency: (c: string) => void; onTab: (t: Tab) => void }) {
+function TopBar({ onTab }: { onTab: (t: Tab) => void }) {
   const { user, logout } = useAuth();
   const router = useRouter();
 
@@ -638,16 +638,14 @@ interface DashboardShellProps {
   children?: React.ReactNode;
   tab: Tab;
   onTab: (t: Tab) => void;
-  currency: string;
-  onCurrency: (c: string) => void;
 }
 
-export function DashboardShell({ children, tab, onTab, currency, onCurrency }: DashboardShellProps) {
+export function DashboardShell({ children, tab, onTab }: DashboardShellProps) {
   return (
     <div className="fixed inset-0 flex overflow-hidden bg-ink">
       <Sidebar tab={tab} onChange={onTab}/>
       <div className="flex-1 flex flex-col min-w-0">
-        <TopBar currency={currency} onCurrency={onCurrency} onTab={onTab}/>
+        <TopBar onTab={onTab}/>
         <main className="flex-1 overflow-auto bg-ink">
           {children}
         </main>

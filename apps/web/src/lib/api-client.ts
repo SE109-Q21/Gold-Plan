@@ -14,6 +14,15 @@ export const apiClient = axios.create({
   withCredentials: true,
 });
 
+export function getApiErrorMessage(err: unknown, fallback: string): string {
+  if (axios.isAxiosError(err)) {
+    const message = (err.response?.data as { message?: string | string[] } | undefined)?.message;
+    if (Array.isArray(message)) return message.join(', ');
+    if (message) return message;
+  }
+  return err instanceof Error ? err.message : fallback;
+}
+
 apiClient.interceptors.request.use((config) => {
   if (_accessToken) config.headers.Authorization = `Bearer ${_accessToken}`;
   return config;

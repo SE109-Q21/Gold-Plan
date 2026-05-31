@@ -5,14 +5,12 @@ import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/contexts/auth-context';
 import { apiChangePassword, apiDeleteAccount } from '@/lib/auth.api';
-import { useClearHistory } from '@/lib/browsing-history.api';
 import { useSubscribeDigest } from '@/lib/digest.api';
 import { usePortfolio } from '@/lib/portfolio.api';
 import { useAlerts, useAlertHistory } from '@/lib/alerts.api';
 import { PushNotificationButton } from '@/components/PushNotificationButton';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import type { PortfolioTransactionDto, PaginatedDto } from '@gpls/shared';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -163,11 +161,10 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-export function AccountPage({ currency = 'USD', onCurrency }: { currency?: string; onCurrency?: (c: string) => void }) {
+export function AccountPage() {
   const { user, getAccessToken, logout } = useAuth();
   const router = useRouter();
   const { theme: nextTheme, setTheme: setNextTheme } = useTheme();
-  const clearHistory = useClearHistory();
   const subscribeDigest = useSubscribeDigest();
   const portfolioQuery = usePortfolio();
   const alertsQuery = useAlerts();
@@ -218,11 +215,6 @@ export function AccountPage({ currency = 'USD', onCurrency }: { currency?: strin
     await logout();
     toast.success('Đã đăng xuất');
     router.push('/auth/login');
-  }
-
-  async function handleClearHistory() {
-    if (!window.confirm('Xóa toàn bộ lịch sử duyệt? Hành động này không thể hoàn tác.')) return;
-    await clearHistory.mutateAsync();
   }
 
   const initials = user
@@ -292,7 +284,6 @@ export function AccountPage({ currency = 'USD', onCurrency }: { currency?: strin
             <div className="px-[22px] py-4">
               <h3 className="font-display text-[16px] leading-none font-bold m-0">Tùy chỉnh</h3>
             </div>
-            <Row label="Đơn vị tiền tệ" detail="tất cả giá hiển thị theo đơn vị này" right={<Segmented options={['USD', 'VND', 'EUR']} value={currency} onChange={v => onCurrency?.(v)}/>}/>
             <Row label="Giao diện" detail="tối theo mặc định" right={<Segmented options={['DARK', 'LIGHT', 'AUTO']} value={themeDisplay} onChange={handleThemeChange}/>}/>
           </div>
 
@@ -334,15 +325,6 @@ export function AccountPage({ currency = 'USD', onCurrency }: { currency?: strin
               label="Lịch sử duyệt"
               detail="Xem và xóa lịch sử xem giá"
               right={<SmallBtn onClick={() => router.push('/profile/history')}>xem →</SmallBtn>}
-            />
-            <Row
-              label="Xóa lịch sử duyệt"
-              detail="Xóa toàn bộ lịch sử xem giá"
-              right={
-                <SmallBtn danger disabled={clearHistory.isPending} onClick={handleClearHistory}>
-                  {clearHistory.isPending ? '…' : 'xóa'}
-                </SmallBtn>
-              }
             />
           </div>
 

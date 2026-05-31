@@ -13,6 +13,7 @@ import {
   useDeleteTransaction,
 } from '@/lib/portfolio.api';
 import type { AddTransactionPayload } from '@/lib/portfolio.api';
+import { getApiErrorMessage } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -520,7 +521,7 @@ function AddTransactionModal({ onClose, holdings }: { onClose: () => void; holdi
       toast.success('Giao dịch đã được thêm');
       onClose();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Lưu giao dịch thất bại');
+      setError(getApiErrorMessage(err, 'Lưu giao dịch thất bại'));
     } finally {
       setSubmitting(false);
     }
@@ -719,7 +720,7 @@ function EditTransactionModal({ tx, onClose, holdings }: { tx: EditableTx; onClo
       toast.success('Giao dịch đã được cập nhật');
       onClose();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Lưu giao dịch thất bại');
+      setError(getApiErrorMessage(err, 'Lưu giao dịch thất bại'));
     } finally {
       setSubmitting(false);
     }
@@ -988,7 +989,7 @@ function PortfolioContent() {
           </div>
 
           {/* ── Waterfall P&L ── */}
-          {summary?.holdings && summary.holdings.some((h: any) => h.pnlVnd !== 0) && (
+          {summary?.holdings && summary.holdings.some((h: { pnlVnd: number }) => h.pnlVnd !== 0) && (
             <div className="bg-ink-2 border border-line rounded-xl p-[20px_24px] mb-7">
               <SectionLabel>lãi / lỗ theo tài sản</SectionLabel>
               <WaterfallChart

@@ -14,7 +14,7 @@ const PROTECTED_TABS: Tab[] = ['alerts', 'profile'];
 
 export default function Page() {
   const [tab, setTab] = useState<Tab>('home');
-  const [currency, setCurrency] = useState('VND');
+  const [currency] = useState('VND');
   const [alertOpen, setAlertOpen] = useState(false);
   const { user } = useAuth();
 
@@ -29,11 +29,11 @@ export default function Page() {
 
   return (
     <>
-      <DashboardShell tab={safeTab} onTab={setTab} currency={currency} onCurrency={setCurrency}>
+      <DashboardShell tab={safeTab} onTab={setTab}>
         {safeTab === 'home'    && <OverviewPage currency={currency} onNavigateAlerts={() => setTab('alerts')}/>}
         {safeTab === 'chart'   && <MarketsPage currency={currency}/>}
         {safeTab === 'alerts'  && <AlertsPage onOpenAdd={() => setAlertOpen(true)}/>}
-        {safeTab === 'profile' && <AccountPage currency={currency} onCurrency={setCurrency}/>}
+        {safeTab === 'profile' && <AccountPage />}
       </DashboardShell>
       <AddAlertModal open={alertOpen} onClose={() => setAlertOpen(false)}/>
       <AiChatWidget />
