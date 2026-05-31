@@ -42,6 +42,10 @@ export class PortfolioService {
     private readonly priceService: PriceService,
   ) {}
 
+  private normalizeTransactionType(type: string): 'BUY' | 'SELL' {
+    return type.toUpperCase() === 'BUY' ? 'BUY' : 'SELL';
+  }
+
   private async getNetQty(
     userId: string,
     brand: string,
@@ -56,7 +60,7 @@ export class PortfolioService {
       .filter((tx) => tx.id !== excludeTxId)
       .reduce((sum, tx) => {
         const qty = Number(tx.quantity);
-        return tx.type === 'BUY' ? sum + qty : sum - qty;
+        return this.normalizeTransactionType(tx.type) === 'BUY' ? sum + qty : sum - qty;
       }, 0);
   }
 
@@ -116,7 +120,7 @@ export class PortfolioService {
       );
     }
 
-    const effectiveType    = (dto.type      ?? existing.type)              as string;
+    const effectiveType    = this.normalizeTransactionType(dto.type ?? existing.type);
     const effectiveBrand   = dto.brand     ?? existing.brand;
     const effectiveGoldType = dto.goldType ?? existing.goldType;
     const effectiveQty     = dto.quantity  ?? Number(existing.quantity);
@@ -191,6 +195,7 @@ export class PortfolioService {
     return {
       items: items.map((tx) => ({
         ...tx,
+        type: this.normalizeTransactionType(tx.type),
         quantity: Number(tx.quantity),
         pricePerTael: Number(tx.pricePerTael),
       })),
@@ -223,7 +228,7 @@ export class PortfolioService {
       }
 
       const group = groups.get(key)!;
-      if (tx.type === 'BUY') {
+      if (this.normalizeTransactionType(tx.type) === 'BUY') {
         group.netQty += qty;
         group.totalBoughtQty += qty;
         group.totalCostBasis += qty * price;
@@ -359,7 +364,7 @@ export class PortfolioService {
         const key = `${tx.brand}:${tx.goldType}`;
         const qty = Number(tx.quantity);
         const current = holdingQty.get(key) ?? 0;
-        if (tx.type === 'BUY') {
+        if (this.normalizeTransactionType(tx.type) === 'BUY') {
           holdingQty.set(key, current + qty);
         } else {
           holdingQty.set(key, Math.max(0, current - qty));
@@ -411,7 +416,7 @@ export class PortfolioService {
         groups.set(key, { brand: tx.brand, goldType: tx.goldType, netQty: 0 });
       }
       const g = groups.get(key)!;
-      if (tx.type === 'BUY') {
+      if (this.normalizeTransactionType(tx.type) === 'BUY') {
         g.netQty += qty;
       } else {
         g.netQty -= qty;

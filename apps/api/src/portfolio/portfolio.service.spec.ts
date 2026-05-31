@@ -152,6 +152,29 @@ describe('PortfolioService', () => {
       // netQty = 3 - 1 = 2
       expect(summary.holdings[0].netQty).toBeCloseTo(2, 5);
     });
+
+    it('treats legacy lowercase buy/sell transaction types as BUY/SELL', async () => {
+      const buy = makeTxRaw({
+        type: 'buy', brand: 'SJC', goldType: 'MIEN_SJC',
+        quantity: 3, pricePerTael: 80_000_000,
+      });
+      const sell = makeTxRaw({
+        id: 'tx2', type: 'sell', brand: 'SJC', goldType: 'MIEN_SJC',
+        quantity: 1, pricePerTael: 85_000_000,
+        transactedAt: new Date('2024-02-01T00:00:00.000Z'),
+      });
+
+      mockPrismaService.portfolioTransaction.findMany.mockResolvedValue([buy, sell]);
+      mockPriceService.getCurrentPrices.mockResolvedValue([
+        { brand: 'SJC', goldType: 'MIEN_SJC', buyPrice: 85_000_000 },
+      ]);
+
+      const summary = await service.getPortfolio('user1');
+
+      expect(summary.holdings).toHaveLength(1);
+      expect(summary.holdings[0].netQty).toBeCloseTo(2, 5);
+      expect(summary.totalValueVnd).toBeCloseTo(170_000_000, 0);
+    });
   });
 
   describe('addTransaction — quantity validation', () => {

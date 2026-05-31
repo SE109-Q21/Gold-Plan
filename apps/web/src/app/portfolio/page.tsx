@@ -18,7 +18,6 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MoneyInput } from '@/components/ui/money-input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { toast } from 'sonner';
@@ -52,14 +51,6 @@ function IconTrash({ s = 14 }: { s?: number }) {
   );
 }
 
-function IconX({ s = 16 }: { s?: number }) {
-  return (
-    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M18 6 6 18M6 6l12 12"/>
-    </svg>
-  );
-}
-
 function IconPencil({ s = 14 }: { s?: number }) {
   return (
     <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -72,8 +63,21 @@ function IconPencil({ s = 14 }: { s?: number }) {
 // ─── Shared helpers ───────────────────────────────────────────────────────────
 
 function fmtM(v: number): string {
-  if (Math.abs(v) >= 1_000_000_000) return (v / 1_000_000_000).toFixed(2) + 'B₫';
-  return (v / 1_000_000).toFixed(2) + 'M₫';
+  const abs = Math.abs(v);
+  const units = [
+    { value: 1_000_000_000_000_000_000, suffix: 'E₫' },
+    { value: 1_000_000_000_000_000, suffix: 'P₫' },
+    { value: 1_000_000_000_000, suffix: 'T₫' },
+    { value: 1_000_000_000, suffix: 'B₫' },
+    { value: 1_000_000, suffix: 'M₫' },
+  ];
+  const unit = units.find(u => abs >= u.value) ?? units[units.length - 1];
+  const n = v / unit.value;
+  const decimals = Math.abs(n) >= 100 ? 1 : 2;
+  return n.toLocaleString('vi-VN', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  }) + unit.suffix;
 }
 
 function fmtVnd(v: number): string {
@@ -117,14 +121,17 @@ function SummaryCard({
         <Skeleton w={140} h={30}/>
       ) : (
         <div className={cn(
-          'font-display text-[28px] leading-none font-extrabold tracking-[-0.03em] [font-variant-numeric:tabular-nums]',
+          'font-display text-[clamp(20px,2.1vw,28px)] leading-none font-extrabold tracking-[-0.03em] [font-variant-numeric:tabular-nums] truncate max-w-full',
           colorClass ?? 'text-chalk',
         )}>
           {value}
         </div>
       )}
       {subLabel && !loading && (
-        <div className="font-mono text-[11px] leading-none font-medium text-mute mt-[6px] tracking-[0.04em]">
+        <div
+          title={subLabel}
+          className="font-mono text-[11px] leading-none font-medium text-mute mt-[6px] tracking-[0.04em] truncate max-w-full"
+        >
           {subLabel}
         </div>
       )}
@@ -134,9 +141,13 @@ function SummaryCard({
 
 // ─── P&L Chart ────────────────────────────────────────────────────────────────
 
+const PNL_W = 600;
+const PNL_H = 180;
+const PNL_PAD = { top: 16, right: 20, bottom: 32, left: 56 };
+
 function PnlChart({ data, loading }: { data: { date: string; valueVnd: number }[]; loading: boolean }) {
-  const W = 600, H = 180;
-  const PAD = { top: 16, right: 20, bottom: 32, left: 56 };
+  const W = PNL_W, H = PNL_H;
+  const PAD = PNL_PAD;
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
   const containerRef = useRef<SVGSVGElement>(null);
 
@@ -165,7 +176,7 @@ function PnlChart({ data, loading }: { data: { date: string; valueVnd: number }[
 
     const isPositive = points[points.length - 1].valueVnd >= points[0].valueVnd;
     return { linePath, areaPath, xs, ys, xTicks: uniqueIdxs, yTicks, minV, maxV, points, isPositive };
-  }, [data]);
+  }, [data, H, PAD.bottom, PAD.left, PAD.right, PAD.top, W]);
 
   if (loading) {
     return (
@@ -826,51 +837,6 @@ function EditTransactionModal({ tx, onClose, holdings }: { tx: EditableTx; onClo
   );
 }
 
-// ─── Waterfall P&L Chart ──────────────────────────────────────────────────────
-
-function WaterfallChart({ holdings, loading }: {
-  holdings: { brand: string; goldType: string; netQty: number; pnlVnd: number; pnlPct: number }[];
-  loading: boolean;
-}) {
-  if (loading) return <div style={{ height: 120 }} className="animate-pulse bg-ink-3 rounded-lg"/>;
-  if (!holdings.length) return null;
-
-  const sorted = [...holdings].sort((a, b) => Math.abs(b.pnlVnd) - Math.abs(a.pnlVnd));
-  const maxAbs = Math.max(...sorted.map(h => Math.abs(h.pnlVnd)), 1);
-  const LABEL_W = 140, BAR_MAX = 340, ROW_H = 28, GAP = 6;
-  const H = sorted.length * (ROW_H + GAP) + 8;
-  const W = LABEL_W + BAR_MAX + 80;
-  const MID = LABEL_W + 4;
-
-  return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="block w-full h-auto">
-      {sorted.map((h, i) => {
-        const y = i * (ROW_H + GAP) + 4;
-        const barLen = (Math.abs(h.pnlVnd) / maxAbs) * (BAR_MAX / 2 - 4);
-        const isPos = h.pnlVnd >= 0;
-        const color = isPos ? '#58C896' : '#E5484D';
-        const label = `${h.brand} ${GOLD_TYPE_LABELS[h.goldType] ?? h.goldType}`;
-        return (
-          <g key={i}>
-            <text x={LABEL_W - 6} y={y + ROW_H / 2 + 4} textAnchor="end"
-              fill="var(--bone)" fontSize={10} fontFamily="var(--font-mono)"
-              style={{ fontWeight: 600 }}>
-              {label.slice(0, 22)}
-            </text>
-            <rect x={isPos ? MID : MID - barLen} y={y + 4} width={barLen} height={ROW_H - 8} rx={3} fill={color} opacity="0.85"/>
-            <text x={isPos ? MID + barLen + 5 : MID - barLen - 5} y={y + ROW_H / 2 + 4}
-              textAnchor={isPos ? 'start' : 'end'}
-              fill={color} fontSize={10} fontFamily="var(--font-mono)" style={{ fontWeight: 700 }}>
-              {isPos ? '+' : ''}{(h.pnlVnd / 1_000_000).toFixed(2)}M₫
-            </text>
-          </g>
-        );
-      })}
-      <line x1={MID} y1={0} x2={MID} y2={H} stroke="rgba(128,128,148,0.25)" strokeWidth="1"/>
-    </svg>
-  );
-}
-
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 const TH_BASE = 'font-mono text-[9px] leading-none font-bold tracking-[0.14em] uppercase text-mute pb-[14px] px-3 border-b border-line';
@@ -987,17 +953,6 @@ function PortfolioContent() {
             <SectionLabel>lịch sử giá trị danh mục</SectionLabel>
             <PnlChart data={chartData ?? []} loading={chartLoading || (chartFetching && !chartData)}/>
           </div>
-
-          {/* ── Waterfall P&L ── */}
-          {summary?.holdings && summary.holdings.some((h: { pnlVnd: number }) => h.pnlVnd !== 0) && (
-            <div className="bg-ink-2 border border-line rounded-xl p-[20px_24px] mb-7">
-              <SectionLabel>lãi / lỗ theo tài sản</SectionLabel>
-              <WaterfallChart
-                holdings={summary.holdings}
-                loading={summaryLoading || (summaryFetching && !summary)}
-              />
-            </div>
-          )}
 
           {/* ── Holdings table ── */}
           <div className="bg-ink-2 border border-line rounded-xl p-[20px_24px] mb-7 overflow-x-auto">

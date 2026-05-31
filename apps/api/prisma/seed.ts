@@ -393,13 +393,13 @@ async function main() {
   for (const u of [testUser, testUser2]) {
     for (let i = 0; i < 36; i++) {
       const pb = pick(portfolioBrands);
-      const type = Math.random() > 0.35 ? 'buy' : 'sell';
+      const type = Math.random() > 0.35 ? 'BUY' : 'SELL';
       portfolioRows.push({
         userId: u.id, type, brand: pb.brand, goldType: pb.goldType,
         quantity: parseFloat((Math.random() * 3 + 0.25).toFixed(2)),
         pricePerTael: BigInt(74_000_000 + rand(0, 4_000_000)),
         transactedAt: daysAgo(rand(0, 180), rand(7, 17), rand(0, 59)),
-        note: type === 'buy' ? pick(['Tích lũy dài hạn', 'DCA tháng này', 'Mua thêm', null]) : pick(['Chốt lời', 'Cần tiền', null]),
+        note: type === 'BUY' ? pick(['Tích lũy dài hạn', 'DCA tháng này', 'Mua thêm', null]) : pick(['Chốt lời', 'Cần tiền', null]),
       });
     }
   }
