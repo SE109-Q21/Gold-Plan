@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 
 function ConfirmDeleteModal({ message, onConfirm, onClose }: {
   message: string;
@@ -26,7 +26,7 @@ function ConfirmDeleteModal({ message, onConfirm, onClose }: {
             </svg>
           </div>
           <div>
-            <div className="text-[16px] leading-none font-bold font-sans text-chalk mb-[6px]">Xóa cảnh báo</div>
+            <DialogTitle className="text-[16px] leading-none font-bold font-sans text-chalk mb-[6px]">Xóa cảnh báo</DialogTitle>
             <div className="text-[13px] leading-[1.5] font-sans text-mute">{message}</div>
           </div>
         </div>

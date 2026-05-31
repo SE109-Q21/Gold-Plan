@@ -214,7 +214,7 @@ model AlertTriggerHistory {
   priceAtTrigger BigInt
   emailSentAt    DateTime?
 
-  alert PriceAlert @relation(fields: [alertId], references: [id])
+  alert PriceAlert @relation(fields: [alertId], references: [id], onDelete: Cascade)
 }
 
 // ─── Portfolio Tracker (F02) ──────────────────────────────────────────────────
