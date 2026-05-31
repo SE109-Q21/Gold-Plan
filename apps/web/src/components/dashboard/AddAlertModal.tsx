@@ -54,6 +54,14 @@ export function AddAlertModal({ open, onClose }: Props) {
 
   const handleSubmit = () => {
     setError(null);
+    if (!threshold || threshold < 1_000_000) {
+      setError('Ngưỡng giá phải từ 1,000,000₫ trở lên');
+      return;
+    }
+    if (threshold > 1_000_000_000_000) {
+      setError('Ngưỡng giá vượt quá giới hạn cho phép');
+      return;
+    }
     createAlert.mutate(
       { brand, goldType, condition: cond, thresholdPrice: threshold, repeatMode },
       {
@@ -114,7 +122,7 @@ export function AddAlertModal({ open, onClose }: Props) {
             type="number"
             value={threshold}
             onChange={e => setThreshold(+e.target.value)}
-            min={0}
+            min={1_000_000}
             className="flex-1 h-[46px] bg-transparent border-0 outline-none font-display text-[24px] leading-none font-bold text-chalk [font-variant-numeric:tabular-nums] ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
           />
         </div>

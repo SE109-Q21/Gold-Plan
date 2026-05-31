@@ -472,7 +472,9 @@ const TX_TYPE_LABELS: Record<string, string> = {
   SELL: 'Bán',
 };
 
-function AddTransactionModal({ onClose }: { onClose: () => void }) {
+type HoldingInfo = { brand: string; goldType: string; netQty: number };
+
+function AddTransactionModal({ onClose, holdings }: { onClose: () => void; holdings: HoldingInfo[] }) {
   const addTx = useAddTransaction();
 
   const [txType, setTxType] = useState<'BUY' | 'SELL'>('BUY');
@@ -487,12 +489,21 @@ function AddTransactionModal({ onClose }: { onClose: () => void }) {
 
   const today = new Date().toISOString().split('T')[0];
 
+  const availableQty = useMemo(() => {
+    if (txType !== 'SELL') return null;
+    return holdings.find(h => h.brand === brand && h.goldType === goldType)?.netQty ?? 0;
+  }, [txType, brand, goldType, holdings]);
+
   async function handleSubmit(e: { preventDefault(): void }) {
     e.preventDefault();
     const qtyNum = parseFloat(qty);
     const priceNum = parseFloat(price);
     if (!qtyNum || qtyNum <= 0) { setError('Số lượng phải lớn hơn 0'); return; }
     if (!priceNum || priceNum <= 0) { setError('Giá phải lớn hơn 0'); return; }
+    if (txType === 'SELL' && availableQty !== null && qtyNum > availableQty) {
+      setError(`Không đủ số dư. Bạn chỉ có ${availableQty} lượng ${brand} ${GOLD_TYPE_LABELS[goldType] ?? goldType}`);
+      return;
+    }
     setError('');
     setSubmitting(true);
     try {
@@ -573,12 +584,18 @@ function AddTransactionModal({ onClose }: { onClose: () => void }) {
                 type="number"
                 min="0.01"
                 step="0.01"
+                max={availableQty !== null ? availableQty : undefined}
                 value={qty}
                 onChange={(e: { target: { value: string } }) => setQty(e.target.value)}
                 placeholder="vd: 1,5"
                 required
                 className={INPUT_CLS}
               />
+              {availableQty !== null && (
+                <div className="mt-[6px] font-mono text-[10px] leading-none text-mute">
+                  Đang có: <span className={availableQty === 0 ? 'text-down' : 'text-bone'}>{availableQty} lượng</span>
+                </div>
+              )}
             </div>
             <div>
               <SectionLabel>Giá / Lượng (VND)</SectionLabel>
@@ -651,7 +668,7 @@ interface EditableTx {
   note: string | null;
 }
 
-function EditTransactionModal({ tx, onClose }: { tx: EditableTx; onClose: () => void }) {
+function EditTransactionModal({ tx, onClose, holdings }: { tx: EditableTx; onClose: () => void; holdings: HoldingInfo[] }) {
   const editTx = useEditTransaction();
 
   const [txType, setTxType] = useState<'BUY' | 'SELL'>(tx.type);
@@ -666,12 +683,26 @@ function EditTransactionModal({ tx, onClose }: { tx: EditableTx; onClose: () => 
 
   const today = new Date().toISOString().split('T')[0];
 
+  const maxSellQty = useMemo(() => {
+    if (txType !== 'SELL') return null;
+    const currentNet = holdings.find(h => h.brand === brand && h.goldType === goldType)?.netQty ?? 0;
+    if (brand === tx.brand && goldType === tx.goldType) {
+      if (tx.type === 'BUY')  return Math.max(0, currentNet - tx.quantity);
+      if (tx.type === 'SELL') return currentNet + tx.quantity;
+    }
+    return Math.max(0, currentNet);
+  }, [txType, brand, goldType, holdings, tx]);
+
   async function handleSubmit(e: { preventDefault(): void }) {
     e.preventDefault();
     const qtyNum = parseFloat(qty);
     const priceNum = parseFloat(price);
     if (!qtyNum || qtyNum <= 0) { setError('Số lượng phải lớn hơn 0'); return; }
     if (!priceNum || priceNum <= 0) { setError('Giá phải lớn hơn 0'); return; }
+    if (txType === 'SELL' && maxSellQty !== null && qtyNum > maxSellQty) {
+      setError(`Không đủ số dư. Tối đa có thể bán ${maxSellQty} lượng ${brand} ${GOLD_TYPE_LABELS[goldType] ?? goldType}`);
+      return;
+    }
     setError('');
     setSubmitting(true);
     try {
@@ -744,9 +775,16 @@ function EditTransactionModal({ tx, onClose }: { tx: EditableTx; onClose: () => 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <SectionLabel>Số lượng (lượng)</SectionLabel>
-              <Input type="number" min="0.01" step="0.01" value={qty}
+              <Input type="number" min="0.01" step="0.01"
+                max={maxSellQty !== null ? maxSellQty : undefined}
+                value={qty}
                 onChange={(e: { target: { value: string } }) => setQty(e.target.value)}
                 placeholder="vd: 1,5" required className={INPUT_CLS}/>
+              {maxSellQty !== null && (
+                <div className="mt-[6px] font-mono text-[10px] leading-none text-mute">
+                  Tối đa: <span className={maxSellQty === 0 ? 'text-down' : 'text-bone'}>{maxSellQty} lượng</span>
+                </div>
+              )}
             </div>
             <div>
               <SectionLabel>Giá / Lượng (VND)</SectionLabel>
@@ -1153,8 +1191,8 @@ function PortfolioContent() {
       </div>
       </div>
 
-      {showModal && <AddTransactionModal onClose={() => setShowModal(false)}/>}
-      {editingTx && <EditTransactionModal tx={editingTx} onClose={() => setEditingTx(null)}/>}
+      {showModal && <AddTransactionModal onClose={() => setShowModal(false)} holdings={summary?.holdings ?? []}/>}
+      {editingTx && <EditTransactionModal tx={editingTx} onClose={() => setEditingTx(null)} holdings={summary?.holdings ?? []}/>}
     </>
   );
 }

@@ -42,19 +42,49 @@ export class PortfolioService {
     private readonly priceService: PriceService,
   ) {}
 
+  private async getNetQty(
+    userId: string,
+    brand: string,
+    goldType: string,
+    excludeTxId?: string,
+  ): Promise<number> {
+    const txs = await this.prisma.portfolioTransaction.findMany({
+      where: { userId, brand: brand as any, goldType: goldType as any },
+      select: { id: true, type: true, quantity: true },
+    });
+    return txs
+      .filter((tx) => tx.id !== excludeTxId)
+      .reduce((sum, tx) => {
+        const qty = Number(tx.quantity);
+        return tx.type === 'BUY' ? sum + qty : sum - qty;
+      }, 0);
+  }
+
   async addTransaction(
     userId: string,
     dto: AddTransactionDto,
   ): Promise<PortfolioTransaction> {
     if (dto.quantity <= 0) {
-      throw new BadRequestException('quantity must be greater than 0');
+      throw new BadRequestException('Số lượng phải lớn hơn 0');
+    }
+    if (dto.pricePerTael < 1_000_000) {
+      throw new BadRequestException('Giá mỗi lượng phải từ 1,000,000₫ trở lên');
     }
 
     const transactedAt = new Date(dto.transactedAt);
     const today = new Date();
     today.setHours(23, 59, 59, 999);
     if (transactedAt > today) {
-      throw new BadRequestException('transactedAt cannot be in the future');
+      throw new BadRequestException('Ngày giao dịch không được ở tương lai');
+    }
+
+    if (dto.type === 'SELL') {
+      const netQty = await this.getNetQty(userId, dto.brand, dto.goldType);
+      if (dto.quantity > netQty) {
+        throw new BadRequestException(
+          `Không đủ số dư để bán. Hiện có ${netQty} lượng ${dto.brand} ${dto.goldType}, không thể bán ${dto.quantity} lượng.`,
+        );
+      }
     }
 
     return this.prisma.portfolioTransaction.create({
@@ -84,6 +114,35 @@ export class PortfolioService {
       throw new NotFoundException(
         `Transaction "${txId}" not found or does not belong to user.`,
       );
+    }
+
+    const effectiveType    = (dto.type      ?? existing.type)              as string;
+    const effectiveBrand   = dto.brand     ?? existing.brand;
+    const effectiveGoldType = dto.goldType ?? existing.goldType;
+    const effectiveQty     = dto.quantity  ?? Number(existing.quantity);
+    const effectivePrice   = dto.pricePerTael ?? Number(existing.pricePerTael);
+
+    if (effectiveQty <= 0) {
+      throw new BadRequestException('Số lượng phải lớn hơn 0');
+    }
+    if (effectivePrice < 1_000_000) {
+      throw new BadRequestException('Giá mỗi lượng phải từ 1,000,000₫ trở lên');
+    }
+    if (dto.transactedAt !== undefined) {
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+      if (new Date(dto.transactedAt) > today) {
+        throw new BadRequestException('Ngày giao dịch không được ở tương lai');
+      }
+    }
+
+    if (effectiveType === 'SELL') {
+      const netQty = await this.getNetQty(userId, effectiveBrand, effectiveGoldType, txId);
+      if (effectiveQty > netQty) {
+        throw new BadRequestException(
+          `Không đủ số dư để bán. Hiện có ${netQty} lượng ${effectiveBrand} ${effectiveGoldType}, không thể bán ${effectiveQty} lượng.`,
+        );
+      }
     }
 
     const data: Record<string, unknown> = {};
