@@ -602,6 +602,55 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
         {/* ── Right column */}
         <div className="flex flex-col gap-5 min-w-0">
 
+          {/* Today's price changes */}
+          <div className="bg-ink-2 border border-line rounded-[14px] p-5">
+            <div className="flex justify-between items-baseline mb-[14px]">
+              <h3 className="text-[16px] leading-none font-bold font-sans m-0">Biến động trong ngày</h3>
+              <span className="font-mono text-[9px] text-mute tracking-[0.12em] uppercase leading-none">so với hôm qua</span>
+            </div>
+            {!domestic && [0, 1, 2].map(i => (
+              <div key={i} className={cn('py-3 flex items-center justify-between', i !== 0 && 'border-t border-hairline')}>
+                <div className="flex flex-col gap-[6px]">
+                  <div className="h-[13px] w-[90px] bg-ink-3 rounded animate-pulse"/>
+                  <div className="h-[10px] w-[60px] bg-ink-3 rounded animate-pulse"/>
+                </div>
+                <div className="h-[14px] w-[48px] bg-ink-3 rounded animate-pulse"/>
+              </div>
+            ))}
+            {domestic && DISPLAY_GOLD_TYPES.map((gt, i) => {
+              const entries = domestic.filter(d => d.goldType === gt);
+              const row = entries.find(d => d.brand === 'SJC') ?? entries[0];
+              if (!row) return null;
+              const pct = row.changePercent;
+              const isPos = pct != null && pct >= 0;
+              const barW = pct != null ? Math.min(100, Math.abs(pct) * 25) : 0;
+              return (
+                <div key={gt} className={cn('py-3 flex items-center justify-between', i !== 0 && 'border-t border-hairline')}>
+                  <div>
+                    <div className="text-[13px] leading-none font-bold font-sans">{GOLD_TYPE_LABELS[gt] ?? gt}</div>
+                    <div className="font-mono text-[10px] text-mute mt-[5px] tabular-nums">{fmtVnd(row.buyPrice)}</div>
+                  </div>
+                  <div className="flex flex-col items-end gap-[5px]">
+                    <span className={cn(
+                      'font-mono text-[13px] leading-none font-bold tabular-nums',
+                      pct == null ? 'text-mute' : isPos ? 'text-up' : 'text-down',
+                    )}>
+                      {pct == null ? '—' : `${isPos ? '+' : ''}${pct.toFixed(2)}%`}
+                    </span>
+                    <div className="w-[48px] h-[3px] bg-ink-3 rounded-full overflow-hidden">
+                      {pct != null && (
+                        <div
+                          className={cn('h-full rounded-full transition-all duration-500', isPos ? 'bg-up' : 'bg-down')}
+                          style={{ width: `${barW}%` }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
           {/* Arbitrage opportunities */}
           <ArbitrageWidget />
 
