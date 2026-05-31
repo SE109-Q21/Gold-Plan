@@ -449,23 +449,30 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
                   SJC Miếng · <span className="text-chalk">{fmt(hoverVal)}</span>
                 </div>
               </div>
-              <div className="flex gap-0">
-                {RANGE_LABELS.map((r, i) => (
-                  <Button
-                    key={r}
-                    variant="outline"
-                    onClick={() => setRange(r)}
-                    className={cn(
-                      'h-[30px] px-[10px] font-mono text-[11px] leading-none font-bold tracking-[0.1em] uppercase rounded-none border-line',
-                      i === 0 && 'rounded-l-[6px]',
-                      i === RANGE_LABELS.length - 1 && 'rounded-r-[6px]',
-                      i < RANGE_LABELS.length - 1 && 'border-r-0',
-                      range === r
-                        ? 'border-gold bg-gold text-gold-ink hover:bg-gold hover:text-gold-ink'
-                        : 'bg-transparent text-bone hover:bg-ink-3',
-                    )}
-                  >{r}</Button>
-                ))}
+              <div className="flex flex-col items-end gap-[6px]">
+                <div className="flex gap-0">
+                  {RANGE_LABELS.map((r, i) => (
+                    <Button
+                      key={r}
+                      variant="outline"
+                      onClick={() => setRange(r)}
+                      className={cn(
+                        'h-[30px] px-[10px] font-mono text-[11px] leading-none font-bold tracking-[0.1em] uppercase rounded-none border-line',
+                        i === 0 && 'rounded-l-[6px]',
+                        i === RANGE_LABELS.length - 1 && 'rounded-r-[6px]',
+                        i < RANGE_LABELS.length - 1 && 'border-r-0',
+                        range === r
+                          ? 'border-gold bg-gold text-gold-ink hover:bg-gold hover:text-gold-ink'
+                          : 'bg-transparent text-bone hover:bg-ink-3',
+                      )}
+                    >{r}</Button>
+                  ))}
+                </div>
+                {history && history.length > 0 && (
+                  <span className="font-mono text-[9px] text-mute tracking-[0.06em] leading-none">
+                    cập nhật {minsAgo(history[history.length - 1].recordedAt)}
+                  </span>
+                )}
               </div>
             </div>
             <PriceChart history={history ?? []} range={range} onHoverPrice={setHoverPrice} chartId="overview-pc" isLoading={historyLoading} />
@@ -523,7 +530,14 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
           <div className="bg-ink-2 border border-line rounded-[14px]">
             <div className="flex items-center justify-between px-6 py-[18px] border-b border-hairline">
               <h3 className="text-[18px] leading-none font-bold font-sans m-0 tracking-[-0.01em]">Chênh lệch các thương hiệu nội địa</h3>
-              <span className="font-mono text-[10px] text-mute tracking-[0.12em] uppercase">{currency.toLowerCase()} mỗi lượng · tốt nhất nổi bật</span>
+              <div className="flex flex-col items-end gap-[5px]">
+                <span className="font-mono text-[10px] text-mute tracking-[0.12em] uppercase">{currency.toLowerCase()} mỗi lượng · tốt nhất nổi bật</span>
+                {liveTableRows[0]?.recordedAt && (
+                  <span className="font-mono text-[9px] text-mute tracking-[0.06em] leading-none">
+                    cập nhật {minsAgo(liveTableRows[0].recordedAt)}
+                  </span>
+                )}
+              </div>
             </div>
             <div
               className="px-6 py-3 font-mono text-[10px] text-mute tracking-[0.14em] uppercase bg-ink-3 border-b border-hairline grid"
