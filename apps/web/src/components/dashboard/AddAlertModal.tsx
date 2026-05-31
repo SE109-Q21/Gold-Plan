@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useCreateAlert } from '@/lib/alerts.api';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { MoneyInput } from '@/components/ui/money-input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -46,7 +46,7 @@ export function AddAlertModal({ open, onClose }: Props) {
   const [brand,      setBrand]      = useState<GoldBrand>('SJC');
   const [goldType,   setGoldType]   = useState<GoldType>('MIEN_SJC');
   const [cond,       setCond]       = useState<'gte' | 'lte'>('gte');
-  const [threshold,  setThreshold]  = useState(80_000_000);
+  const [threshold,  setThreshold]  = useState('80000000');
   const [repeatMode, setRepeatMode] = useState(false);
   const [error,      setError]      = useState<string | null>(null);
 
@@ -54,21 +54,22 @@ export function AddAlertModal({ open, onClose }: Props) {
 
   const handleSubmit = () => {
     setError(null);
-    if (!threshold || threshold < 1_000_000) {
-      setError('Ngưỡng giá phải từ 1,000,000₫ trở lên');
+    const thresholdNum = parseInt(threshold || '0', 10);
+    if (!threshold || thresholdNum < 1_000_000) {
+      setError('Ngưỡng giá phải từ 1.000.000₫ trở lên');
       return;
     }
-    if (threshold > 1_000_000_000_000) {
+    if (thresholdNum > 1_000_000_000_000) {
       setError('Ngưỡng giá vượt quá giới hạn cho phép');
       return;
     }
     createAlert.mutate(
-      { brand, goldType, condition: cond, thresholdPrice: threshold, repeatMode },
+      { brand, goldType, condition: cond, thresholdPrice: thresholdNum, repeatMode },
       {
         onSuccess: () => {
           onClose();
           setBrand('SJC'); setGoldType('MIEN_SJC'); setCond('gte');
-          setThreshold(80_000_000); setRepeatMode(false);
+          setThreshold('80000000'); setRepeatMode(false);
         },
         onError: (err: unknown) => {
           const msg =
@@ -118,12 +119,11 @@ export function AddAlertModal({ open, onClose }: Props) {
         <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-2">ngưỡng giá (VND)</div>
         <div className="flex items-center gap-[10px] bg-ink-3 border border-line rounded-[10px] py-1 px-2 pl-4 mb-[18px]">
           <span className="font-display text-[24px] leading-none font-bold text-gold">₫</span>
-          <Input
-            type="number"
+          <MoneyInput
             value={threshold}
-            onChange={e => setThreshold(+e.target.value)}
-            min={1_000_000}
-            className="flex-1 h-[46px] bg-transparent border-0 outline-none font-display text-[24px] leading-none font-bold text-chalk [font-variant-numeric:tabular-nums] ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
+            onChange={setThreshold}
+            placeholder="80000000"
+            className="flex-1 h-[46px] bg-transparent border-0 outline-none font-display text-[24px] leading-none font-bold text-chalk [font-variant-numeric:tabular-nums] ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-0 shadow-none focus-visible:ring-offset-0"
           />
         </div>
 
@@ -144,7 +144,7 @@ export function AddAlertModal({ open, onClose }: Props) {
         <div className="p-[12px_14px] bg-ink-3 border border-line rounded-lg font-mono text-[11px] leading-[1.5] text-mute mb-[18px]">
           thông báo khi{' '}
           <span className="text-gold">
-            {brandLabel} · {goldTypeLabel} {cond === 'gte' ? '≥' : '≤'} ₫{threshold.toLocaleString('vi-VN')}
+            {brandLabel} · {goldTypeLabel} {cond === 'gte' ? '≥' : '≤'} ₫{Number(threshold || '0').toLocaleString('vi-VN')}
           </span>
           . lặp lại: {repeatMode ? 'có' : 'không'}
         </div>

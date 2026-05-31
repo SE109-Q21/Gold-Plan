@@ -14,7 +14,7 @@ const PROTECTED_TABS: Tab[] = ['alerts', 'profile'];
 
 export default function Page() {
   const [tab, setTab] = useState<Tab>('home');
-  const [currency, setCurrency] = useState('USD');
+  const [currency, setCurrency] = useState('VND');
   const [alertOpen, setAlertOpen] = useState(false);
   const { user } = useAuth();
 
