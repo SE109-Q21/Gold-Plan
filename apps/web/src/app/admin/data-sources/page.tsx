@@ -14,11 +14,6 @@ import { Label } from '@/components/ui/label';
 const TH = 'text-left p-[10px_16px] font-mono text-[10px] leading-none font-bold text-mute tracking-[0.14em] uppercase whitespace-nowrap';
 const TD = 'p-[14px_16px]';
 
-interface SourceFormValues {
-  name: string; brand: string; url: string; crawlType: string; frequencyMin: number;
-}
-const EMPTY_FORM: SourceFormValues = { name: '', brand: 'SJC', url: '', crawlType: 'http', frequencyMin: 5 };
-
 function EnabledBadge({ active }: { active: boolean }) {
   return (
     <span className={cn(

@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useAdminAuditLog } from '@/lib/admin.api';
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
 const TH = 'text-left p-[10px_16px] font-mono text-[10px] leading-none font-bold text-mute tracking-[0.14em] uppercase whitespace-nowrap';

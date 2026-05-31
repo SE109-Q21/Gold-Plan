@@ -1,8 +1,12 @@
 'use client';
 
 import { useTheme } from 'next-themes';
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 import { Button } from '@/components/ui/button';
+
+const subscribeMounted = () => () => {};
+const getMountedSnapshot = () => true;
+const getServerMountedSnapshot = () => false;
 
 function IconSun({ s = 15 }: { s?: number }) {
   return (
@@ -23,9 +27,11 @@ function IconMoon({ s = 15 }: { s?: number }) {
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => setMounted(true), []);
+  const mounted = useSyncExternalStore(
+    subscribeMounted,
+    getMountedSnapshot,
+    getServerMountedSnapshot,
+  );
 
   // Render a placeholder with the same dimensions to avoid layout shift
   if (!mounted) return <div className="w-[34px] h-[34px] shrink-0" />;

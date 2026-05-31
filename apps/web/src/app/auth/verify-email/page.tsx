@@ -18,7 +18,7 @@ function VerifyEmailContent() {
   const [status, setStatus] = useState<Status>(token ? 'loading' : 'invalid');
 
   useEffect(() => {
-    if (!token) { setStatus('invalid'); return; }
+    if (!token) return;
     (async () => {
       try {
         await apiVerifyEmail(token);

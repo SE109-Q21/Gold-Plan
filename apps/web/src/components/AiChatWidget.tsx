@@ -43,13 +43,9 @@ export function AiChatWidget() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
-  const [remaining, setRemaining] = useState(10);
+  const [remaining, setRemaining] = useState(() => getRemainingQuestions());
   const [limitReached, setLimitReached] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setRemaining(getRemainingQuestions());
-  }, [open]);
 
   useEffect(() => {
     if (listRef.current) {
@@ -101,7 +97,10 @@ export function AiChatWidget() {
   if (!open) {
     return (
       <Button
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          setRemaining(getRemainingQuestions());
+          setOpen(true);
+        }}
         aria-label="Mở trợ lý AI"
         size="icon"
         className="fixed bottom-7 right-7 z-[1000] w-14 h-14 rounded-full bg-gold shadow-[0_4px_20px_rgba(212,175,55,0.4)] transition-shadow hover:bg-gold/90"

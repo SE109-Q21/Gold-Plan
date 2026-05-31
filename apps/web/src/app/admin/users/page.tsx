@@ -50,15 +50,6 @@ export default function AdminUsersPage() {
     return (e: React.ChangeEvent<HTMLSelectElement>) => { setter(e.target.value); setPage(1); };
   }
 
-  const actionBtn = (color: 'up' | 'down' | 'gold' | 'mute', disabled: boolean) => cn(
-    'px-[10px] py-[5px] bg-transparent rounded-[5px] font-mono text-[9px] leading-none font-bold tracking-[0.08em] uppercase border',
-    color === 'up'   ? 'border-up text-up' :
-    color === 'down' ? 'border-down text-down' :
-    color === 'gold' ? 'border-[rgba(212,175,55,0.5)] text-gold' :
-    'border-line text-mute',
-    disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
-  );
-
   return (
     <div className="h-full overflow-auto bg-ink">
     <div className="p-[32px_36px_60px]">

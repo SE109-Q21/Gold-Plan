@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { apiClient } from './api-client';
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
@@ -11,13 +11,11 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
 }
 
 export function usePushNotifications() {
-  const [isSupported, setIsSupported] = useState(false);
+  const [isSupported] = useState(
+    () => typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window,
+  );
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    setIsSupported('serviceWorker' in navigator && 'PushManager' in window);
-  }, []);
 
   const subscribe = async () => {
     if (!isSupported) return;

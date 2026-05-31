@@ -88,13 +88,21 @@ export function PriceChart({
   const [touchPinned, setTouchPinned] = useState(false);
   const [dataVersion, setDataVersion] = useState(0);
 
-  const zoomRef = useRef(zoomWindow); zoomRef.current = zoomWindow;
-  const histRef = useRef(history);   histRef.current = history;
+  const zoomRef = useRef(zoomWindow);
+  const histRef = useRef(history);
 
   useEffect(() => {
-    setZoomWindow(null); setHoverIdx(null); setTouchPinned(false); onHoverPrice(null);
-    setShowBB(false); setDragStart(null); setDragCurrent(null);
-    setDataVersion(v => v + 1);
+    zoomRef.current = zoomWindow;
+    histRef.current = history;
+  }, [history, zoomWindow]);
+
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      setZoomWindow(null); setHoverIdx(null); setTouchPinned(false); onHoverPrice(null);
+      setShowBB(false); setDragStart(null); setDragCurrent(null);
+      setDataVersion(v => v + 1);
+    }, 0);
+    return () => window.clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [range, history.length]);
 
@@ -325,7 +333,7 @@ export function PriceChart({
     setDragStart(clientXToIdx(e.clientX));
     setDragCurrent(clientXToIdx(e.clientX));
   }
-  function handleMouseUp(e: React.MouseEvent) {
+  function handleMouseUp() {
     if (dragStart !== null && dragCurrent !== null) {
       const lo = Math.min(dragStart, dragCurrent);
       const hi = Math.max(dragStart, dragCurrent);

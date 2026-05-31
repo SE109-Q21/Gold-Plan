@@ -154,7 +154,7 @@ function ConverterContent() {
     if (!result) return '';
     const valMap = { VND: fmtVnd(result.valuations.VND), USD: fmtUsd(result.valuations.USD), EUR: fmtEur(result.valuations.EUR) };
     return `${qty} ${UNIT_DISPLAY[unit]} ${purity} = ${valMap[currency]} (${brand} at ${timeStr})`;
-  }, [result, unit, qty, purity, brand, timeStr]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [result, unit, qty, purity, brand, timeStr]);
 
   const noDataLabel = noPriceData ? 'Chưa có dữ liệu giá' : '—';
   const resultRows: { id: 'VND' | 'USD' | 'EUR'; label: string; value: string; skeleton: boolean }[] = [

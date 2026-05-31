@@ -126,7 +126,10 @@ export default function FireCalculatorPage() {
 
   useEffect(() => {
     cancelAnimationFrame(countUpRef.current!);
-    if (!result || result.years === 0) { setDisplayYears(0); return; }
+    if (!result || result.years === 0) {
+      const id = window.setTimeout(() => setDisplayYears(0), 0);
+      return () => window.clearTimeout(id);
+    }
     const target = result.years;
     const t0 = performance.now();
     const run = (now: number) => {
@@ -136,7 +139,7 @@ export default function FireCalculatorPage() {
     };
     countUpRef.current = requestAnimationFrame(run);
     return () => cancelAnimationFrame(countUpRef.current!);
-  }, [resultVersion]);
+  }, [result, resultVersion]);
 
   function fmtVnd(n: number) {
     if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(2) + ' tỷ ₫';

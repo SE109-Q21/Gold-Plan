@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePortfolio } from '@/lib/portfolio.api';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
@@ -32,6 +32,7 @@ const GOLD_COLOR = '#D4AF37';
 const STORAGE_KEY = 'gt_manual_assets_v1';
 
 function loadAssets(): ManualAsset[] {
+  if (typeof window === 'undefined') return [];
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]'); } catch { return []; }
 }
 function saveAssets(assets: ManualAsset[]) {
@@ -200,11 +201,9 @@ function AssetModal({
 function AssetsContent() {
   const router = useRouter();
   const { data: portfolio } = usePortfolio();
-  const [manualAssets, setManualAssets] = useState<ManualAsset[]>([]);
+  const [manualAssets, setManualAssets] = useState<ManualAsset[]>(() => loadAssets());
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<ManualAsset | undefined>(undefined);
-
-  useEffect(() => { setManualAssets(loadAssets()); }, []);
 
   const saveAndSet = useCallback((assets: ManualAsset[]) => {
     setManualAssets(assets);

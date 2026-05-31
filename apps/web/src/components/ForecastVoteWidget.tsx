@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useActiveSession, useCastVote } from '@/lib/forecast.api';
 import { useAuth } from '@/contexts/auth-context';

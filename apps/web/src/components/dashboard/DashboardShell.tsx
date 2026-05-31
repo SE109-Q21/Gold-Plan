@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 import { useInternationalPrice, useComparison } from '@/lib/price.api';
@@ -145,10 +145,19 @@ const NAV_ITEMS = [
 
 type Tab = 'home' | 'chart' | 'alerts' | 'profile';
 
+function subscribeClock(onStoreChange: () => void) {
+  const id = window.setInterval(onStoreChange, 60_000);
+  return () => window.clearInterval(id);
+}
+
+const getClockSnapshot = () => Date.now();
+const getServerClockSnapshot = () => 0;
+
 function Sidebar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
   const { user } = useAuth();
   const { data: intl } = useInternationalPrice();
   const { data: comparison } = useComparison('MIEN_SJC' as GoldType);
+  const now = useSyncExternalStore(subscribeClock, getClockSnapshot, getServerClockSnapshot);
   const compBrands = comparison?.[0]?.brands ?? [];
   const sjc = compBrands.find(b => b.brand === 'SJC');
   const doji = compBrands.find(b => b.brand === 'DOJI');
@@ -276,7 +285,7 @@ function Sidebar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
         <div className="font-mono text-[9px] text-mute mt-2 leading-[1.5]">
           {intl
             ? `cập nhật ${(() => {
-                const m = Math.floor((Date.now() - new Date(intl.recordedAt).getTime()) / 60_000);
+                const m = Math.floor((now - new Date(intl.recordedAt).getTime()) / 60_000);
                 return m < 1 ? 'vừa xong' : `${m} phút trước`;
               })()}`
             : 'cập nhật tự động'}

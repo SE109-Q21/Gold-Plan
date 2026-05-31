@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { DashboardShell, type Tab } from '@/components/dashboard/DashboardShell';
 import { OverviewPage } from '@/components/dashboard/OverviewPage';
 import { MarketsPage } from '@/components/dashboard/MarketsPage';
@@ -17,13 +17,6 @@ export default function Page() {
   const [currency] = useState('VND');
   const [alertOpen, setAlertOpen] = useState(false);
   const { user } = useAuth();
-
-  // Reset to home if user logs out while on a protected tab
-  useEffect(() => {
-    if (!user && PROTECTED_TABS.includes(tab)) {
-      setTab('home');
-    }
-  }, [user, tab]);
 
   const safeTab = (!user && PROTECTED_TABS.includes(tab)) ? 'home' : tab;
 

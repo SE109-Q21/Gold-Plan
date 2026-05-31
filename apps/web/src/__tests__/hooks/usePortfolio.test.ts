@@ -25,8 +25,10 @@ function wrapper() {
   const qc = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
-  return ({ children }: { children: React.ReactNode }) =>
+  const TestWrapper = ({ children }: { children: React.ReactNode }) =>
     React.createElement(QueryClientProvider, { client: qc }, children);
+  TestWrapper.displayName = 'PortfolioQueryClientWrapper';
+  return TestWrapper;
 }
 
 describe('usePortfolio', () => {
