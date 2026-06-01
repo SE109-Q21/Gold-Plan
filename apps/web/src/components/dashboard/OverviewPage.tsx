@@ -5,15 +5,15 @@ import { useRouter } from 'next/navigation';
 import { useInternationalPrice, useDomesticPrices, usePriceHistory, useComparison } from '@/lib/price.api';
 import { useExchangeRates } from '@/lib/exchange-rate.api';
 import { useAlerts } from '@/lib/alerts.api';
+import { useDigestArchive } from '@/lib/digest.api';
 import { PriceChart } from '@/components/ui/PriceChart';
 import { BrandLogo } from '@/components/ui/BrandLogo';
 import { LiveBadge } from '@/components/ui/LiveBadge';
 import { IconPlus } from '@/components/dashboard/DashboardShell';
-import type { GoldType, ComparisonBrandDto } from '@gpls/shared';
+import type { GoldType, ComparisonBrandDto, DigestDto } from '@gpls/shared';
 import { useAuth } from '@/contexts/auth-context';
 import { usePersonalisationOrder, useRecordView, useAddPin, useRemovePin, useReorderPins } from '@/lib/personalisation.api';
 import { useBrowsingContext, useRecordBrowse } from '@/lib/browsing-history.api';
-import { DigestCard } from '@/components/DigestCard';
 import { ForecastVoteWidget } from '@/components/ForecastVoteWidget';
 import { ArbitrageWidget } from '@/components/ArbitrageWidget';
 import { cn } from '@/lib/utils';
@@ -55,6 +55,14 @@ function fmtVnd(n: number) { return (n / 1_000_000).toFixed(2) + 'M₫'; }
 
 function fmtFx(n: number) {
   return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function fmtDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
 }
 
 function minsAgo(iso: string): string {
@@ -121,6 +129,144 @@ function daysAgo(iso: string): string {
   if (d === 0) return 'hôm nay';
   if (d === 1) return '1 ngày trước';
   return `${d} ngày trước`;
+}
+
+function DigestPctBadge({ pct }: { pct: number }) {
+  const isUp = pct >= 0;
+  return (
+    <span className={cn(
+      'inline-flex items-center font-mono text-[10px] leading-none font-bold border rounded px-[7px] py-[4px]',
+      isUp
+        ? 'text-up bg-[rgba(88,200,150,0.12)] border-[rgba(88,200,150,0.3)]'
+        : 'text-down bg-[rgba(229,72,77,0.12)] border-[rgba(229,72,77,0.3)]',
+    )}>
+      {isUp ? '+' : ''}{pct.toFixed(2)}%
+    </span>
+  );
+}
+
+function DigestImage({ item, compact = false }: { item: DigestDto; compact?: boolean }) {
+  const isUp = item.pctChangeSjc >= 0;
+  return (
+    <div
+      role="img"
+      aria-label="Minh họa bản tin thị trường vàng"
+      className={cn(
+        'relative overflow-hidden rounded-[10px] border border-[rgba(212,175,55,0.35)] bg-[#19140c]',
+        compact ? 'h-[78px] w-[92px] shrink-0' : 'h-[170px] w-full',
+      )}
+    >
+      <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(239,211,130,0.9),rgba(117,81,18,0.9)_45%,rgba(18,17,15,0.95))]" />
+      <div className="absolute inset-0 opacity-55 bg-[radial-gradient(circle_at_22%_28%,rgba(255,255,255,0.55)_0_9%,transparent_10%),radial-gradient(circle_at_62%_70%,rgba(255,210,96,0.45)_0_15%,transparent_16%)]" />
+      <div className="absolute left-0 right-0 bottom-0 h-[46%] bg-[linear-gradient(180deg,transparent,rgba(0,0,0,0.58))]" />
+      <div className={cn(
+        'absolute rounded-full border border-[rgba(255,240,184,0.4)] bg-[rgba(255,219,109,0.16)] shadow-[0_0_28px_rgba(212,175,55,0.35)]',
+        compact ? 'right-[-20px] top-[-18px] h-[72px] w-[72px]' : 'right-[-34px] top-[-30px] h-[132px] w-[132px]',
+      )} />
+      <div className={cn(
+        'absolute left-3 bottom-3 font-mono font-bold tracking-[0.12em] uppercase text-[#fff4c4]',
+        compact ? 'text-[9px]' : 'text-[10px]',
+      )}>
+        GoldPlan digest
+      </div>
+      <div className={cn(
+        'absolute right-3 bottom-3 font-mono font-black tabular-nums',
+        isUp ? 'text-up' : 'text-down',
+        compact ? 'text-[14px]' : 'text-[26px]',
+      )}>
+        {isUp ? '+' : ''}{item.pctChangeSjc.toFixed(2)}%
+      </div>
+    </div>
+  );
+}
+
+function OverviewDigestSection() {
+  const router = useRouter();
+  const { data, isLoading } = useDigestArchive(1);
+  const items = data?.items ?? [];
+  const featured = items[0];
+  const secondary = items.slice(1, 3);
+
+  return (
+    <div className="bg-ink-2 border border-line rounded-[14px] p-5">
+      <div className="flex justify-between items-baseline gap-3 mb-4">
+        <div>
+          <h3 className="text-[16px] leading-none font-bold font-sans m-0">Bản tin thị trường</h3>
+          <div className="font-mono text-[9px] text-mute tracking-[0.12em] uppercase mt-[7px]">từ kho lưu trữ</div>
+        </div>
+        <Button
+          variant="ghost"
+          onClick={() => router.push('/digest/archive')}
+          className="h-auto px-0 py-0 font-mono text-[11px] text-gold tracking-[0.08em] leading-none font-bold hover:bg-transparent hover:text-gold"
+        >
+          xem kho →
+        </Button>
+      </div>
+
+      {isLoading && (
+        <div className="space-y-3">
+          <div className="h-[170px] rounded-[10px] bg-ink-3 animate-pulse" />
+          <div className="h-[16px] w-[70%] rounded bg-ink-3 animate-pulse" />
+          <div className="h-[12px] w-full rounded bg-ink-3 animate-pulse" />
+          <div className="h-[12px] w-[84%] rounded bg-ink-3 animate-pulse" />
+        </div>
+      )}
+
+      {!isLoading && !featured && (
+        <div className="py-8 text-center font-mono text-[12px] text-mute">
+          Chưa có bản tin nào.
+        </div>
+      )}
+
+      {featured && (
+        <div className="space-y-4">
+          <button
+            type="button"
+            onClick={() => router.push('/digest/archive')}
+            className="block w-full text-left group"
+          >
+            <DigestImage item={featured} />
+            <div className="flex items-center justify-between gap-3 mt-3">
+              <span className="font-mono text-[10px] text-mute tracking-[0.12em] uppercase">{fmtDate(featured.date)}</span>
+              <DigestPctBadge pct={featured.pctChangeSjc} />
+            </div>
+            <p className="mt-2 mb-0 font-sans text-[14px] leading-[1.5] font-semibold text-chalk group-hover:text-bone transition-colors">
+              {featured.highlight}
+            </p>
+            {featured.aiSummary && (
+              <p className="mt-2 mb-0 font-sans text-[12px] leading-[1.55] text-mute line-clamp-3">
+                {featured.aiSummary}
+              </p>
+            )}
+          </button>
+
+          {secondary.length > 0 && (
+            <div className="space-y-2 pt-1">
+              {secondary.map(item => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => router.push('/digest/archive')}
+                  className="w-full flex gap-3 rounded-[10px] border border-hairline bg-ink-3/50 p-2 text-left hover:border-line hover:bg-ink-3 transition-colors"
+                >
+                  <DigestImage item={item} compact />
+                  <div className="min-w-0 flex-1 py-1">
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <span className="font-mono text-[9px] text-mute tracking-[0.12em] uppercase">{fmtDate(item.date)}</span>
+                      <DigestPctBadge pct={item.pctChangeSjc} />
+                    </div>
+                    <div className="font-sans text-[12px] leading-[1.45] font-semibold text-chalk line-clamp-2">
+                      {item.highlight}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function PinIcon({ pinned, onClick }: { pinned: boolean; onClick: (e: React.MouseEvent) => void }) {
@@ -387,7 +533,6 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
 
   return (
     <div className="px-7 pt-6 pb-10">
-      <DigestCard />
       <div className="grid gap-5" style={{ gridTemplateColumns: '1.6fr 1fr' }}>
         {/* ── Left column */}
         <div className="flex flex-col gap-5 min-w-0">
@@ -668,6 +813,9 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
 
           {/* Arbitrage opportunities */}
           <ArbitrageWidget />
+
+          {/* Market digest */}
+          <OverviewDigestSection />
 
           {/* Alerts widget */}
           <div className="bg-ink-2 border border-line rounded-[14px] p-5">

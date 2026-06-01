@@ -23,4 +23,10 @@ describe('Overview hero price card', () => {
   test('does not show a separate USD/VND hero stat', () => {
     expect(source).not.toContain('usd / vnd');
   });
+
+  test('shows an archive-backed digest section with a visual image panel', () => {
+    expect(source).toContain('useDigestArchive(1)');
+    expect(source).toContain('Bản tin thị trường');
+    expect(source).toContain('Minh họa bản tin thị trường vàng');
+  });
 });
