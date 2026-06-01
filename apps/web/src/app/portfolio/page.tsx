@@ -1020,7 +1020,7 @@ function PortfolioContent() {
           </div>
 
           {/* ── Transactions ── */}
-          <div className="bg-ink-2 border border-line rounded-xl p-[20px_24px] overflow-x-auto">
+          <div className="bg-ink-2 border border-line rounded-xl p-[20px_24px] overflow-hidden">
             <div className="flex items-center justify-between mb-4">
               <SectionLabel>giao dịch</SectionLabel>
               {txData && txData.totalPages > 1 && (
@@ -1029,91 +1029,93 @@ function PortfolioContent() {
                 </div>
               )}
             </div>
-            <table className="w-full border-collapse min-w-[680px]">
-              <thead>
-                <tr>
-                  {['Ngày', 'Loại', 'Thương hiệu', 'Loại vàng', 'Số lượng', 'Giá/Lượng', 'Ghi chú', ''].map((h, i) => (
-                    <th key={i} className={cn(TH_BASE, i >= 4 ? 'text-right' : 'text-left')}>
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {(txLoading || (txFetching && !txData)) ? (
-                  [1, 2, 3, 4].map(i => (
-                    <tr key={i}>
-                      {Array.from({ length: 8 }).map((_, j) => (
-                        <td key={j} className="px-[10px] py-[13px] border-b border-hairline">
-                          <Skeleton w={j === 1 ? 40 : 70} h={11}/>
-                        </td>
-                      ))}
-                    </tr>
-                  ))
-                ) : !txData?.items.length ? (
+            <div className="max-h-[420px] overflow-auto">
+              <table className="w-full border-collapse min-w-[680px]">
+                <thead className="sticky top-0 z-10 bg-ink-2">
                   <tr>
-                    <td colSpan={8} className="p-8 text-center font-mono text-[13px] leading-none font-medium text-mute">
-                      chưa có giao dịch
-                    </td>
+                    {['Ngày', 'Loại', 'Thương hiệu', 'Loại vàng', 'Số lượng', 'Giá/Lượng', 'Ghi chú', ''].map((h, i) => (
+                      <th key={i} className={cn(TH_BASE, i >= 4 ? 'text-right' : 'text-left')}>
+                        {h}
+                      </th>
+                    ))}
                   </tr>
-                ) : (
-                  txData.items.map((tx: { id: string; type: 'BUY' | 'SELL'; brand: string; goldType: string; quantity: number; pricePerTael: number; transactedAt: string; note: string | null }) => {
-                    const d = new Date(tx.transactedAt);
-                    const dateStr = `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
-                    const isBuy = tx.type === 'BUY';
-                    return (
-                      <tr key={tx.id}>
-                        <td className="px-[10px] py-[13px] border-b border-hairline font-mono text-[11px] text-bone [font-variant-numeric:tabular-nums]">
-                          {dateStr}
-                        </td>
-                        <td className="px-[10px] py-[13px] border-b border-hairline">
-                          <Badge className={cn(
-                            'font-mono text-[10px] font-bold tracking-[0.1em] border rounded',
-                            isBuy
-                              ? 'bg-[rgba(88,200,150,0.12)] text-up border-[rgba(88,200,150,0.3)] hover:bg-[rgba(88,200,150,0.12)]'
-                              : 'bg-[rgba(229,72,77,0.12)] text-down border-[rgba(229,72,77,0.3)] hover:bg-[rgba(229,72,77,0.12)]',
-                          )}>
-                            {TX_TYPE_LABELS[tx.type] ?? tx.type}
-                          </Badge>
-                        </td>
-                        <td className="px-[10px] py-[13px] border-b border-hairline font-display text-[12px] leading-none font-semibold text-chalk">{tx.brand}</td>
-                        <td className="px-[10px] py-[13px] border-b border-hairline font-mono text-[11px] text-bone tracking-[0.04em]">{GOLD_TYPE_LABELS[tx.goldType] ?? tx.goldType}</td>
-                        <td className="px-[10px] py-[13px] border-b border-hairline text-right font-mono text-[12px] [font-variant-numeric:tabular-nums]">
-                          {tx.quantity.toFixed(3)}
-                        </td>
-                        <td className="px-[10px] py-[13px] border-b border-hairline text-right font-mono text-[12px] [font-variant-numeric:tabular-nums]">
-                          {fmtM(tx.pricePerTael)}
-                        </td>
-                        <td className="px-[10px] py-[13px] border-b border-hairline font-display text-[12px] leading-[1.4] text-mute max-w-[140px] overflow-hidden text-ellipsis whitespace-nowrap">
-                          {tx.note ?? '—'}
-                        </td>
-                        <td className="px-[10px] py-[13px] border-b border-hairline text-right">
-                          <div className="inline-flex gap-[6px]">
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => setEditingTx(tx)}
-                              className="border-line text-mute w-7 h-7 bg-transparent hover:bg-ink-3 hover:text-bone"
-                            >
-                              <IconPencil s={12}/>
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => handleDeleteTx(tx.id)}
-                              disabled={deleteTx.isPending}
-                              className="border-line text-mute w-7 h-7 bg-transparent hover:bg-[rgba(229,72,77,0.08)] hover:text-down hover:border-[rgba(229,72,77,0.3)]"
-                            >
-                              <IconTrash s={12}/>
-                            </Button>
-                          </div>
-                        </td>
+                </thead>
+                <tbody>
+                  {(txLoading || (txFetching && !txData)) ? (
+                    [1, 2, 3, 4].map(i => (
+                      <tr key={i}>
+                        {Array.from({ length: 8 }).map((_, j) => (
+                          <td key={j} className="px-[10px] py-[13px] border-b border-hairline">
+                            <Skeleton w={j === 1 ? 40 : 70} h={11}/>
+                          </td>
+                        ))}
                       </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+                    ))
+                  ) : !txData?.items.length ? (
+                    <tr>
+                      <td colSpan={8} className="p-8 text-center font-mono text-[13px] leading-none font-medium text-mute">
+                        chưa có giao dịch
+                      </td>
+                    </tr>
+                  ) : (
+                    txData.items.map((tx: { id: string; type: 'BUY' | 'SELL'; brand: string; goldType: string; quantity: number; pricePerTael: number; transactedAt: string; note: string | null }) => {
+                      const d = new Date(tx.transactedAt);
+                      const dateStr = `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+                      const isBuy = tx.type === 'BUY';
+                      return (
+                        <tr key={tx.id}>
+                          <td className="px-[10px] py-[13px] border-b border-hairline font-mono text-[11px] text-bone [font-variant-numeric:tabular-nums]">
+                            {dateStr}
+                          </td>
+                          <td className="px-[10px] py-[13px] border-b border-hairline">
+                            <Badge className={cn(
+                              'font-mono text-[10px] font-bold tracking-[0.1em] border rounded',
+                              isBuy
+                                ? 'bg-[rgba(88,200,150,0.12)] text-up border-[rgba(88,200,150,0.3)] hover:bg-[rgba(88,200,150,0.12)]'
+                                : 'bg-[rgba(229,72,77,0.12)] text-down border-[rgba(229,72,77,0.3)] hover:bg-[rgba(229,72,77,0.12)]',
+                            )}>
+                              {TX_TYPE_LABELS[tx.type] ?? tx.type}
+                            </Badge>
+                          </td>
+                          <td className="px-[10px] py-[13px] border-b border-hairline font-display text-[12px] leading-none font-semibold text-chalk">{tx.brand}</td>
+                          <td className="px-[10px] py-[13px] border-b border-hairline font-mono text-[11px] text-bone tracking-[0.04em]">{GOLD_TYPE_LABELS[tx.goldType] ?? tx.goldType}</td>
+                          <td className="px-[10px] py-[13px] border-b border-hairline text-right font-mono text-[12px] [font-variant-numeric:tabular-nums]">
+                            {tx.quantity.toFixed(3)}
+                          </td>
+                          <td className="px-[10px] py-[13px] border-b border-hairline text-right font-mono text-[12px] [font-variant-numeric:tabular-nums]">
+                            {fmtM(tx.pricePerTael)}
+                          </td>
+                          <td className="px-[10px] py-[13px] border-b border-hairline font-display text-[12px] leading-[1.4] text-mute max-w-[140px] overflow-hidden text-ellipsis whitespace-nowrap">
+                            {tx.note ?? '—'}
+                          </td>
+                          <td className="px-[10px] py-[13px] border-b border-hairline text-right">
+                            <div className="inline-flex gap-[6px]">
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => setEditingTx(tx)}
+                                className="border-line text-mute w-7 h-7 bg-transparent hover:bg-ink-3 hover:text-bone"
+                              >
+                                <IconPencil s={12}/>
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => handleDeleteTx(tx.id)}
+                                disabled={deleteTx.isPending}
+                                className="border-line text-mute w-7 h-7 bg-transparent hover:bg-[rgba(229,72,77,0.08)] hover:text-down hover:border-[rgba(229,72,77,0.3)]"
+                              >
+                                <IconTrash s={12}/>
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
 
             {/* Pagination */}
             {txData && txData.totalPages > 1 && (
