@@ -19,7 +19,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
 
-const ASSETS = ['SJC', 'DOJI', 'PNJ'] as const;
+const ASSETS = ['SJC', 'DOJI', 'PNJ', 'BAO_TIN'] as const;
 type Range = HistoryRange;
 const RANGES: Range[] = ['1D', '1W', '1M', '3M', '1Y'];
 
@@ -44,6 +44,7 @@ const ASSET_CONFIG: Record<string, { brand: GoldBrand; goldType: GoldType }> = {
   'SJC':     { brand: 'SJC',    goldType: 'MIEN_SJC' },
   'DOJI':    { brand: 'DOJI',   goldType: 'MIEN_SJC' },
   'PNJ':     { brand: 'PNJ',    goldType: 'NHAN_9999' },
+  'BAO_TIN': { brand: 'BAO_TIN', goldType: 'NHAN_9999' },
 };
 
 function QuickAlertPanel({
