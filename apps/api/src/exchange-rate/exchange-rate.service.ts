@@ -26,7 +26,10 @@ export class ExchangeRateService {
     const prev = this.cache?.data;
     await this.getRates();
     const next = this.cache?.data;
-    if (next && (prev?.usdVnd !== next.usdVnd || prev?.eurVnd !== next.eurVnd)) {
+    if (
+      next &&
+      (prev?.usdVnd !== next.usdVnd || prev?.eurVnd !== next.eurVnd)
+    ) {
       this.eventEmitter.emit('exchange-rate.updated', next);
     }
   }
@@ -34,17 +37,6 @@ export class ExchangeRateService {
   async getRates(): Promise<ExchangeRateDto> {
     if (this.cache && Date.now() < this.cache.expiresAt) {
       return this.cache.data;
-    }
-
-    if (!process.env.EXCHANGE_RATE_API_KEY) {
-      const fallback: ExchangeRateDto = {
-        usdVnd: DEFAULT_USD_VND,
-        eurVnd: DEFAULT_EUR_VND,
-        updatedAt: new Date().toISOString(),
-        source: 'fallback',
-      };
-      this.cache = { data: fallback, expiresAt: Date.now() + 2 * 60_000 };
-      return fallback;
     }
 
     try {
@@ -66,14 +58,22 @@ export class ExchangeRateService {
       };
 
       this.cache = { data: dto, expiresAt: Date.now() + CACHE_TTL_MS };
-      this.logger.log(`Exchange rates fetched: USD→VND=${usdVnd}, EUR→VND=${eurVnd}`);
+      this.logger.log(
+        `Exchange rates fetched: USD→VND=${usdVnd}, EUR→VND=${eurVnd}`,
+      );
       return dto;
-    } catch (err) {
+    } catch {
       if (this.cache) {
         this.logger.warn('Exchange rate fetch failed; serving stale cache');
-        return { ...this.cache.data, source: 'stale', updatedAt: new Date().toISOString() };
+        return {
+          ...this.cache.data,
+          source: 'stale',
+          updatedAt: new Date().toISOString(),
+        };
       }
-      this.logger.error('Exchange rate fetch failed and no cache available — using fallback defaults');
+      this.logger.error(
+        'Exchange rate fetch failed and no cache available — using fallback defaults',
+      );
       const fallback: ExchangeRateDto = {
         usdVnd: DEFAULT_USD_VND,
         eurVnd: DEFAULT_EUR_VND,

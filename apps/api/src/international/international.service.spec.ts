@@ -10,20 +10,17 @@ describe('InternationalService', () => {
   beforeEach(() => {
     service = new InternationalService();
     jest.clearAllMocks();
-    // Service reads process.env directly — set keys so it doesn't take the fallback path
     process.env.GOLD_API_KEY = 'test-key';
-    process.env.EXCHANGE_RATE_API_KEY = 'test-key';
   });
 
   afterEach(() => {
     delete process.env.GOLD_API_KEY;
-    delete process.env.EXCHANGE_RATE_API_KEY;
   });
 
   it('returns correct InternationalPriceDto', async () => {
     mockedAxios.get
       .mockResolvedValueOnce({ data: { price: 2350.5, currency: 'USD' } }) // gold API
-      .mockResolvedValueOnce({ data: { rates: { VND: 25450 } } });          // exchange rate API
+      .mockResolvedValueOnce({ data: { rates: { VND: 25450 } } }); // exchange rate API
 
     const result = await service.getInternationalPrice();
 
@@ -43,7 +40,7 @@ describe('InternationalService', () => {
     await service.getInternationalPrice();
     await service.getInternationalPrice(); // should use cache
 
-    expect(mockedAxios.get).toHaveBeenCalledTimes(2); // called only for the first fetch
+    expect(mockedAxios.get.mock.calls).toHaveLength(2); // called only for the first fetch
   });
 
   it('fetches fresh data after cache expires', async () => {
@@ -60,7 +57,7 @@ describe('InternationalService', () => {
     jest.advanceTimersByTime(6 * 60_000); // advance 6 minutes past TTL
     await service.getInternationalPrice();
 
-    expect(mockedAxios.get).toHaveBeenCalledTimes(4); // 2 calls × 2 fetches
+    expect(mockedAxios.get.mock.calls).toHaveLength(4); // 2 calls × 2 fetches
     jest.useRealTimers();
   });
 });

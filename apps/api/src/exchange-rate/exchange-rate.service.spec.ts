@@ -12,6 +12,18 @@ function makeFxResponse(rates: Record<string, number> = MOCK_RATES) {
   return { data: { rates } };
 }
 
+function resetCache(service: ExchangeRateService) {
+  Reflect.set(service, 'cache', null);
+}
+
+function expireCache(service: ExchangeRateService) {
+  const cache = Reflect.get(service, 'cache') as { expiresAt: number } | null;
+  if (!cache) {
+    throw new Error('Expected exchange-rate cache to exist');
+  }
+  cache.expiresAt = Date.now() - 1;
+}
+
 describe('ExchangeRateService', () => {
   let service: ExchangeRateService;
   let axiosGetSpy: jest.SpyInstance;
@@ -26,23 +38,16 @@ describe('ExchangeRateService', () => {
 
     service = module.get<ExchangeRateService>(ExchangeRateService);
 
-    // Reset internal cache between tests
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (service as any).cache = null;
+    resetCache(service);
 
     axiosGetSpy = jest.spyOn(axios, 'get');
   });
 
   afterEach(() => {
     jest.restoreAllMocks();
-    delete process.env.EXCHANGE_RATE_API_KEY;
   });
 
-  describe('when API key is present', () => {
-    beforeEach(() => {
-      process.env.EXCHANGE_RATE_API_KEY = 'test-key-123';
-    });
-
+  describe('when the provider responds', () => {
     it('fetches rates on cache miss and returns live source', async () => {
       axiosGetSpy.mockResolvedValueOnce(makeFxResponse());
 
@@ -71,9 +76,7 @@ describe('ExchangeRateService', () => {
 
       await service.getRates();
 
-      // Expire the cache
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (service as any).cache.expiresAt = Date.now() - 1;
+      expireCache(service);
 
       await service.getRates();
 
@@ -85,9 +88,7 @@ describe('ExchangeRateService', () => {
       axiosGetSpy.mockResolvedValueOnce(makeFxResponse());
       await service.getRates();
 
-      // Expire the cache
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (service as any).cache.expiresAt = Date.now() - 1;
+      expireCache(service);
 
       // Second call — fetch fails
       axiosGetSpy.mockRejectedValueOnce(new Error('Network error'));
@@ -109,27 +110,27 @@ describe('ExchangeRateService', () => {
     });
   });
 
-  describe('when API key is missing', () => {
-    beforeEach(() => {
-      delete process.env.EXCHANGE_RATE_API_KEY;
-    });
+  describe('without extra exchange-rate configuration', () => {
+    it('fetches live rates because the configured provider does not require a key', async () => {
+      axiosGetSpy.mockResolvedValueOnce(makeFxResponse());
 
-    it('returns fallback defaults without calling axios', async () => {
       const result = await service.getRates();
 
-      expect(axiosGetSpy).not.toHaveBeenCalled();
+      expect(axiosGetSpy).toHaveBeenCalledTimes(1);
       expect(result.usdVnd).toBe(25_480);
-      expect(result.eurVnd).toBe(27_900);
-      expect(result.source).toBe('fallback');
+      expect(result.eurVnd).toBe(27908);
+      expect(result.source).toBe('live');
     });
 
-    it('returns cached fallback on second call without re-logging', async () => {
+    it('returns cached live data on second call without re-fetching', async () => {
+      axiosGetSpy.mockResolvedValue(makeFxResponse());
+
       const first = await service.getRates();
       const second = await service.getRates();
 
-      // axios never called in either call
-      expect(axiosGetSpy).not.toHaveBeenCalled();
+      expect(axiosGetSpy).toHaveBeenCalledTimes(1);
       expect(second.usdVnd).toBe(first.usdVnd);
+      expect(second.source).toBe('live');
     });
   });
 });

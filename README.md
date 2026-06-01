@@ -160,7 +160,6 @@ pnpm dev
 | `VAPID_PRIVATE_KEY` | | Web Push private key |
 | `VAPID_EMAIL` | | Email liên hệ cho VAPID |
 | `GOLD_API_KEY` | | [goldapi.io](https://goldapi.io) — giá vàng quốc tế XAU/USD |
-| `EXCHANGE_RATE_API_KEY` | | [exchangerate-api.com](https://exchangerate-api.com) — tỷ giá USD/VND |
 | `BTMC_API_KEY` | | Key API của BTMC (Bảo Tín Minh Châu) |
 | `OPENAI_API_KEY` | | OpenAI — AI Assistant + Daily Digest |
 | `GOOGLE_CLIENT_ID` | | Google OAuth 2.0 Client ID |
