@@ -335,6 +335,7 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
     { brand: 'DOJI', buyPrice: 76300000, sellPrice: 78700000, isBestBuy: true, isBestSell: true, crawlSessionId: '' },
   ];
   const displayBrands = compBrands.length > 0 ? compBrands : FALLBACK_BRANDS;
+  const heroBuyPrice = displayBrands.find(b => b.brand === 'SJC') ?? displayBrands[0] ?? null;
 
   function handleRowClick(brand: string, goldType: string, buyPrice: number) {
     if (!isLoggedIn) return;
@@ -416,7 +417,7 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
                   <span className="font-mono text-[11px] text-mute">24h</span>
                 </div>
               </div>
-              <div className="flex-1 grid grid-cols-2 gap-3">
+              <div className="flex-1 grid grid-cols-3 gap-3">
                 <div className="p-[14px] bg-ink-3 border border-line rounded-[10px]">
                   <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-[6px]">mỗi lượng · {currency.toLowerCase()}</div>
                   <div className="text-[22px] leading-none font-bold font-sans tabular-nums">
@@ -424,6 +425,17 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
                   </div>
                   <div className={cn('font-mono text-[10px] mt-[6px]', change1D != null && change1D < 0 ? 'text-down' : 'text-up')}>
                     {change1D != null ? (change1D >= 0 ? '+' : '') + change1D.toFixed(2) + '%' : '—'}
+                  </div>
+                </div>
+                <div className="p-[14px] bg-ink-3 border border-line rounded-[10px]">
+                  <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-[6px]">
+                    giá mua · {heroBuyPrice ? (BRAND_LABELS[heroBuyPrice.brand] ?? heroBuyPrice.brand) : 'SJC'}
+                  </div>
+                  <div className="text-[22px] leading-none font-bold font-sans tabular-nums">
+                    {heroBuyPrice ? fmt(heroBuyPrice.buyPrice) : '—'}
+                  </div>
+                  <div className="font-mono text-[10px] text-mute mt-[6px]">
+                    {GOLD_TYPE_LABELS[compGoldType] ?? compGoldType}
                   </div>
                 </div>
                 <div className="p-[14px] bg-ink-3 border border-line rounded-[10px]">
