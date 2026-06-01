@@ -53,7 +53,7 @@ function BrowsingHistoryContent() {
           <Button variant="outline" onClick={() => router.back()} className="h-[34px] px-[10px] border-line bg-transparent text-bone hover:bg-ink-3 font-mono text-[12px] font-bold tracking-[0.04em] flex items-center gap-[6px]">
             ← quay lại
           </Button>
-          <h1 className="font-display text-[20px] leading-none font-bold m-0 tracking-[-0.015em]">lịch sử duyệt</h1>
+          <h1 className="font-display text-[20px] leading-none font-bold m-0 tracking-[-0.015em] uppercase">lịch sử duyệt</h1>
         </div>
         <Button variant="outline" onClick={handleClearAll} disabled={clearHistory.isPending} className="h-[34px] px-[14px] border-[rgba(229,72,77,0.5)] bg-transparent text-down hover:bg-[rgba(229,72,77,0.08)] hover:text-down font-mono text-[11px] font-bold tracking-[0.04em] uppercase">
           {clearHistory.isPending ? '…' : 'xóa tất cả'}

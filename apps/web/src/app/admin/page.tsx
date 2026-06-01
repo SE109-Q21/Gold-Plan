@@ -451,7 +451,7 @@ export default function AdminOverviewPage() {
     <div className="p-[32px_36px_60px]">
       <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="font-display text-[28px] leading-none font-extrabold m-0 mb-[6px] tracking-[-0.02em]">
+          <h1 className="font-display text-[28px] leading-none font-extrabold m-0 mb-[6px] tracking-[-0.02em] uppercase">
             Tổng quan
           </h1>
           <div className="font-mono text-[12px] leading-none text-mute">

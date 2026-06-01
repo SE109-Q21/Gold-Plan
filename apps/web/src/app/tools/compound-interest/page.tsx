@@ -150,7 +150,7 @@ export default function CompoundInterestPage() {
         </Button>
 
         <div className="mb-8">
-          <h1 className="font-display text-[40px] leading-none font-extrabold tracking-[-0.03em] text-chalk m-0">
+          <h1 className="font-display text-[40px] leading-none font-extrabold tracking-[-0.03em] text-chalk m-0 uppercase">
             Máy tính lãi kép
           </h1>
           <p className="font-display text-[14px] leading-[1.5] text-mute m-0 mt-2">

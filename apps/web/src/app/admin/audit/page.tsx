@@ -46,7 +46,7 @@ export default function AdminAuditPage() {
   return (
     <div className="p-[32px_36px]">
       <div className="mb-7">
-        <h1 className="font-display text-[28px] leading-none font-extrabold m-0 mb-[6px] tracking-[-0.02em]">
+        <h1 className="font-display text-[28px] leading-none font-extrabold m-0 mb-[6px] tracking-[-0.02em] uppercase">
           Nhật Ký Kiểm Tra
         </h1>
         <div className="font-mono text-[12px] leading-none text-mute">

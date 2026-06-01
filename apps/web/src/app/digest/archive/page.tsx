@@ -134,7 +134,7 @@ function DigestArchiveContent() {
 
         {/* Header */}
         <div className="mb-7">
-          <h1 className="font-display text-[36px] leading-none font-extrabold m-0 mb-[10px] tracking-[-0.025em]">
+          <h1 className="font-display text-[36px] leading-none font-extrabold m-0 mb-[10px] tracking-[-0.025em] uppercase">
             Kho lưu trữ bản tin
           </h1>
           <p className="font-sans text-[14px] leading-[1.5] text-mute m-0">

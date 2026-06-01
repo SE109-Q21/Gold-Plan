@@ -107,7 +107,7 @@ export function AlertsPage({ onOpenAdd }: { onOpenAdd: () => void }) {
         {/* Header */}
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-[36px] leading-none font-extrabold font-sans m-0 tracking-[-0.025em]">cảnh báo giá</h1>
+            <h1 className="text-[36px] leading-none font-extrabold font-sans m-0 tracking-[-0.025em] uppercase">cảnh báo giá</h1>
             <div className="font-mono text-[11px] text-mute mt-2 max-w-[480px]">
               nhận thông báo khi giá vượt ngưỡng. email trong 2 phút, push trong 30 giây.
             </div>

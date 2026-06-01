@@ -161,7 +161,7 @@ export default function AdminForecastPage() {
     <div className="p-[32px_36px_60px]">
       <div className="flex items-center justify-between mb-7">
         <div>
-          <h1 className="font-display text-[28px] leading-none font-extrabold m-0 mb-[6px] tracking-[-0.02em]">Phiên Dự Báo</h1>
+          <h1 className="font-display text-[28px] leading-none font-extrabold m-0 mb-[6px] tracking-[-0.02em] uppercase">Phiên Dự Báo</h1>
           <div className="font-mono text-[12px] leading-none text-mute">Quản lý phiên dự báo giá vàng và kết quả</div>
         </div>
         <Button

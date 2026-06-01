@@ -416,7 +416,7 @@ export function MarketsPage({ currency = 'VND' }: { currency?: string }) {
     <div className="px-7 pt-6 pb-10 flex flex-col gap-5">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-[36px] leading-none font-extrabold font-sans m-0 tracking-[-0.025em]">thị trường</h1>
+          <h1 className="text-[36px] leading-none font-extrabold font-sans m-0 tracking-[-0.025em] uppercase">thị trường</h1>
           <div className="font-mono text-[11px] text-mute mt-2">biểu đồ tương tác · di chuột để xem · tự làm mới 5 phút trong giờ giao dịch</div>
         </div>
       </div>

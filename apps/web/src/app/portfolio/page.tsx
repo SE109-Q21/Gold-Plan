@@ -890,7 +890,7 @@ function PortfolioContent() {
               >
                 <IconArrowLeft s={13}/> danh mục
               </Button>
-              <h1 className="font-display text-[40px] leading-none font-extrabold tracking-[-0.035em] m-0">
+              <h1 className="font-display text-[40px] leading-none font-extrabold tracking-[-0.035em] m-0 uppercase">
                 danh mục của tôi
               </h1>
               <p className="font-display text-[13px] leading-[1.5] text-mute m-0 mt-2">

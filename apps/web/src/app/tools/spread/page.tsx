@@ -164,7 +164,7 @@ export default function SpreadPage() {
             <Button variant="ghost" onClick={() => router.back()} className="text-mute flex items-center gap-1 font-mono text-[12px] font-medium mb-3 p-0 h-auto hover:bg-transparent hover:text-bone">
               ← Quay lại
             </Button>
-            <h1 className="font-display text-[36px] leading-none font-extrabold m-0 tracking-[-0.025em]">xếp hạng chênh lệch</h1>
+            <h1 className="font-display text-[36px] leading-none font-extrabold m-0 tracking-[-0.025em] uppercase">xếp hạng chênh lệch</h1>
             <p className="font-display text-[14px] leading-[1.5] text-mute m-0 mt-2 max-w-[480px]">
               So sánh spread mua/bán giữa các thương hiệu — spread thấp = giao dịch rẻ hơn.
             </p>

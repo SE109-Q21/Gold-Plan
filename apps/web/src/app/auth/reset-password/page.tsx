@@ -36,7 +36,7 @@ function ResetPasswordContent() {
         <div className={CARD}>
           <div className="text-center">
             <div className="w-[52px] h-[52px] rounded-[12px] bg-[rgba(229,72,77,0.12)] border border-[rgba(229,72,77,0.3)] flex items-center justify-center mx-auto font-display text-[22px] leading-none font-extrabold text-down">×</div>
-            <h1 className="font-display text-[24px] leading-[1.1] font-extrabold tracking-[-0.02em] text-chalk mt-3 m-0">Liên kết không hợp lệ</h1>
+            <h1 className="font-display text-[24px] leading-[1.1] font-extrabold tracking-[-0.02em] text-chalk mt-3 m-0 uppercase">Liên kết không hợp lệ</h1>
             <p className="text-mute mt-2 text-[14px]">Liên kết đặt lại này bị thiếu hoặc không hợp lệ.</p>
             <Button asChild className="mt-6 h-[42px] px-6 text-[13px] font-bold tracking-[0.02em]">
               <Link href="/auth/forgot-password">Yêu cầu liên kết mới</Link>
@@ -53,7 +53,7 @@ function ResetPasswordContent() {
         <div className={CARD}>
           <div className="text-center">
             <div className="w-[52px] h-[52px] rounded-[12px] bg-[linear-gradient(135deg,#D4AF37,#8E7321)] flex items-center justify-center mx-auto font-display text-[22px] leading-none font-extrabold text-gold-ink">✓</div>
-            <h1 className="font-display text-[24px] leading-[1.1] font-extrabold tracking-[-0.02em] text-chalk mt-3 m-0">Mật khẩu đã cập nhật</h1>
+            <h1 className="font-display text-[24px] leading-[1.1] font-extrabold tracking-[-0.02em] text-chalk mt-3 m-0 uppercase">Mật khẩu đã cập nhật</h1>
             <p className="text-mute mt-2 text-[14px]">Mật khẩu của bạn đã được đặt lại thành công.</p>
             <Button asChild className="mt-6 h-[42px] px-6 text-[13px] font-bold tracking-[0.02em]">
               <Link href="/auth/login">Đăng nhập</Link>
@@ -85,7 +85,7 @@ function ResetPasswordContent() {
       <div className={CARD}>
         <div className="text-center mb-7">
           <div className="w-11 h-11 rounded-[10px] bg-[linear-gradient(135deg,#D4AF37,#8E7321)] flex items-center justify-center mx-auto mb-[14px] font-display text-[18px] leading-none font-extrabold text-gold-ink">GT</div>
-          <h1 className="font-display text-[24px] leading-[1.1] font-extrabold tracking-[-0.02em] text-chalk m-0">Mật khẩu mới</h1>
+          <h1 className="font-display text-[24px] leading-[1.1] font-extrabold tracking-[-0.02em] text-chalk m-0 uppercase">Mật khẩu mới</h1>
           <p className="text-mute text-[13px] mt-[6px] m-0">Chọn mật khẩu mới mạnh</p>
         </div>
 

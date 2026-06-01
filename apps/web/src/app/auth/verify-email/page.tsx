@@ -7,7 +7,7 @@ import { apiVerifyEmail } from '@/lib/auth.api';
 
 const PAGE = 'min-h-screen bg-ink flex items-center justify-center px-4 py-6';
 const CARD = 'w-full max-w-[400px] bg-ink-2 border border-line rounded-2xl px-8 py-[40px] [clip-path:polygon(0_0,calc(100%-20px)_0,100%_20px,100%_100%,0_100%)]';
-const HEADING = 'font-display text-[24px] leading-[1.1] font-extrabold tracking-[-0.02em] text-chalk mt-3 m-0';
+const HEADING = 'font-display text-[24px] leading-[1.1] font-extrabold tracking-[-0.02em] text-chalk mt-3 m-0 uppercase';
 const BTN = 'inline-block mt-6 h-[42px] px-6 bg-gold rounded-lg font-display text-[13px] leading-[42px] font-bold text-gold-ink tracking-[0.02em] no-underline cursor-pointer';
 
 type Status = 'loading' | 'success' | 'expired' | 'invalid';

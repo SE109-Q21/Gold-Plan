@@ -54,7 +54,7 @@ export default function AdminUsersPage() {
     <div className="h-full overflow-auto bg-ink">
     <div className="p-[32px_36px_60px]">
       <div className="mb-6">
-        <h1 className="font-display text-[28px] leading-none font-extrabold m-0 mb-[6px] tracking-[-0.02em]">Người dùng</h1>
+        <h1 className="font-display text-[28px] leading-none font-extrabold m-0 mb-[6px] tracking-[-0.02em] uppercase">Người dùng</h1>
         <div className="font-mono text-[12px] leading-none text-mute">
           {total > 0 ? `${total} tài khoản đã đăng ký` : 'Quản lý tài khoản người dùng'}
         </div>
