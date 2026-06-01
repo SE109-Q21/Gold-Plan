@@ -70,7 +70,7 @@ export default function GoldVsAssetsPage() {
 
   return (
     <div className="max-w-[900px] mx-auto p-[24px_16px]">
-      <h1 className="text-gold mb-1 text-[24px] font-bold uppercase">
+      <h1 className="text-gold mb-1 text-[24px] font-bold capitalize">
         📊 Vàng vs Các Kênh Đầu Tư
       </h1>
       <p className="text-mute text-[14px] mb-6">

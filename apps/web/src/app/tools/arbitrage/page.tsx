@@ -97,7 +97,7 @@ export default function ArbitragePage() {
   return (
     <div className="max-w-[800px] mx-auto p-[24px_16px]">
       <div className="flex items-center gap-3 mb-1">
-        <h1 className="text-gold text-[24px] font-bold m-0 uppercase">⚡ Chênh lệch giá vàng</h1>
+        <h1 className="text-gold text-[24px] font-bold m-0 capitalize">⚡ Chênh lệch giá vàng</h1>
         <LiveBadge />
       </div>
       <p className="text-mute text-[14px] mb-6">

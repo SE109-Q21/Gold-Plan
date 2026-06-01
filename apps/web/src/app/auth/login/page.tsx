@@ -53,7 +53,7 @@ function LoginForm() {
           <div className="w-11 h-11 rounded-[10px] bg-[linear-gradient(135deg,#D4AF37,#8E7321)] flex items-center justify-center mx-auto mb-[14px] text-[18px] leading-none font-extrabold font-sans text-gold-ink">
             GT
           </div>
-          <h1 className="text-[24px] leading-[1.1] font-extrabold font-sans tracking-[-0.02em] text-chalk m-0 uppercase">Đăng nhập</h1>
+          <h1 className="text-[24px] leading-[1.1] font-extrabold font-sans tracking-[-0.02em] text-chalk m-0 capitalize">Đăng nhập</h1>
           <p className="text-mute text-[13px] mt-[6px] m-0">Chào mừng trở lại GoldTracker</p>
         </div>
 

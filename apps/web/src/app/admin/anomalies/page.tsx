@@ -42,7 +42,7 @@ export default function AdminAnomaliesPage() {
   return (
     <div className="p-[32px_36px]">
       <div className="mb-8">
-        <h1 className="font-display text-[28px] leading-none font-extrabold m-0 mb-[6px] tracking-[-0.02em] uppercase">
+        <h1 className="font-display text-[28px] leading-none font-extrabold m-0 mb-[6px] tracking-[-0.02em] capitalize">
           Dữ Liệu Bất Thường
         </h1>
         <div className="font-mono text-[12px] leading-none text-mute">

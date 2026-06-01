@@ -34,7 +34,7 @@ export default function ForgotPasswordPage() {
         <div className={CARD}>
           <div className="text-center">
             <div className="w-[52px] h-[52px] rounded-[12px] bg-[linear-gradient(135deg,#D4AF37,#8E7321)] flex items-center justify-center mx-auto mb-4 font-display text-[22px] leading-none font-extrabold text-gold-ink">✉</div>
-            <h1 className="font-display text-[24px] leading-[1.1] font-extrabold tracking-[-0.02em] text-chalk m-0 uppercase">Kiểm tra hộp thư</h1>
+            <h1 className="font-display text-[24px] leading-[1.1] font-extrabold tracking-[-0.02em] text-chalk m-0 capitalize">Kiểm tra hộp thư</h1>
             <p className="text-mute mt-[10px] text-[14px] leading-[1.6]">
               Nếu <strong className="text-bone">{email}</strong> đã đăng ký,
               bạn sẽ nhận được liên kết đặt lại mật khẩu trong thời gian ngắn.
@@ -53,7 +53,7 @@ export default function ForgotPasswordPage() {
       <div className={CARD}>
         <div className="text-center mb-7">
           <div className="w-11 h-11 rounded-[10px] bg-[linear-gradient(135deg,#D4AF37,#8E7321)] flex items-center justify-center mx-auto mb-[14px] font-display text-[18px] leading-none font-extrabold text-gold-ink">GT</div>
-          <h1 className="font-display text-[24px] leading-[1.1] font-extrabold tracking-[-0.02em] text-chalk m-0 uppercase">Đặt lại mật khẩu</h1>
+          <h1 className="font-display text-[24px] leading-[1.1] font-extrabold tracking-[-0.02em] text-chalk m-0 capitalize">Đặt lại mật khẩu</h1>
           <p className="text-mute text-[13px] mt-[6px] leading-[1.5] m-0">
             Nhập email và chúng tôi sẽ gửi cho bạn liên kết đặt lại.
           </p>

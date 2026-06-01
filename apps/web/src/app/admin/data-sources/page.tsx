@@ -117,7 +117,7 @@ export default function AdminDataSourcesPage() {
     <div className="p-[32px_36px]">
       <div className="flex items-center justify-between mb-7">
         <div>
-          <h1 className="font-display text-[28px] leading-none font-extrabold m-0 mb-[6px] tracking-[-0.02em] uppercase">Nguồn Dữ Liệu</h1>
+          <h1 className="font-display text-[28px] leading-none font-extrabold m-0 mb-[6px] tracking-[-0.02em] capitalize">Nguồn Dữ Liệu</h1>
           <div className="font-mono text-[12px] leading-none text-mute">Quản lý nguồn thu thập dữ liệu cho tất cả thương hiệu vàng</div>
         </div>
         <Button

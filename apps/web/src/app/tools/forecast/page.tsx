@@ -79,7 +79,7 @@ export default function ForecastLeaderboardPage() {
       <div className="max-w-[800px] mx-auto">
 
         <div className="mb-8">
-          <h1 className="font-display text-[36px] leading-none font-extrabold tracking-[-0.03em] m-0 uppercase">
+          <h1 className="font-display text-[36px] leading-none font-extrabold tracking-[-0.03em] m-0 capitalize">
             bảng xếp hạng dự báo
           </h1>
           <p className="font-display text-[13px] leading-[1.5] text-mute m-0 mt-2">

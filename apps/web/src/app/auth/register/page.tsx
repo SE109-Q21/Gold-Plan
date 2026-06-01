@@ -53,7 +53,7 @@ export default function RegisterPage() {
         <div className={CARD}>
           <div className="text-center mb-7">
             <div className="w-[52px] h-[52px] rounded-[12px] bg-[linear-gradient(135deg,#D4AF37,#8E7321)] flex items-center justify-center mx-auto mb-4 font-display text-[20px] leading-none font-extrabold text-gold-ink">✓</div>
-            <h1 className="font-display text-[24px] leading-[1.1] font-extrabold tracking-[-0.02em] text-chalk m-0 uppercase">Kiểm tra email</h1>
+            <h1 className="font-display text-[24px] leading-[1.1] font-extrabold tracking-[-0.02em] text-chalk m-0 capitalize">Kiểm tra email</h1>
             <p className="text-mute text-[14px] mt-2 leading-[1.6] m-0">
               Chúng tôi đã gửi liên kết xác minh đến <strong className="text-bone">{email}</strong>.<br/>
               Nhấp vào liên kết để kích hoạt tài khoản.
@@ -70,7 +70,7 @@ export default function RegisterPage() {
       <div className={CARD}>
         <div className="text-center mb-7">
           <div className="w-11 h-11 rounded-[10px] bg-[linear-gradient(135deg,#D4AF37,#8E7321)] flex items-center justify-center mx-auto mb-[14px] font-display text-[18px] leading-none font-extrabold text-gold-ink">GT</div>
-          <h1 className="font-display text-[24px] leading-[1.1] font-extrabold tracking-[-0.02em] text-chalk m-0 uppercase">Tạo tài khoản</h1>
+          <h1 className="font-display text-[24px] leading-[1.1] font-extrabold tracking-[-0.02em] text-chalk m-0 capitalize">Tạo tài khoản</h1>
           <p className="text-mute text-[13px] mt-[6px] m-0">Bắt đầu theo dõi giá vàng</p>
         </div>
 

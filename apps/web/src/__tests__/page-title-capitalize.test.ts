@@ -15,8 +15,8 @@ function tsxFiles(dir: string): string[] {
 }
 
 describe('page titles', () => {
-  test('all h1 page titles render uppercase', () => {
-    const missingUppercase = SOURCE_ROOTS
+  test('all h1 page titles render capitalized', () => {
+    const missingCapitalize = SOURCE_ROOTS
       .flatMap(tsxFiles)
       .flatMap((file) => {
         const source = readFileSync(file, 'utf8');
@@ -26,16 +26,18 @@ describe('page titles', () => {
           .filter((match) => {
             const literalClass = match[1];
             if (literalClass) {
-              return !literalClass.split(/\s+/).includes('uppercase');
+              const classes = literalClass.split(/\s+/);
+              return !classes.includes('capitalize') || classes.includes('uppercase');
             }
 
             const constantName = match[2];
             const constantMatch = source.match(new RegExp(`const\\s+${constantName}\\s*=\\s*['"\`]([^'"\`]+)['"\`]`));
-            return !constantMatch?.[1].split(/\s+/).includes('uppercase');
+            const classes = constantMatch?.[1].split(/\s+/) ?? [];
+            return !classes.includes('capitalize') || classes.includes('uppercase');
           })
           .map(() => file);
       });
 
-    expect([...new Set(missingUppercase)]).toEqual([]);
+    expect([...new Set(missingCapitalize)]).toEqual([]);
   });
 });

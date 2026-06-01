@@ -120,7 +120,7 @@ function LeaderboardContent() {
 
       {/* Page header */}
       <div className="mb-7">
-        <h1 className="font-display text-[28px] leading-none font-extrabold m-0 mb-2 tracking-[-0.02em] uppercase">
+        <h1 className="font-display text-[28px] leading-none font-extrabold m-0 mb-2 tracking-[-0.02em] capitalize">
           Bảng xếp hạng
         </h1>
         <p className="font-mono text-[13px] leading-[1.5] text-mute m-0">
