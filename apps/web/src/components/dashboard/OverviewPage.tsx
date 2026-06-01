@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { useInternationalPrice, useDomesticPrices, usePriceHistory, useComparison } from '@/lib/price.api';
 import { useExchangeRates } from '@/lib/exchange-rate.api';
 import { useAlerts } from '@/lib/alerts.api';
@@ -50,6 +51,7 @@ const DISPLAY_GOLD_TYPES = ['MIEN_SJC', 'NHAN_9999', 'VANG_24K'] as const;
 type Range = '1D' | '1W' | '1M' | '3M' | '1Y';
 
 const EXCHANGE_RATE_CODES = ['AUD', 'EUR', 'JPY', 'USD'] as const;
+const DIGEST_IMAGE_SRC = '/digest/gold-bars-coins.jpg';
 
 function fmtVnd(n: number) { return (n / 1_000_000).toFixed(2) + 'M₫'; }
 
@@ -150,19 +152,21 @@ function DigestImage({ item, compact = false }: { item: DigestDto; compact?: boo
   return (
     <div
       role="img"
-      aria-label="Minh họa bản tin thị trường vàng"
+      aria-label="Ảnh thật vàng thỏi và đồng vàng cho bản tin thị trường"
       className={cn(
-        'relative overflow-hidden rounded-[10px] border border-[rgba(212,175,55,0.35)] bg-[#19140c]',
+        'relative overflow-hidden rounded-[10px] border border-[rgba(212,175,55,0.35)] bg-[#19140c] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]',
         compact ? 'h-[78px] w-[92px] shrink-0' : 'h-[170px] w-full',
       )}
     >
-      <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(239,211,130,0.9),rgba(117,81,18,0.9)_45%,rgba(18,17,15,0.95))]" />
-      <div className="absolute inset-0 opacity-55 bg-[radial-gradient(circle_at_22%_28%,rgba(255,255,255,0.55)_0_9%,transparent_10%),radial-gradient(circle_at_62%_70%,rgba(255,210,96,0.45)_0_15%,transparent_16%)]" />
-      <div className="absolute left-0 right-0 bottom-0 h-[46%] bg-[linear-gradient(180deg,transparent,rgba(0,0,0,0.58))]" />
-      <div className={cn(
-        'absolute rounded-full border border-[rgba(255,240,184,0.4)] bg-[rgba(255,219,109,0.16)] shadow-[0_0_28px_rgba(212,175,55,0.35)]',
-        compact ? 'right-[-20px] top-[-18px] h-[72px] w-[72px]' : 'right-[-34px] top-[-30px] h-[132px] w-[132px]',
-      )} />
+      <Image
+        src={DIGEST_IMAGE_SRC}
+        alt=""
+        aria-hidden="true"
+        fill
+        sizes={compact ? '92px' : '(max-width: 900px) 100vw, 233px'}
+        className="absolute inset-0 h-full w-full object-cover"
+      />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,7,5,0.02),rgba(8,7,5,0.64)),linear-gradient(90deg,rgba(8,7,5,0.42),transparent_58%)]" />
       <div className={cn(
         'absolute left-3 bottom-3 font-mono font-bold tracking-[0.12em] uppercase text-[#fff4c4]',
         compact ? 'text-[9px]' : 'text-[10px]',

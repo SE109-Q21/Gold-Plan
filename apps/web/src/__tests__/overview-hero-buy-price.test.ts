@@ -27,6 +27,7 @@ describe('Overview hero price card', () => {
   test('shows an archive-backed digest section with a visual image panel', () => {
     expect(source).toContain('useDigestArchive(1)');
     expect(source).toContain('Bản tin thị trường');
-    expect(source).toContain('Minh họa bản tin thị trường vàng');
+    expect(source).toContain('/digest/gold-bars-coins.jpg');
+    expect(source).toContain('Ảnh thật vàng thỏi và đồng vàng');
   });
 });
