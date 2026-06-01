@@ -14,10 +14,13 @@ describe('Overview hero price card', () => {
   });
 
   test('renders exchange rates as a multi-currency buy and sell table', () => {
-    expect(source).toContain('EXCHANGE_RATE_ROWS');
+    expect(source).toContain('currencyRates');
     expect(source).toContain('buyRate');
     expect(source).toContain('sellRate');
-    expect(source).toContain("code: 'AUD'");
-    expect(source).toContain("code: 'JPY'");
+    expect(source).not.toContain('usdRatio');
+  });
+
+  test('does not show a separate USD/VND hero stat', () => {
+    expect(source).not.toContain('usd / vnd');
   });
 });

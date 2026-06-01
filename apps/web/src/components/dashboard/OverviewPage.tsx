@@ -49,12 +49,7 @@ const GOLD_TYPE_LABELS: Record<string, string> = {
 const DISPLAY_GOLD_TYPES = ['MIEN_SJC', 'NHAN_9999', 'VANG_24K'] as const;
 type Range = '1D' | '1W' | '1M' | '3M' | '1Y';
 
-const EXCHANGE_RATE_ROWS = [
-  { code: 'AUD', label: 'AUD', base: 'usd', usdRatio: 0.7066, spreadPct: 0.0206 },
-  { code: 'EUR', label: 'EUR', base: 'eur', usdRatio: 1, spreadPct: 0.0489 },
-  { code: 'JPY', label: 'JPY', base: 'usd', usdRatio: 0.00611, spreadPct: 0.0310 },
-  { code: 'USD', label: 'USD', base: 'usd', usdRatio: 1, spreadPct: 0.0119 },
-] as const;
+const EXCHANGE_RATE_CODES = ['AUD', 'EUR', 'JPY', 'USD'] as const;
 
 function fmtVnd(n: number) { return (n / 1_000_000).toFixed(2) + 'M₫'; }
 
@@ -70,16 +65,9 @@ function minsAgo(iso: string): string {
 
 function ExchangeRateCard() {
   const { data: fx } = useExchangeRates();
-  const rows = EXCHANGE_RATE_ROWS.map(row => {
-    const midRate = fx
-      ? row.base === 'eur'
-        ? fx.eurVnd
-        : fx.usdVnd * row.usdRatio
-      : null;
-    const buyRate = midRate == null ? null : midRate * (1 - row.spreadPct / 2);
-    const sellRate = midRate == null ? null : midRate * (1 + row.spreadPct / 2);
-
-    return { ...row, buyRate, sellRate };
+  const rows = EXCHANGE_RATE_CODES.map(code => {
+    const rate = fx?.currencyRates?.find(item => item.code === code);
+    return { code, buyRate: rate?.buyRate ?? null, sellRate: rate?.sellRate ?? null };
   });
   const sourceBadgeColor =
     fx?.source === 'live' ? 'text-live' :
@@ -114,7 +102,7 @@ function ExchangeRateCard() {
         <div className="bg-[#f7ecd0] px-3 py-[7px] text-right">Bán ra</div>
         {rows.map(row => (
           <div key={row.code} className="contents">
-            <div className="px-3 py-[7px] bg-[#e4c572]">{row.label}</div>
+            <div className="px-3 py-[7px] bg-[#e4c572]">{row.code}</div>
             <div className="px-3 py-[7px] bg-[#e4c572] text-right tabular-nums">
               {row.buyRate == null ? '—' : fmtFx(row.buyRate)}
             </div>
@@ -439,7 +427,7 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
                   <span className="font-mono text-[11px] text-mute">24h</span>
                 </div>
               </div>
-              <div className="flex-1 grid grid-cols-3 gap-3">
+              <div className="flex-1 grid grid-cols-2 gap-3">
                 <div className="p-[14px] bg-ink-3 border border-line rounded-[10px]">
                   <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-[6px]">mỗi lượng · {currency.toLowerCase()}</div>
                   <div className="text-[22px] leading-none font-bold font-sans tabular-nums">
@@ -459,13 +447,6 @@ export function OverviewPage({ currency, onNavigateAlerts }: { currency: string;
                   <div className="font-mono text-[10px] text-mute mt-[6px]">
                     {GOLD_TYPE_LABELS[compGoldType] ?? compGoldType}
                   </div>
-                </div>
-                <div className="p-[14px] bg-ink-3 border border-line rounded-[10px]">
-                  <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-[6px]">usd / vnd</div>
-                  <div className="text-[22px] leading-none font-bold font-sans tabular-nums">
-                    {intl ? intl.exchangeRate.toLocaleString('en-US', { maximumFractionDigits: 0 }) : '24,815'}
-                  </div>
-                  <div className="font-mono text-[10px] text-mute mt-[6px]">—</div>
                 </div>
               </div>
             </div>

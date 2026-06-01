@@ -53,6 +53,11 @@ export interface ComparisonRowDto {
 export interface ExchangeRateDto {
   usdVnd: number;
   eurVnd: number;
+  currencyRates?: {
+    code: string;
+    buyRate: number;
+    sellRate: number;
+  }[];
   updatedAt: string; // ISO string
   source: string;    // 'live' | 'stale' | 'fallback'
 }

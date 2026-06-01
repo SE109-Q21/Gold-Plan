@@ -9,6 +9,17 @@ const CACHE_TTL_MS = 15 * 60_000; // 15 minutes
 const DEFAULT_USD_VND = 25_480;
 const DEFAULT_EUR_VND = 27_900;
 
+const CURRENCY_RATE_CONFIG = [
+  { code: 'AUD', usdRatio: 0.7066, spreadPct: 0.0206 },
+  {
+    code: 'EUR',
+    usdRatio: DEFAULT_EUR_VND / DEFAULT_USD_VND,
+    spreadPct: 0.0489,
+  },
+  { code: 'JPY', usdRatio: 0.00611, spreadPct: 0.031 },
+  { code: 'USD', usdRatio: 1, spreadPct: 0.0119 },
+] as const;
+
 interface CacheEntry {
   data: ExchangeRateDto;
   expiresAt: number;
@@ -53,6 +64,7 @@ export class ExchangeRateService {
       const dto: ExchangeRateDto = {
         usdVnd,
         eurVnd,
+        currencyRates: this.buildCurrencyRates(res.data.rates, usdVnd, eurVnd),
         updatedAt: new Date().toISOString(),
         source: 'live',
       };
@@ -77,6 +89,11 @@ export class ExchangeRateService {
       const fallback: ExchangeRateDto = {
         usdVnd: DEFAULT_USD_VND,
         eurVnd: DEFAULT_EUR_VND,
+        currencyRates: this.buildCurrencyRates(
+          {},
+          DEFAULT_USD_VND,
+          DEFAULT_EUR_VND,
+        ),
         updatedAt: new Date().toISOString(),
         source: 'fallback',
       };
@@ -84,5 +101,31 @@ export class ExchangeRateService {
       this.cache = { data: fallback, expiresAt: Date.now() + 2 * 60_000 };
       return fallback;
     }
+  }
+
+  private buildCurrencyRates(
+    providerRates: Record<string, number>,
+    usdVnd: number,
+    eurVnd: number,
+  ): ExchangeRateDto['currencyRates'] {
+    return CURRENCY_RATE_CONFIG.map((currency) => {
+      const usdRatio =
+        currency.code === 'USD'
+          ? 1
+          : currency.code === 'EUR'
+            ? eurVnd / usdVnd
+            : providerRates[currency.code]
+              ? 1 / providerRates[currency.code]
+              : currency.usdRatio;
+      const midRate = usdVnd * usdRatio;
+      const buyRate = midRate * (1 - currency.spreadPct / 2);
+      const sellRate = midRate * (1 + currency.spreadPct / 2);
+
+      return {
+        code: currency.code,
+        buyRate,
+        sellRate,
+      };
+    });
   }
 }

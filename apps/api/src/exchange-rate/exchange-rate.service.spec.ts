@@ -56,6 +56,18 @@ describe('ExchangeRateService', () => {
       expect(axiosGetSpy).toHaveBeenCalledTimes(1);
       expect(result.usdVnd).toBe(25_480);
       expect(result.eurVnd).toBe(27908);
+      expect(result.currencyRates?.map((rate) => rate.code)).toEqual([
+        'AUD',
+        'EUR',
+        'JPY',
+        'USD',
+      ]);
+      expect(
+        result.currencyRates?.every(
+          (rate) =>
+            Number.isFinite(rate.buyRate) && Number.isFinite(rate.sellRate),
+        ),
+      ).toBe(true);
       expect(result.source).toBe('live');
       expect(result.updatedAt).toBeTruthy();
     });
