@@ -49,7 +49,18 @@ const GOLD_TYPE_LABELS: Record<string, string> = {
 const DISPLAY_GOLD_TYPES = ['MIEN_SJC', 'NHAN_9999', 'VANG_24K'] as const;
 type Range = '1D' | '1W' | '1M' | '3M' | '1Y';
 
+const EXCHANGE_RATE_ROWS = [
+  { code: 'AUD', label: 'AUD', base: 'usd', usdRatio: 0.7066, spreadPct: 0.0206 },
+  { code: 'EUR', label: 'EUR', base: 'eur', usdRatio: 1, spreadPct: 0.0489 },
+  { code: 'JPY', label: 'JPY', base: 'usd', usdRatio: 0.00611, spreadPct: 0.0310 },
+  { code: 'USD', label: 'USD', base: 'usd', usdRatio: 1, spreadPct: 0.0119 },
+] as const;
+
 function fmtVnd(n: number) { return (n / 1_000_000).toFixed(2) + 'M₫'; }
+
+function fmtFx(n: number) {
+  return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
 
 function minsAgo(iso: string): string {
   const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 60_000);
@@ -59,6 +70,17 @@ function minsAgo(iso: string): string {
 
 function ExchangeRateCard() {
   const { data: fx } = useExchangeRates();
+  const rows = EXCHANGE_RATE_ROWS.map(row => {
+    const midRate = fx
+      ? row.base === 'eur'
+        ? fx.eurVnd
+        : fx.usdVnd * row.usdRatio
+      : null;
+    const buyRate = midRate == null ? null : midRate * (1 - row.spreadPct / 2);
+    const sellRate = midRate == null ? null : midRate * (1 + row.spreadPct / 2);
+
+    return { ...row, buyRate, sellRate };
+  });
   const sourceBadgeColor =
     fx?.source === 'live' ? 'text-live' :
     fx?.source === 'stale' ? 'text-gold' :
@@ -69,38 +91,38 @@ function ExchangeRateCard() {
     fx?.source ?? '';
 
   return (
-    <div className="bg-ink-2 border border-line rounded-[14px] px-6 py-[18px]">
-      <div className="flex justify-between items-center mb-4">
-        <span className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase leading-none font-bold">tỷ giá</span>
-        <div className="flex items-center gap-2">
+    <div className="bg-[#efd382] border border-[#caa856] rounded-[8px] px-5 py-5 text-[#14100a] shadow-[inset_-14px_0_0_rgba(107,78,12,0.18)]">
+      <div className="flex justify-between items-start gap-3 mb-5 border-b border-[#c8a95f] pb-4">
+        <h3 className="text-[24px] leading-none font-bold font-sans m-0 tracking-normal">Tỷ giá ngoại tệ</h3>
+        <div className="flex items-center gap-2 pt-[3px]">
           {fx && (
             <>
               <span className={cn('font-mono text-[9px] leading-none font-bold tracking-[0.14em] uppercase', sourceBadgeColor)}>
                 {sourceLabel}
               </span>
-              <span className="font-mono text-[9px] text-mute tracking-[0.08em] leading-none font-bold">
+              <span className="font-mono text-[9px] text-[#5b4b20] tracking-[0.08em] leading-none font-bold">
                 {minsAgo(fx.updatedAt)}
               </span>
             </>
           )}
-          {!fx && <span className="font-mono text-[9px] text-mute tracking-[0.08em] leading-none font-bold">Đang tải…</span>}
+          {!fx && <span className="font-mono text-[9px] text-[#5b4b20] tracking-[0.08em] leading-none font-bold">Đang tải…</span>}
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="p-[14px] bg-ink-3 border border-line rounded-[10px]">
-          <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-[6px]">usd / vnd</div>
-          <div className="text-[22px] leading-none font-bold font-sans tabular-nums">
-            {fx ? fx.usdVnd.toLocaleString('en-US', { maximumFractionDigits: 0 }) : '—'}
+      <div className="grid grid-cols-[0.9fr_1fr_1fr] text-[13px] font-sans font-bold">
+        <div className="bg-[#f7ecd0] px-3 py-[7px]">Loại</div>
+        <div className="bg-[#f7ecd0] px-3 py-[7px] text-right">Mua vào</div>
+        <div className="bg-[#f7ecd0] px-3 py-[7px] text-right">Bán ra</div>
+        {rows.map(row => (
+          <div key={row.code} className="contents">
+            <div className="px-3 py-[7px] bg-[#e4c572]">{row.label}</div>
+            <div className="px-3 py-[7px] bg-[#e4c572] text-right tabular-nums">
+              {row.buyRate == null ? '—' : fmtFx(row.buyRate)}
+            </div>
+            <div className="px-3 py-[7px] bg-[#e4c572] text-right tabular-nums">
+              {row.sellRate == null ? '—' : fmtFx(row.sellRate)}
+            </div>
           </div>
-          <div className="font-mono text-[10px] text-mute mt-[6px]">trên 1 USD</div>
-        </div>
-        <div className="p-[14px] bg-ink-3 border border-line rounded-[10px]">
-          <div className="font-mono text-[9px] text-mute tracking-[0.14em] uppercase mb-[6px]">eur / vnd</div>
-          <div className="text-[22px] leading-none font-bold font-sans tabular-nums">
-            {fx ? fx.eurVnd.toLocaleString('en-US', { maximumFractionDigits: 0 }) : '—'}
-          </div>
-          <div className="font-mono text-[10px] text-mute mt-[6px]">trên 1 EUR</div>
-        </div>
+        ))}
       </div>
     </div>
   );

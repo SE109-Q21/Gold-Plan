@@ -12,4 +12,12 @@ describe('Overview hero price card', () => {
     expect(source).toContain('heroBuyPrice');
     expect(source).toContain('giá mua ·');
   });
+
+  test('renders exchange rates as a multi-currency buy and sell table', () => {
+    expect(source).toContain('EXCHANGE_RATE_ROWS');
+    expect(source).toContain('buyRate');
+    expect(source).toContain('sellRate');
+    expect(source).toContain("code: 'AUD'");
+    expect(source).toContain("code: 'JPY'");
+  });
 });
